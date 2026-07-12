@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Every sample must pass the reference validator (structure + semantics:
+      # single start node, no dangling connections, reachability, typed actions).
+      - name: Reference validator
+        run: npx -y tsx validator/cli.ts samples/*/module.json
+
+      # …and the JSON Schema (structural contract, any language).
+      - name: JSON Schema
+        run: >-
+          npx -y ajv-cli@5 validate --spec=draft2020 --strict=false
+          -s schema/ronu-module.schema.json -d "samples/*/module.json"
+
+      # The bundled sample is a real .ronu: it must unzip to the three members.
+      - name: Real .ronu unpacks
+        run: |
+          unzip -l samples/hello-ronu/hello.ronu
+          unzip -p samples/hello-ronu/hello.ronu module.json > /dev/null

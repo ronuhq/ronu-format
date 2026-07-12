@@ -1,5 +1,8 @@
 # The `.ronu` format
 
+[![CI](https://github.com/ronuhq/ronu-format/actions/workflows/ci.yml/badge.svg)](https://github.com/ronuhq/ronu-format/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 **An open file format for interactive, branching learning experiences.**
 
 A `.ronu` file is a complete simulation — the scenario graph, the choices, the scoring logic, the media — in a single portable zip you can email, put on a USB stick, or send over WhatsApp. No account, no platform lock-in: the format is open, and anyone can build tools that read or write it.
