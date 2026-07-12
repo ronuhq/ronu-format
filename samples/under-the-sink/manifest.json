@@ -1,0 +1,16 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "132a2097-db9e-400c-a580-827dfec9c3d5",
+    "versionId": "132a2097-db9e-400c-a580-827dfec9c3d5",
+    "versionNumber": 1,
+    "title": "Under the Sink: Trace the Leak & Fix It Right",
+    "description": "Diagnose a leak, choose the correct repair, and explain it to the customer. A 360° + decision simulation.",
+    "language": "en"
+  },
+  "activityIri": "https://ronunest.com/xapi/modules/132a2097-db9e-400c-a580-827dfec9c3d5",
+  "exportedAt": "2026-07-12T00:00:00Z",
+  "exportedBy": "ronunest.com (manual sample export, JSON-only interchange form)",
+  "assets": []
+}

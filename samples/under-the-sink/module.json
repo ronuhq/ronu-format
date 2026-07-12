@@ -1,0 +1,261 @@
+{
+  "nodes": [
+    {
+      "id": "intro",
+      "type": "message",
+      "color": "#64748B",
+      "title": "The Kitchen Call-out",
+      "config": {
+        "title": "The Kitchen Call-out",
+        "content": "A customer reports water under the kitchen sink. Inspect, find the source, choose the right repair, then explain it to them.",
+        "isStart": true,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 320,
+        "y": 200
+      },
+      "connection": "sink"
+    },
+    {
+      "id": "sink",
+      "type": "scene",
+      "color": "#0EA5E9",
+      "title": "Inspect Under the Sink",
+      "config": {
+        "title": "Inspect Under the Sink",
+        "hotspots": [
+          {
+            "id": "cl-fitting",
+            "label": "Weeping compression fitting",
+            "hidden": true,
+            "reveal": {
+              "body": "The compression nut on the cold feed is weeping — the olive isn't seated properly. This is your leak source.",
+              "kind": "text"
+            },
+            "position": {
+              "yaw": -1.25,
+              "pitch": 0
+            },
+            "required": true,
+            "variableActions": [
+              {
+                "value": 1,
+                "operator": "increment",
+                "variableId": "clues_found"
+              }
+            ]
+          },
+          {
+            "id": "cl-trap",
+            "label": "Dry, intact trap",
+            "hidden": true,
+            "reveal": {
+              "body": "The trap is dry and intact — not the source, good to rule out.",
+              "kind": "text"
+            },
+            "position": {
+              "yaw": 1.25,
+              "pitch": 0
+            },
+            "required": true,
+            "variableActions": [
+              {
+                "value": 1,
+                "operator": "increment",
+                "variableId": "clues_found"
+              }
+            ]
+          }
+        ],
+        "completion": "free",
+        "environment": {
+          "kind": "photo360",
+          "source": ""
+        },
+        "missActions": [
+          {
+            "value": 1,
+            "operator": "increment",
+            "variableId": "wrong_guesses"
+          }
+        ],
+        "instructions": "Click where you see evidence of the leak.",
+        "subtitlesUrl": "",
+        "allowPrevious": true,
+        "discoveryRadius": 0.35
+      },
+      "position": {
+        "x": 640,
+        "y": 200
+      },
+      "connection": "fix"
+    },
+    {
+      "id": "fix",
+      "type": "choice",
+      "color": "#F59E0B",
+      "title": "Choose the Repair",
+      "config": {
+        "title": "Choose the Repair",
+        "choices": [
+          {
+            "id": "opt-reseat",
+            "text": "Re-make the joint with a new olive and PTFE",
+            "actions": [
+              {
+                "operator": "set_true",
+                "variableId": "correct_fix"
+              }
+            ],
+            "connection": "customer"
+          },
+          {
+            "id": "opt-tape",
+            "text": "Wrap tape around the outside of the joint",
+            "actions": [
+              {
+                "operator": "set_false",
+                "variableId": "correct_fix"
+              }
+            ],
+            "connection": "customer"
+          },
+          {
+            "id": "opt-replace",
+            "text": "Replace the entire sink unit",
+            "actions": [
+              {
+                "operator": "set_false",
+                "variableId": "correct_fix"
+              }
+            ],
+            "connection": "customer"
+          }
+        ],
+        "overlay": false,
+        "question": "You've found a weeping compression fitting. What's the correct fix?",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 960,
+        "y": 200
+      }
+    },
+    {
+      "id": "customer",
+      "type": "conversation",
+      "color": "#C026D3",
+      "title": "Explain to the Customer",
+      "config": {
+        "title": "Explain to the Customer",
+        "persona": "You are the homeowner — friendly but cost-conscious and a bit wary of being upsold. You want to understand what was wrong and what it costs, in plain language.",
+        "maxTurns": 5,
+        "objective": "The learner should explain the fault and the repair in plain, honest language and set fair expectations on cost. Score higher for clarity and honesty; lower for jargon or pushy upselling.",
+        "firstMessage": "So what was actually wrong with it? And is this going to be expensive?",
+        "subtitlesUrl": "",
+        "allowPrevious": true,
+        "scoreVariableId": "customer_score"
+      },
+      "position": {
+        "x": 1280,
+        "y": 200
+      },
+      "connection": "passcheck"
+    },
+    {
+      "id": "passcheck",
+      "type": "condition",
+      "color": "#0D9488",
+      "title": "Right fix?",
+      "config": {
+        "title": "Right fix?",
+        "choices": "{\"criteriaSets\":[{\"id\":\"cs-pass\",\"pathLabel\":\"Scored 1+\",\"targetNodeId\":\"pass\",\"conditions\":[{\"id\":\"c1\",\"field\":\"customer_score\",\"operator\":\">=\",\"value\":\"1\"}]}],\"defaultTargetNodeId\":\"retry\",\"defaultPathLabel\":\"Below 1\",\"useRealEvaluation\":true}",
+        "overlay": true,
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1600,
+        "y": 200
+      }
+    },
+    {
+      "id": "pass",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Job done right",
+      "config": {
+        "title": "Job done right",
+        "content": "Correct diagnosis, the right repair, and a customer who understands what they paid for. That's how you get repeat work.",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1920,
+        "y": 200
+      }
+    },
+    {
+      "id": "retry",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Reconsider the fix",
+      "config": {
+        "title": "Reconsider the fix",
+        "content": "Tape on the outside or a full replacement isn't the right call here — re-making the joint is. Try again.",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 2240,
+        "y": 200
+      }
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "operator": "is_true",
+      "variableId": "correct_fix",
+      "certificate": true
+    }
+  },
+  "variables": [
+    {
+      "id": "clues_found",
+      "name": "clues_found",
+      "type": "number",
+      "visible": true,
+      "description": "Diagnostic clues found",
+      "initialValue": 0
+    },
+    {
+      "id": "wrong_guesses",
+      "name": "wrong_guesses",
+      "type": "number",
+      "visible": true,
+      "description": "Wrong guesses",
+      "initialValue": 0
+    },
+    {
+      "id": "correct_fix",
+      "name": "correct_fix",
+      "type": "boolean",
+      "visible": true,
+      "description": "Chose the correct repair",
+      "initialValue": false
+    },
+    {
+      "id": "customer_score",
+      "name": "customer_score",
+      "type": "number",
+      "visible": true,
+      "description": "Customer-handling score",
+      "initialValue": 0
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "3a0649ed-a64e-46a2-ab03-8ba212c42f12",
+    "versionId": "ecbc45c9-7354-4d0e-865e-4d7ba75fe4c2",
+    "versionNumber": 5,
+    "title": "Fantasy Series Quiz",
+    "language": "en"
+  },
+  "activityIri": "https://ronunest.com/xapi/modules/3a0649ed-a64e-46a2-ab03-8ba212c42f12",
+  "exportedAt": "2026-07-12T00:00:00Z",
+  "exportedBy": "ronunest.com (manual sample export, JSON-only interchange form)",
+  "assets": []
+}

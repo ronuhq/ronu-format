@@ -1,0 +1,16 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "9bce2d23-4b6d-41e1-b524-d600636f120c",
+    "versionId": "82f3fad5-45c0-442b-bcf3-52fe37992b78",
+    "versionNumber": 4,
+    "title": "Here is a new module title Latest",
+    "description": "Created from version 8 of \"Here is a new module title\"",
+    "language": "en"
+  },
+  "activityIri": "https://ronunest.com/xapi/modules/9bce2d23-4b6d-41e1-b524-d600636f120c",
+  "exportedAt": "2026-07-12T00:00:00Z",
+  "exportedBy": "ronunest.com (manual sample export, JSON-only interchange form)",
+  "assets": []
+}

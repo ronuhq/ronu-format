@@ -1,0 +1,171 @@
+{
+  "nodes": [
+    {
+      "id": "node-1754813710969",
+      "type": "message",
+      "color": "#3b82f6",
+      "title": "New Message",
+      "config": {
+        "title": "New Message",
+        "content": "<p>Hello!<br>Welcome to the module, How are you</p>",
+        "isStart": true,
+        "required": false,
+        "allowPrevious": false
+      },
+      "position": {
+        "x": 420,
+        "y": 315
+      },
+      "connection": "node-1759342922546"
+    },
+    {
+      "id": "node-1759342922546",
+      "type": "textInput",
+      "color": "#f59e0b",
+      "title": "Text Question",
+      "config": {
+        "title": "Text Question",
+        "question": "How are you????????????",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 765,
+        "y": 270
+      },
+      "connection": "node-1764598953718"
+    },
+    {
+      "id": "node-1764598953718",
+      "type": "router",
+      "color": "#8b5cf6",
+      "title": "Decision Point1",
+      "config": {
+        "title": "Decision Point1",
+        "choices": [
+          {
+            "id": "choice-1764598992065-0.25609353534695634",
+            "text": "lick a strawberry",
+            "connection": "node-1764599034741"
+          },
+          {
+            "id": "choice-1764598998311-0.0916154909164798",
+            "text": "catch a pokemon",
+            "connection": "node-1764599037294"
+          },
+          {
+            "id": "choice-1764599003178-0.5598983586206759",
+            "text": "find a great restaurant to eat at",
+            "connection": "node-1764599039494"
+          }
+        ],
+        "overlay": true,
+        "question": "Choose what should happen next",
+        "required": true,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1065,
+        "y": 225
+      }
+    },
+    {
+      "id": "node-1764599034741",
+      "type": "multipleChoice",
+      "color": "#ef4444",
+      "title": "Multiple Choice",
+      "config": {
+        "title": "Multiple Choice",
+        "choices": [
+          {
+            "id": "choice-1764599088277",
+            "text": "12"
+          },
+          {
+            "id": "choice-1764599092414",
+            "text": "116"
+          },
+          {
+            "id": "choice-1764599098596",
+            "text": "1"
+          },
+          {
+            "id": "choice-1764599100749",
+            "text": "48"
+          }
+        ],
+        "question": "How many times do you plan to lick the strawberry",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowMultiple": false,
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1410,
+        "y": 45
+      }
+    },
+    {
+      "id": "node-1764599037294",
+      "type": "ranking",
+      "color": "#ec4899",
+      "title": "Ranking Question",
+      "config": {
+        "title": "Ranking Question",
+        "question": "Rank these pokemon in order",
+        "required": false,
+        "rankingItems": [
+          "Squirtle",
+          "Snorlax",
+          "Sycther",
+          "Slowpoke",
+          "Sandshrew"
+        ],
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1425,
+        "y": 240
+      }
+    },
+    {
+      "id": "node-1764599039494",
+      "type": "textInput",
+      "color": "#f59e0b",
+      "title": "Text Question2",
+      "config": {
+        "title": "Text Question2",
+        "question": "Why did you choose resturant",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1410,
+        "y": 450
+      }
+    },
+    {
+      "id": "node-1764599765281",
+      "type": "decisionPath",
+      "color": "#00CED1",
+      "title": "Conditional Branch",
+      "config": {
+        "title": "Conditional Branch",
+        "choices": "{\"criteriaSets\":[],\"defaultTargetNodeId\":\"\",\"defaultPathLabel\":\"\"}",
+        "overlay": true,
+        "question": "",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1740,
+        "y": 300
+      }
+    }
+  ]
+}

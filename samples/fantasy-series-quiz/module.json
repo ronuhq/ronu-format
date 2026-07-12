@@ -1,0 +1,290 @@
+{
+  "nodes": [
+    {
+      "id": "node-1777160061967",
+      "type": "video",
+      "color": "#10b981",
+      "title": "Video Content",
+      "config": {
+        "title": "Video Content",
+        "isStart": false,
+        "required": false,
+        "videoUrl": "https://www.youtube.com/watch?v=evG0HzPouS4",
+        "subtitlesUrl": "",
+        "thumbnailUrl": "",
+        "allowPrevious": true,
+        "videoControls": {
+          "autoplay": false,
+          "showVolume": true,
+          "allowSeeking": true,
+          "showPlayPause": true,
+          "showSubtitles": true
+        },
+        "showContinueButton": true
+      },
+      "position": {
+        "x": 330,
+        "y": 195
+      },
+      "connection": "node-1780800771419"
+    },
+    {
+      "id": "node-1780800764131",
+      "type": "message",
+      "color": "#3b82f6",
+      "title": "New Message",
+      "config": {
+        "title": "New Message",
+        "content": "<p>Let the quiz begin</p>",
+        "isStart": true,
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 15,
+        "y": 180
+      },
+      "connection": "node-1777160061967"
+    },
+    {
+      "id": "node-1780800771419",
+      "type": "textInput",
+      "color": "#f59e0b",
+      "title": "Text Question",
+      "config": {
+        "title": "Text Question",
+        "isStart": false,
+        "question": "What is your favourite fantasy book",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 630,
+        "y": 135
+      },
+      "connection": "node-1780800782677"
+    },
+    {
+      "id": "node-1780800782677",
+      "type": "multipleChoice",
+      "color": "#ef4444",
+      "title": "Multiple Choice",
+      "config": {
+        "title": "Multiple Choice",
+        "choices": [
+          {
+            "id": "choice-1780831646857",
+            "text": "Vin",
+            "actions": [
+              {
+                "value": 10,
+                "operator": "increment",
+                "variableId": "var-1780831533329-9do7n"
+              }
+            ]
+          },
+          {
+            "id": "choice-1780831647639",
+            "text": "Vivenna"
+          },
+          {
+            "id": "choice-1780831648258",
+            "text": "Vahser"
+          },
+          {
+            "id": "choice-1780831663221",
+            "text": "Siri"
+          },
+          {
+            "id": "choice-1780831667523",
+            "text": "Jasnah"
+          },
+          {
+            "id": "choice-1780831674547",
+            "text": "Sazed"
+          },
+          {
+            "id": "choice-1780831683203",
+            "text": "Serene"
+          }
+        ],
+        "isStart": false,
+        "question": "Which of these characters are more like Giulia",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowMultiple": true,
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 900,
+        "y": 195
+      },
+      "connection": "node-1780800794905"
+    },
+    {
+      "id": "node-1780800794905",
+      "type": "ranking",
+      "color": "#ec4899",
+      "title": "Ranking — score: {score}",
+      "config": {
+        "title": "Ranking — score: {score}",
+        "isStart": false,
+        "question": "Rank these power systems in terms of favourites (Score so far: {score})",
+        "required": false,
+        "rankingItems": [
+          "Breath",
+          "Allomancy",
+          "Feruchelmy",
+          "WindRunner",
+          "Lightweaver",
+          "WorldReshaping",
+          "Door"
+        ],
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1170,
+        "y": 195
+      },
+      "connection": "node-1780800814506"
+    },
+    {
+      "id": "node-1780800814506",
+      "type": "matching",
+      "color": "#f97316",
+      "title": "Matching Question",
+      "config": {
+        "title": "Matching Question",
+        "question": "Match these characters to the right book",
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true,
+        "matchingLeftItems": [
+          {
+            "id": "l-1780800985230",
+            "text": "Vin",
+            "correctRightId": "r-1780800993974"
+          },
+          {
+            "id": "l-1780800989935",
+            "text": "Ellend",
+            "correctRightId": "r-1780800993974"
+          },
+          {
+            "id": "l-1780800993122",
+            "text": "Sazed",
+            "correctRightId": "r-1780800993974"
+          },
+          {
+            "id": "l-1780801056805",
+            "text": "Siri",
+            "correctRightId": "r-1780831873191"
+          },
+          {
+            "id": "l-1780831817747",
+            "text": "Raoden",
+            "actions": [],
+            "correctRightId": "r-1780831879697"
+          },
+          {
+            "id": "l-1780831821730",
+            "text": "Adolin",
+            "actions": [],
+            "correctRightId": "r-1780800986382"
+          },
+          {
+            "id": "l-1780831840351",
+            "text": "Vasher",
+            "actions": [],
+            "correctRightId": "r-1780831873191"
+          },
+          {
+            "id": "l-1780831852274",
+            "text": "Bayaz",
+            "actions": [],
+            "correctRightId": "r-1780800988232"
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r-1780800986382",
+            "text": "Stormlight Archive"
+          },
+          {
+            "id": "r-1780800988232",
+            "text": "First Law Trilogy"
+          },
+          {
+            "id": "r-1780800993974",
+            "text": "Mistborn"
+          },
+          {
+            "id": "r-1780831873191",
+            "text": "Warbreaker"
+          },
+          {
+            "id": "r-1780831879697",
+            "text": "Elantris"
+          }
+        ]
+      },
+      "position": {
+        "x": 1425,
+        "y": 195
+      },
+      "connection": "node-1780800826198"
+    },
+    {
+      "id": "node-1780800826198",
+      "type": "rating",
+      "color": "#6366f1",
+      "title": "Rating Question",
+      "config": {
+        "title": "Rating Question",
+        "question": "How enjoyable was this quiz",
+        "required": false,
+        "ratingMax": 7,
+        "ratingMin": 1,
+        "ratingEmoji": "⭐",
+        "ratingStyle": "numbers",
+        "subtitlesUrl": "",
+        "allowPrevious": true,
+        "ratingLowLabel": "Not Enjoyable at all",
+        "ratingHighLabel": "Very Enjoyable"
+      },
+      "position": {
+        "x": 1680,
+        "y": 195
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "var-1780831533329-9do7n",
+      "name": "score",
+      "type": "number",
+      "visible": true,
+      "description": "",
+      "initialValue": 0
+    },
+    {
+      "id": "var-1780831538768-ohsil",
+      "name": "great_fantasy_reader",
+      "type": "number",
+      "description": "",
+      "initialValue": 0
+    },
+    {
+      "id": "var-1781217631984-n4pgr",
+      "name": "quality",
+      "type": "number",
+      "formula": "score * 2",
+      "computed": true,
+      "description": "",
+      "initialValue": 0
+    }
+  ]
+}
