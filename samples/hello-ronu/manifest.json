@@ -1,0 +1,23 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "a0000000-0000-4000-8000-000000000001",
+    "versionId": "b0000000-0000-4000-8000-000000000001",
+    "versionNumber": 1,
+    "title": "Hello, .ronu",
+    "description": "The smallest self-contained .ronu file: one image, four nodes, a variable, a pass rule.",
+    "language": "en",
+    "thumbnail": "assets/01-cover.png"
+  },
+  "activityIri": "https://ronunest.com/xapi/modules/a0000000-0000-4000-8000-000000000001",
+  "exportedAt": "2026-07-12T00:00:00.000Z",
+  "exportedBy": "ronunest.com",
+  "assets": [
+    {
+      "path": "assets/01-cover.png",
+      "mimeType": "image/png",
+      "bytes": 3354
+    }
+  ]
+}

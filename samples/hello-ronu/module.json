@@ -1,0 +1,107 @@
+{
+  "variables": [
+    {
+      "id": "v_score",
+      "name": "score",
+      "type": "number",
+      "initialValue": 0,
+      "scope": "module"
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "v_score",
+      "operator": ">=",
+      "value": 1
+    }
+  },
+  "nodes": [
+    {
+      "id": "welcome",
+      "type": "message",
+      "title": "Welcome",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "color": "#C4511A",
+      "connection": "q1",
+      "config": {
+        "title": "Welcome",
+        "isStart": true,
+        "content": "<p>Welcome to the smallest possible .ronu experience.</p><img src=\"assets/01-cover.png\" alt=\"Ronu cover\" />",
+        "files": [
+          {
+            "id": "f_cover",
+            "name": "cover.png",
+            "path": "assets/01-cover.png",
+            "mimeType": "image/png"
+          }
+        ]
+      }
+    },
+    {
+      "id": "q1",
+      "type": "choice",
+      "title": "Your first decision",
+      "position": {
+        "x": 320,
+        "y": 0
+      },
+      "color": "#2E3A4F",
+      "config": {
+        "title": "Your first decision",
+        "question": "This file just travelled to you as a single portable zip. Ready to build a player for it?",
+        "choices": [
+          {
+            "id": "c_yes",
+            "text": "Yes — let's go",
+            "connection": "done",
+            "actions": [
+              {
+                "variableId": "v_score",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "c_more",
+            "text": "Tell me how it works first",
+            "connection": "how"
+          }
+        ]
+      }
+    },
+    {
+      "id": "how",
+      "type": "message",
+      "title": "How it works",
+      "position": {
+        "x": 640,
+        "y": 80
+      },
+      "color": "#2E3A4F",
+      "connection": "done",
+      "config": {
+        "title": "How it works",
+        "content": "<p>A .ronu file is a zip: <code>manifest.json</code> (this envelope), <code>module.json</code> (this graph), and an <code>assets/</code> folder for media. Unknown fields and node types are ignored, so this plays in any conformant player.</p>"
+      }
+    },
+    {
+      "id": "done",
+      "type": "message",
+      "title": "The end",
+      "position": {
+        "x": 960,
+        "y": 0
+      },
+      "color": "#1B4D35",
+      "config": {
+        "title": "The end",
+        "content": "<p>That's the whole format. Now go build something.</p>"
+      }
+    }
+  ]
+}

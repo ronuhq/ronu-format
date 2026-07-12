@@ -1,0 +1,3 @@
+# Sample binaries must never be line-ending-converted.
+*.ronu binary
+*.png binary

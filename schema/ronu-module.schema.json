@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ronuhq/ronu-format/main/schema/ronu-module.schema.json",
+  "title": "ronu module.json",
+  "description": "Structural schema for the module.json member of a .ronu file (spec v0.9). This checks SHAPE; semantic rules the schema cannot express — exactly one start node, no dangling connections, reachability, action/variable type-agreement — are the reference validator's job (validator/). Deliberately LENIENT in two places, because the format requires it: unknown object fields are allowed everywhere (must-ignore, spec §5.1) and node `type` is an open string, not an enum (unknown node types and namespaced extensions are valid, spec §5.2–§5.3). Node `config` is intentionally loose — per-type config profiles live in the catalogue (spec §7), some still provisional.",
+  "type": "object",
+  "required": ["nodes"],
+  "properties": {
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "variables": { "type": "array", "items": { "$ref": "#/$defs/variable" } },
+    "settings": { "$ref": "#/$defs/settings" }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "description": "A catalogue type or a namespaced extension (`prefix:name`). Known core types: message, video, choice, textInput, multipleChoice, ranking, matching, rating, condition, note, scene, conversation, code. Also accepted (legacy aliases, spec §8): router→choice, decisionPath→condition."
+        },
+        "title": { "type": "string" },
+        "position": {
+          "type": "object",
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+        },
+        "color": { "type": "string" },
+        "connection": { "type": "string" },
+        "config": { "$ref": "#/$defs/config" }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Per-node configuration. Loosely typed on purpose (see the catalogue, spec §7). A few stable fields are checked when present.",
+      "properties": {
+        "isStart": { "type": "boolean" },
+        "choices": {
+          "description": "An array of options (choice/multipleChoice), or — legacy condition form, spec §8 — a JSON-encoded string.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "text"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "text": { "type": "string" },
+                  "connection": { "type": "string" },
+                  "actions": { "type": "array", "items": { "$ref": "#/$defs/variableAction" } }
+                }
+              }
+            },
+            { "type": "string" }
+          ]
+        },
+        "criteria": {
+          "type": "object",
+          "description": "Canonical condition config (spec §8).",
+          "properties": {
+            "criteriaSets": { "type": "array" },
+            "defaultTargetNodeId": { "type": "string" }
+          }
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "actions": { "type": "array", "items": { "$ref": "#/$defs/variableAction" } }
+            }
+          }
+        },
+        "timer": { "$ref": "#/$defs/timerConfig" }
+      }
+    },
+    "variable": {
+      "type": "object",
+      "required": ["id", "name", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["number", "boolean", "text"] },
+        "initialValue": { "type": ["number", "boolean", "string"] },
+        "description": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "computed": { "type": "boolean" },
+        "formula": { "type": ["string", "null"] },
+        "scope": { "enum": ["module", "learner"] }
+      }
+    },
+    "variableAction": {
+      "type": "object",
+      "required": ["variableId", "operator"],
+      "properties": {
+        "variableId": { "type": "string" },
+        "operator": {
+          "enum": ["set", "increment", "decrement", "multiply", "divide", "set_true", "set_false", "toggle"]
+        },
+        "value": { "type": ["number", "string"] }
+      }
+    },
+    "timerConfig": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["countdown", "countup"] },
+        "seconds": { "type": "number" },
+        "visible": { "type": "boolean" },
+        "label": { "type": "string" },
+        "warnAtSeconds": { "type": "number" },
+        "sound": { "type": "boolean" },
+        "recordVariableId": { "type": "string" }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "timer": { "$ref": "#/$defs/timerConfig" },
+        "completion": {
+          "type": "object",
+          "properties": {
+            "mode": { "enum": ["variable", "reachedNode", "nodeScore"] },
+            "variableId": { "type": "string" },
+            "operator": {
+              "enum": [">=", ">", "<=", "<", "==", "!=", "contains", "is_true", "is_false"]
+            },
+            "value": { "type": ["number", "string"] },
+            "passNodeId": { "type": "string" },
+            "scoreNodeId": { "type": "string" },
+            "scoreAggregate": { "enum": ["average", "total", "min", "max"] },
+            "certificate": { "type": "boolean" },
+            "certificateValidityMonths": { "type": "number" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -121,7 +121,10 @@ Top level:
 - `formatVersion` `MAJOR.MINOR`: MINOR bumps are always additive (rule 5.1 makes them safe); a MAJOR bump is a breaking change and is expected to be rare-to-never.
 - **Minimal player** (conformance level 1): implements the skeleton + the `stable` catalogue types, rules 5.1–5.3, and plays fully offline from the zip. May treat `code`, `conversation`, and 3-D scene kinds as unknown (rule 5.2).
 - **Full player** (level 2): additionally implements the `provisional` types it declares, the code-node sandbox, and AI-backed conversation (which requires connectivity — a full player degrades to the fallback offline).
-- The [reference validator](../validator) is the executable arbiter of "valid module.json".
+- The [reference validator](../validator) is the executable arbiter of "valid module.json" — it checks both shape and semantics (single start, no dangling edges, reachability, action/variable type agreement).
+- A [JSON Schema](../schema/ronu-module.schema.json) (draft 2020-12) covers the *structural* contract for any language; it intentionally does not (and cannot) express the cross-node semantic rules the validator enforces.
+
+A worked example of the container — an actual `.ronu` file with a bundled image, plus its unpacked contents — is in [`samples/hello-ronu/`](../samples/hello-ronu).
 
 ## 7. The node catalogue (as of the 12 Jul 2026 baseline)
 
