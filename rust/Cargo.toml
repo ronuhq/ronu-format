@@ -1,0 +1,28 @@
+[package]
+name = "ronu"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Reference types, validator, and JSON Schema generator for the .ronu open learning-experience format. The single source of truth."
+repository = "https://github.com/ronuhq/ronu-format"
+
+# Unversioned by design (trunk-based): the commit hash is the version until the
+# tooling ecosystem settles. See the format dossier.
+publish = false
+
+[lib]
+name = "ronu"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ronu"
+path = "src/bin/ronu.rs"
+
+[[bin]]
+name = "gen-schema"
+path = "src/bin/gen_schema.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "0.8"

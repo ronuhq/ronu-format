@@ -1,0 +1,793 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Module",
+  "description": "The experience — `module.json`. Matches the platform's `ModuleContent`.",
+  "type": "object",
+  "properties": {
+    "nodes": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Node"
+      }
+    },
+    "settings": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ModuleSettings"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "variables": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Variable"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "Choice": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        },
+        "connection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Choices": {
+      "description": "`config.choices` is either a structured list (choice / multipleChoice) or a JSON-encoded string (legacy condition nodes). Untagged so both forms parse.",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Choice"
+          }
+        },
+        {
+          "description": "Legacy: a stringified `ConditionConfig` (see spec §8).",
+          "type": "string"
+        }
+      ]
+    },
+    "CompletionRule": {
+      "type": "object",
+      "properties": {
+        "certificate": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "certificateValidityMonths": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "mode": {
+          "description": "`\"variable\"` (default) | `\"reachedNode\"` | `\"nodeScore\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "passNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scoreAggregate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scoreNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true,
+        "variableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Condition": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "A node id or a variable id — or the literal `\"operator\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true
+      },
+      "additionalProperties": true
+    },
+    "ConditionConfig": {
+      "type": "object",
+      "properties": {
+        "criteriaSets": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CriteriaSet"
+          }
+        },
+        "defaultPathLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "defaultTargetNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "useRealEvaluation": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "CriteriaSet": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pathLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "HotspotConversation": {
+      "type": "object",
+      "properties": {
+        "firstMessage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxTurns": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "objective": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "persona": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scoreVariableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "MatchingLeftItem": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        },
+        "correctRightId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "ModuleSettings": {
+      "type": "object",
+      "properties": {
+        "completion": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CompletionRule"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timer": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TimerConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Node": {
+      "description": "A node in the scenario graph. `type` stays a string so unknown node types surface as `node/unknown-type` (validation) instead of a parse error.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NodeConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "connection": {
+          "description": "Single forward connection for non-branching nodes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Point"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "NodeConfig": {
+      "description": "The per-node config bag. Only the fields the skeleton + validator need are typed; everything else (the growing node *catalogue*) rides in `extra`.",
+      "type": "object",
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Choices"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion": {
+          "description": "Scene completion mode: `\"free\"` | `\"allRequired\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "criteria": {
+          "description": "Canonical condition criteria (spec §8). Exporters emit this; readers accept this OR the legacy stringified `choices`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ConditionConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "environment": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneEnvironment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hotspots": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/SceneHotspot"
+          }
+        },
+        "isStart": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "matchingLeftItems": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/MatchingLeftItem"
+          }
+        },
+        "missActions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        },
+        "objective": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "persona": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ratingVariableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scoreVariableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timer": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TimerConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "triggers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/NodeTrigger"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "NodeTrigger": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        },
+        "config": true,
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "default": 0.0,
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "default": 0.0,
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SceneEnvironment": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "description": "`\"photo360\"` | `\"photo2d\"` | `\"splat\"` | `\"embed3d\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "SceneHotspot": {
+      "type": "object",
+      "properties": {
+        "conversation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HotspotConversation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "description": "Anchor — shape varies by environment (yaw/pitch, x/y, or x/y/z)."
+        },
+        "required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reveal": true,
+        "targetNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variableActions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "TimerConfig": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "description": "`\"countdown\"` | `\"countup\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "onExpire": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TimerExpire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recordVariableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "sound": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "visible": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "warnAtSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": true
+    },
+    "TimerExpire": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          }
+        },
+        "behavior": {
+          "description": "`\"none\"` | `\"advance\"` | `\"route\"` | `\"end\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Variable": {
+      "description": "`type` and `initialValue` stay loose (string / arbitrary JSON) so mismatches surface as validation issues, not parse failures.",
+      "type": "object",
+      "properties": {
+        "computed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "formula": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "initialValue": true,
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "description": "`\"module\"` (default) | `\"learner\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "visible": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "VariableAction": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true,
+        "variableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
