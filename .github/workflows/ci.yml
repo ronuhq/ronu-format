@@ -6,8 +6,36 @@ on:
   pull_request:
 
 jobs:
-  validate:
-    name: Validate samples
+  rust:
+    name: Rust reference tooling
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Types, formula parser, validator, and the differential sample tests.
+      - name: cargo test
+        run: cargo test
+
+      # The committed JSON Schema must match what the types generate — otherwise
+      # someone changed the types without regenerating it, and the schema is a lie.
+      - name: JSON Schema is up to date with the types
+        run: |
+          cargo run --quiet --bin gen-schema > ../schema/ronu-module.schema.json
+          if ! git -C .. diff --exit-code -- schema/ronu-module.schema.json; then
+            echo "::error::schema/ronu-module.schema.json is stale — regenerate: cargo run --bin gen-schema > ../schema/ronu-module.schema.json"
+            exit 1
+          fi
+
+      # The reference validator must accept every sample.
+      - name: Reference validator accepts every sample
+        run: cargo run --quiet --bin ronu -- validate ../samples/*/module.json
+
+  schema:
+    name: JSON Schema + real .ronu
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,18 +43,13 @@ jobs:
         with:
           node-version: 20
 
-      # Every sample must pass the reference validator (structure + semantics:
-      # single start node, no dangling connections, reachability, typed actions).
-      - name: Reference validator
-        run: npx -y tsx validator/cli.ts samples/*/module.json
-
-      # …and the JSON Schema (structural contract, any language).
-      - name: JSON Schema
+      # The structural contract, checkable in any language.
+      - name: Samples validate against the JSON Schema
         run: >-
-          npx -y ajv-cli@5 validate --spec=draft2020 --strict=false
+          npx -y ajv-cli@5 validate --spec=draft7 --strict=false
           -s schema/ronu-module.schema.json -d "samples/*/module.json"
 
-      # The bundled sample is a real .ronu: it must unzip to the three members.
+      # The bundled sample is a real .ronu: it must unzip to its members.
       - name: Real .ronu unpacks
         run: |
           unzip -l samples/hello-ronu/hello.ronu

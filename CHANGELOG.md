@@ -2,6 +2,11 @@
 
 All notable changes to the `.ronu` format and this repository are recorded here. The format follows the versioning rules in the [spec](spec/ronu-spec-v0.9.md) §6: `formatVersion` versions the frozen skeleton; catalogue additions don't bump it.
 
+## Unreleased
+
+- **Reference implementation moved to Rust** ([`rust/`](rust)) — one set of Rust types now drives (de)serialization, semantic validation, and the **generated** JSON Schema, so the three can never disagree. The previous TypeScript validator is retired; TS/Python bindings generated from the Rust are planned.
+- **Trunk-based from here** — the commit hash is the version until the tooling ecosystem settles (see the format dossier). The JSON Schema is standardised on draft-07.
+
 ## v0.9 — DRAFT (2026-07-12)
 
 First public draft. The skeleton (container, envelope, graph shape, evolution rules) is expected to freeze as v1.0 essentially unchanged; some node types are still marked `provisional`.

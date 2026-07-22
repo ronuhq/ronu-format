@@ -20,6 +20,7 @@ pub type Extra = BTreeMap<String, Value>;
 
 /// The experience — `module.json`. Matches the platform's `ModuleContent`.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[schemars(title = "ronu module.json")]
 pub struct Module {
     #[serde(default)]
     pub nodes: Vec<Node>,

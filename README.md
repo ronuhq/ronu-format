@@ -20,8 +20,8 @@ It is also built for places the always-online assumption fails: the file carries
 | Path | What it is |
 |---|---|
 | [`spec/ronu-spec-v0.9.md`](spec/ronu-spec-v0.9.md) | The specification: container, envelope, node catalogue, evolution rules |
-| [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) | JSON Schema (draft 2020-12) for `module.json` — validate or codegen in any language |
-| [`validator/`](validator) | The reference validator — pure TypeScript, zero dependencies, CLI included |
+| [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) | JSON Schema for `module.json` — validate or codegen in any language. **Generated** from the Rust types. |
+| [`rust/`](rust) | The reference implementation — Rust types, validator, and JSON Schema generator. The single source of truth. |
 | [`samples/`](samples) | Real modules, including [`hello-ronu/`](samples/hello-ronu) — an **actual `.ronu` file** with a bundled image you can unzip and inspect |
 
 ## Try it in 60 seconds
@@ -33,13 +33,13 @@ cd ronu-format
 # 1. Look inside a real .ronu file — it's just a zip
 unzip -l samples/hello-ronu/hello.ronu
 
-# 2. Validate every sample module against the reference validator
-npx -y tsx validator/cli.ts samples/*/module.json
+# 2. Validate every sample module against the reference validator (needs Rust)
+cargo run --manifest-path rust/Cargo.toml --bin ronu -- validate samples/*/module.json
 ```
 
 You should see the zip contain `manifest.json`, `module.json`, and `assets/01-cover.png`, and every sample validate. Now break one — delete a node a connection points at — and run it again.
 
-Prefer a JSON Schema? [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) validates the same files in any language — e.g. `npx -y ajv-cli@5 validate --spec=draft2020 --strict=false -s schema/ronu-module.schema.json -d "samples/*/module.json"`. (The schema checks *shape*; the reference validator additionally checks *semantics* — a single start node, no dangling connections, reachability.)
+Prefer a JSON Schema? [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) validates the same files in any language — e.g. `npx -y ajv-cli@5 validate --spec=draft7 --strict=false -s schema/ronu-module.schema.json -d "samples/*/module.json"`. (The schema checks *shape*; the reference validator additionally checks *semantics* — a single start node, no dangling connections, reachability.)
 
 ## The design in three ideas
 

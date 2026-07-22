@@ -63,19 +63,29 @@ cargo run --bin ronu -- validate ../samples/*/module.json
 cargo run --bin gen-schema > ../schema/ronu-module.schema.generated.json
 ```
 
+## Cutover ✅ (done 22 Jul 2026)
+
+The Rust crate is now the reference. TS `validator/` retired; the hand-written
+schema is replaced by the **generated** `schema/ronu-module.schema.json`
+(draft-07, carries `$id` + title); CI (`.github/workflows/ci.yml`) runs `cargo
+test`, asserts the committed schema matches `gen-schema` output (fails if a type
+change wasn't regenerated), and validates every sample via the Rust CLI + ajv.
+All the docs (README, CONTRIBUTING, SECURITY, spec, samples/schema READMEs) now
+point at `rust/` instead of the old validator. `rust/` stays a subdir (room for
+`typescript/`, `python/` binding dirs later).
+
 ## What remains 🔜  (rough order)
 
-1. **README** — plain, de-slopped draft for Hameed to voice.
-2. **Cutover** — once parity is trusted:
-   - delete the TS `validator/` and the hand-written `schema/ronu-module.schema.json`;
-   - point CI (`.github/workflows/ci.yml`) at `cargo test` + `cargo run --bin gen-schema` (assert the committed schema is up to date);
-   - move `rust/` to the repo's canonical spot (or make it the root crate).
-3. **Bindings** — generate TS types the *platform* consumes (wasm-bindgen or
+1. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1).
+   The factual bits (Rust, cargo commands) are already corrected; the *voice*
+   rewrite is the open piece.
+2. **Bindings** — generate TS types the *platform* consumes (wasm-bindgen or
    `ts-rs`), so RonuNest drops its hand-written TS validator. Python (`pyo3`)
-   later.
-4. **Strip version strings** repo-wide for trunk-based (spec header, schema
-   `$id`, package names, CHANGELOG → "Unreleased").
-5. **Update the dossier** (`docs/ronu-format-dossier.md`, platform repo
+   later. This is what fully pays off "single source of truth".
+3. **Strip version strings** repo-wide for trunk-based — the spec is still named
+   `ronu-spec-v0.9.md` and headed "v0.9"; the schema `$id` is already
+   version-free and the CHANGELOG has an "Unreleased" head.
+4. **Update the dossier** (`docs/ronu-format-dossier.md`, platform repo
    `hameed-claude-dev`) to Rust-canonical + trunk-based.
 
 ## Open decisions

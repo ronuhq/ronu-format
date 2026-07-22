@@ -15,7 +15,7 @@ Thanks for your interest — the format gets better with more implementers. Here
 | Add a node type for your own domain | Use a namespaced extension (`x-…:`). No process. |
 | Propose an extension for **graduation into the catalogue** | Open an issue titled `graduation: <type>` with the config schema, at least one real implementation, and sample files. Graduated types enter as `provisional`. |
 | Move a `provisional` type to `stable` | Open an issue with evidence the shape has stopped moving (implementations, files in the wild). `stable` is a one-way door — once tagged, the shape's meaning is frozen. |
-| Fix the spec text, validator, or samples | Pull request. For the validator, keep it dependency-free and pure. |
+| Fix the spec text, validator, or samples | Pull request. For the validator, keep the crate dependency-light, and regenerate the schema if you touch the types. |
 | Change the **skeleton** | Expect a very high bar: skeleton changes must be additive (spec §5.1) and are batched into MINOR releases. Breaking changes (MAJOR) are intended never to happen. |
 
 ## Ground rules for spec changes
@@ -27,6 +27,6 @@ Thanks for your interest — the format gets better with more implementers. Here
 
 ## Practical notes
 
-- The reference validator is vendored TypeScript (`validator/src/`), pure functions, zero runtime dependencies. `npx -y tsx validator/cli.ts <module.json>` runs it anywhere.
+- The reference implementation is a Rust crate ([`rust/`](rust)): the types, the validator, and the JSON Schema generator. `cargo run --manifest-path rust/Cargo.toml --bin ronu -- validate <module.json>` runs the validator; `cargo test` checks it. The JSON Schema is **generated** from the same types (`cargo run --bin gen-schema`) — never hand-edit `schema/ronu-module.schema.json`.
 - The originating implementation (export, import, authoring) lives in the RonuNest platform; this repository is the format's public home and the platform tracks it.
 - Be excellent to each other: see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

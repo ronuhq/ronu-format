@@ -32,10 +32,10 @@ Their media references are in the legacy platform form (storage refs), so they'r
 
 ```bash
 # reference validator (structure + semantics)
-npx -y tsx ../validator/cli.ts */module.json
+cargo run --manifest-path ../rust/Cargo.toml --bin ronu -- validate */module.json
 
 # JSON Schema (structure), any language
-npx -y ajv-cli@5 validate --spec=draft2020 --strict=false \
+npx -y ajv-cli@5 validate --spec=draft7 --strict=false \
   -s ../schema/ronu-module.schema.json -d "*/module.json"
 ```
 

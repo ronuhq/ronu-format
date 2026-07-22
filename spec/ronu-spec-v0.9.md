@@ -2,7 +2,7 @@
 
 **Status:** DRAFT — stabilising toward 1.0. The skeleton (§2–§6) is expected to freeze essentially as-is; catalogue entries tagged `provisional` (§7) may still change shape.
 **Schema baseline:** the RonuNest platform build of 12 July 2026. The catalogue documents the module content schema as of that build; catalogue entries evolve, the skeleton does not.
-**Companions in this repository:** [`validator/`](../validator) (the reference validator — the executable arbiter of a valid `module.json`) and [`samples/`](../samples) (real exported modules to test against).
+**Companions in this repository:** [`rust/`](../rust) (the reference implementation — the executable arbiter of a valid `module.json`, in Rust) and [`samples/`](../samples) (real exported modules to test against).
 
 ---
 
@@ -148,7 +148,7 @@ Thirteen types. Tags: **stable** = shape settled, follows the skeleton promise f
 
 **Shared sub-schemas** (stable, used across types): `VariableAction{variableId, operator, value}` with operators `set|increment|decrement|multiply|divide|set_true|set_false|toggle`; `NodeTrigger{type: onNodeEnter|onNodeExit|onTimerElapsed|onVideoComplete|onVideoTimestamp, actions[], config}`; `TimerConfig{mode: countdown|countup, seconds, visible, label, warnAtSeconds, sound, onExpire{behavior: none|advance|route|end, targetNodeId, actions[]}, recordVariableId}`; text placeholders `{variableName}` substituted at play time.
 
-The vendored [validator sources](../validator/src) carry the full TypeScript definitions for every profile above.
+The [Rust types](../rust/src/types.rs) carry the definitions for every profile above.
 
 ## 8. Canonical form vs. accepted legacy (readers accept both; writers emit canonical only)
 
