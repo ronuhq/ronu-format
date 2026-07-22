@@ -82,12 +82,14 @@ cargo run --bin gen-schema > ../schema/ronu-module.schema.generated.json
 
 - **Schema draft**: schemars emits **draft-07**; the old hand-written schema was
   **2020-12**. Kept draft-07 (widest tooling) unless there's a reason to switch.
-- **Git identity**: this branch is committed as `Hameed Adigun
-  <hameed@ronucreative.com>`. The three pre-existing commits on `main` are still
-  authored `Your Name <your.email@example.com>` — Cameron flagged this; the
-  planned cleanup is a history reset + force-push with the final chosen public
-  identity (and signing, if wanted). Not done here to avoid a destructive push
-  without sign-off.
+- **Git identity**: DONE (22 Jul 2026). All commits on `main` and
+  `rust-rewrite` were rewritten to `Hcatel
+  <18502309+Hcatel@users.noreply.github.com>` (GitHub noreply — links to the
+  profile, no inbox to spam) and force-pushed. Set the same locally on any new
+  machine: `git config user.name Hcatel && git config user.email
+  18502309+Hcatel@users.noreply.github.com`. **Signed commits deferred** —
+  optional; needs a GPG/SSH key generated per machine and registered with
+  GitHub for the green "Verified" badge.
 
 ## Repos
 
