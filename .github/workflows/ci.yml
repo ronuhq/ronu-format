@@ -34,6 +34,20 @@ jobs:
       - name: Reference validator accepts every sample
         run: cargo run --quiet --bin ronu -- validate ../samples/*/module.json
 
+  wasm:
+    name: wasm binding compiles
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/wasm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      # Proves the validator still compiles to wasm for JS/TS consumers.
+      - run: cargo build --target wasm32-unknown-unknown
+
   schema:
     name: JSON Schema + real .ronu
     runs-on: ubuntu-latest

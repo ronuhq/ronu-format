@@ -1,0 +1,16 @@
+[package]
+name = "ronu-wasm"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "WebAssembly bindings for the .ronu reference validator — lets JS/TS run the Rust validator directly."
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ronu = { path = "../../rust" }
+wasm-bindgen = "0.2"
+serde_json = "1"
+serde-wasm-bindgen = "0.6"

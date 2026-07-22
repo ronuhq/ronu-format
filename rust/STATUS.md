@@ -74,12 +74,28 @@ All the docs (README, CONTRIBUTING, SECURITY, spec, samples/schema READMEs) now
 point at `rust/` instead of the old validator. `rust/` stays a subdir (room for
 `typescript/`, `python/` binding dirs later).
 
+## Bindings — wasm validator ✅ (22 Jul), integration pending
+
+`bindings/wasm/` (crate `ronu-wasm`, wasm-bindgen) exposes
+`validate(moduleJsonString) → { valid, errors, warnings }` — the actual Rust
+validator, in JS, in the platform's exact result shape. Built with `wasm-pack
+build bindings/wasm --target web|nodejs`; verified in Node against the samples +
+the oracle (matches). CI builds it to the wasm target. `pkg/` is git-ignored
+(rebuild to consume). To make this pay off, the core got `Serialize` on
+`Issue`/`ValidationResult` (camelCase, `nodeId` omitted when absent).
+
 ## What remains 🔜  (rough order)
 
-1. **Bindings** (next) — a wasm validator + TS types the *platform* consumes,
-   so RonuNest drops its hand-written TS validator. Python (`pyo3`) later. This
-   is what fully pays off "single source of truth".
-2. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1);
+1. **Platform integration** — RonuNest imports `@ronu/wasm` and drops its
+   hand-written `packages/ronu-validator`. This is in the *platform* repo and
+   needs: Vite wasm config, async `init()` at the validate call sites (wasm
+   loads async), swapping `validateModuleContent`, the platform vitest suite,
+   and a browser check. Deliberately its own pass — don't do it in a hurry on
+   the live product.
+2. **Binding niceties** — type the wasm return as `ValidationResult` (wasm-pack
+   emits `any`); generate TS types from the schema (`json-schema-to-typescript`)
+   for the module-content shape; Python via `pyo3` later.
+3. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1);
    done LAST per plan. Factual bits already corrected; the *voice* rewrite is
    the open piece.
 

@@ -7,6 +7,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+use serde::Serialize;
 use serde_json::Value;
 
 use crate::formula;
@@ -16,14 +17,21 @@ use crate::types::{
 
 /// One validation finding. `code` is stable machine-readable identity;
 /// `message` is human-facing; `node_id` locates it when relevant.
-#[derive(Debug, Clone, PartialEq)]
+///
+/// Serializes to `{ code, message, nodeId? }` — the exact shape the platform's
+/// TS `ValidationIssue` uses, so a JS/wasm consumer is drop-in.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Issue {
     pub code: String,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub node_id: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+/// Serializes to `{ valid, errors, warnings }` — matches the platform's
+/// TS `ValidationResult`.
+#[derive(Debug, Clone, Serialize)]
 pub struct ValidationResult {
     pub valid: bool,
     pub errors: Vec<Issue>,
