@@ -76,17 +76,20 @@ point at `rust/` instead of the old validator. `rust/` stays a subdir (room for
 
 ## What remains 🔜  (rough order)
 
-1. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1).
-   The factual bits (Rust, cargo commands) are already corrected; the *voice*
-   rewrite is the open piece.
-2. **Bindings** — generate TS types the *platform* consumes (wasm-bindgen or
-   `ts-rs`), so RonuNest drops its hand-written TS validator. Python (`pyo3`)
-   later. This is what fully pays off "single source of truth".
-3. **Strip version strings** repo-wide for trunk-based — the spec is still named
-   `ronu-spec-v0.9.md` and headed "v0.9"; the schema `$id` is already
-   version-free and the CHANGELOG has an "Unreleased" head.
-4. **Update the dossier** (`docs/ronu-format-dossier.md`, platform repo
-   `hameed-claude-dev`) to Rust-canonical + trunk-based.
+1. **Bindings** (next) — a wasm validator + TS types the *platform* consumes,
+   so RonuNest drops its hand-written TS validator. Python (`pyo3`) later. This
+   is what fully pays off "single source of truth".
+2. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1);
+   done LAST per plan. Factual bits already corrected; the *voice* rewrite is
+   the open piece.
+
+Done 22 Jul: **version strings stripped** — spec renamed `spec/ronu-spec.md`
+and reframed unversioned/trunk-based; README / CHANGELOG / CONTRIBUTING /
+samples updated. The envelope `formatVersion` field itself is left as-is (files
+still carry `"0.9"`); whether the format keeps a `formatVersion` field, and its
+value during the trunk phase, is an **open design question for the `v1.0` cut**
+— flag for Cameron. **Dossier updated** (platform repo) to Rust-canonical +
+trunk-based.
 
 ## Open decisions
 

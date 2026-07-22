@@ -1,6 +1,6 @@
-# The `.ronu` File Format — Specification (v0.9 DRAFT)
+# The `.ronu` File Format — Specification
 
-**Status:** DRAFT — stabilising toward 1.0. The skeleton (§2–§6) is expected to freeze essentially as-is; catalogue entries tagged `provisional` (§7) may still change shape.
+**Status:** DRAFT, and **unversioned** — a living draft on trunk. Until a `v1.0` is cut, the commit hash of the [repository](https://github.com/ronuhq/ronu-format) is the effective version and every change is assumed potentially breaking; don't pin production tooling to it yet. The skeleton (§2–§6) is expected to freeze essentially as-is at `v1.0`; catalogue entries tagged `provisional` (§7) may still change shape.
 **Schema baseline:** the RonuNest platform build of 12 July 2026. The catalogue documents the module content schema as of that build; catalogue entries evolve, the skeleton does not.
 **Companions in this repository:** [`rust/`](../rust) (the reference implementation — the executable arbiter of a valid `module.json`, in Rust) and [`samples/`](../samples) (real exported modules to test against).
 
@@ -17,7 +17,7 @@ A `.ronu` file is a **portable, self-contained learning experience**: a branchin
 | **Skeleton** (§2–§6) | Container, envelope, graph shape, variables, evolution rules, extension mechanism | Frozen at v1.0. Fields may be *added*; existing fields never change meaning, are never renamed, never removed. |
 | **Catalogue** (§7) | Each node type's config profile, tagged `stable` or `provisional` | Grows freely. `stable` entries follow the skeleton promise; `provisional` entries may still change shape and are excluded from conformance claims. |
 
-The version number in the envelope (`formatVersion`) versions the **skeleton**. Catalogue growth does not bump it.
+Once the format is versioned (at `v1.0`), the envelope's `formatVersion` will version the **skeleton**, and catalogue growth will not bump it. During the current unversioned draft phase there is no version number to rely on — the repository commit is the version.
 
 ## 2. Container
 
@@ -63,8 +63,8 @@ module.ronu (zip)
 
 - **`familyId` is the permanent identity** of the learning experience: it survives republishing and versioning (all versions of one module share it, while `versionId`/`versionNumber` identify the specific cut). Records keyed by `familyId` — completions, certificates, xAPI statements — stay attached to the experience across revisions.
 - **`activityIri`** is the stable xAPI activity identifier, derived from the family: `{origin}/xapi/modules/{familyId}` for the module and `{activityIri}/nodes/{nodeId}` for a node within it. Any player emitting learning records about a .ronu file should use these IRIs so records from different players aggregate instead of fragmenting.
-- `formatVersion` is semver-ish: readers MUST accept any file whose major version they support (see §6).
-- Everything except `format`, `formatVersion`, `module.familyId`, and `module.title` is optional.
+- `formatVersion` will be semver-ish once the format is versioned at `v1.0` (see §6). **The format is unversioned today** — files from this draft phase carry `"0.9"` for historical reasons, but readers MUST NOT gate compatibility on it yet; treat every trunk change as potentially breaking.
+- Everything except `format`, `module.familyId`, and `module.title` is optional.
 
 ## 4. The experience — `module.json` (the skeleton part)
 
@@ -118,11 +118,12 @@ Top level:
 
 ## 6. Versioning & conformance
 
-- `formatVersion` `MAJOR.MINOR`: MINOR bumps are always additive (rule 5.1 makes them safe); a MAJOR bump is a breaking change and is expected to be rare-to-never.
+- **The format is unversioned during the current trunk-based draft phase** — the repository commit is the version and any change may break. The scheme below takes effect only when `v1.0` is cut.
+- Once versioned, `formatVersion` is `MAJOR.MINOR`: MINOR bumps are always additive (rule 5.1 makes them safe); a MAJOR bump is a breaking change and is expected to be rare-to-never.
 - **Minimal player** (conformance level 1): implements the skeleton + the `stable` catalogue types, rules 5.1–5.3, and plays fully offline from the zip. May treat `code`, `conversation`, and 3-D scene kinds as unknown (rule 5.2).
 - **Full player** (level 2): additionally implements the `provisional` types it declares, the code-node sandbox, and AI-backed conversation (which requires connectivity — a full player degrades to the fallback offline).
-- The [reference validator](../validator) is the executable arbiter of "valid module.json" — it checks both shape and semantics (single start, no dangling edges, reachability, action/variable type agreement).
-- A [JSON Schema](../schema/ronu-module.schema.json) (draft 2020-12) covers the *structural* contract for any language; it intentionally does not (and cannot) express the cross-node semantic rules the validator enforces.
+- The [reference validator](../rust) (Rust) is the executable arbiter of "valid module.json" — it checks both shape and semantics (single start, no dangling edges, reachability, action/variable type agreement).
+- A [JSON Schema](../schema/ronu-module.schema.json) (draft-07), **generated from the same Rust types**, covers the *structural* contract for any language; it intentionally does not (and cannot) express the cross-node semantic rules the validator enforces.
 
 A worked example of the container — an actual `.ronu` file with a bundled image, plus its unpacked contents — is in [`samples/hello-ronu/`](../samples/hello-ronu).
 
@@ -179,5 +180,5 @@ The one-question discipline: **"is this a player behaviour, or an author's choic
 
 1. Freeze the **skeleton** (§2–§6) — nothing in it is contentious.
 2. Let the catalogue's `provisional` entries (code/3-D, conversation visuals) settle; re-tag as `stable` when their configs stop moving.
-3. Cut v1.0 = frozen skeleton + the then-stable catalogue; publish the validator to npm.
+3. Cut `v1.0` = frozen skeleton + the then-stable catalogue; start versioning, and publish the crate + generated bindings (npm, PyPI).
 4. The **reference player** — an offline app that plays any conformant `.ronu` with no account — is the format's most-wanted missing piece, and an intentionally open invitation: see [CONTRIBUTING](../CONTRIBUTING.md).

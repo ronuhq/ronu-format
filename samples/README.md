@@ -18,13 +18,13 @@ The loose files are exactly the contents of `hello.ronu` — unzipped so you can
 
 ## Unzipped interchange samples (real modules from RonuNest)
 
-The other folders are real public modules exported in the **JSON-only interchange form** ([spec](../spec/ronu-spec-v0.9.md) §2) — just the two JSON members, no bundled media:
+The other folders are real public modules exported in the **JSON-only interchange form** ([spec](../spec/ronu-spec.md) §2) — just the two JSON members, no bundled media:
 
 | Sample | Exercises |
 |---|---|
 | `fantasy-series-quiz` | The classic assessment types: video, message, textInput, multipleChoice, ranking, matching, rating |
 | `under-the-sink` | Immersive surface: scene (hotspots), choice, conversation, condition — plus variables and scoring |
-| `legacy-branching-sample` | The **legacy tolerance rule** ([spec](../spec/ronu-spec-v0.9.md) §5.4/§8): old `router`/`decisionPath` node types and the stringified condition config, which readers MUST still accept |
+| `legacy-branching-sample` | The **legacy tolerance rule** ([spec](../spec/ronu-spec.md) §5.4/§8): old `router`/`decisionPath` node types and the stringified condition config, which readers MUST still accept |
 
 Their media references are in the legacy platform form (storage refs), so they're playable online only — `hello-ronu` is the one to study for the offline, bundled-media form.
 

@@ -4,7 +4,7 @@ Thanks for your interest — the format gets better with more implementers. Here
 
 ## The core / extensions split
 
-- **The core** is the spec's skeleton plus the node catalogue (`spec/ronu-spec-v0.9.md` §1–§8). Changes to it are conservative by design: the skeleton's promise is that meaning never changes.
+- **The core** is the spec's skeleton plus the node catalogue (`spec/ronu-spec.md` §1–§8). Changes to it are conservative by design: the skeleton's promise is that meaning never changes.
 - **Extensions are yours.** Anyone may create node types under their own namespace (`x-yourname:type`, spec §5.3) without asking. Publish them wherever you like; conformant players fall back gracefully on types they don't know.
 
 ## How change happens

@@ -7,7 +7,7 @@
 
 A `.ronu` file is a complete simulation — the scenario graph, the choices, the scoring logic, the media — in a single portable zip you can email, put on a USB stick, or send over WhatsApp. No account, no platform lock-in: the format is open, and anyone can build tools that read or write it.
 
-> **Status: v0.9 DRAFT.** The format's skeleton is stable and expected to freeze as v1.0 essentially unchanged; some node types are still marked provisional. Real `.ronu` files are being produced and consumed today by [RonuNest](https://ronunest.com), where the format originates.
+> **Status: draft, unversioned.** It's on trunk — the commit hash is the version and changes may break until a `v1.0` is cut; the skeleton is expected to freeze as `v1.0` essentially unchanged, and some node types are still marked provisional. Real `.ronu` files are being produced and consumed today by [RonuNest](https://ronunest.com), where the format originates.
 
 ## Why
 
@@ -19,7 +19,7 @@ It is also built for places the always-online assumption fails: the file carries
 
 | Path | What it is |
 |---|---|
-| [`spec/ronu-spec-v0.9.md`](spec/ronu-spec-v0.9.md) | The specification: container, envelope, node catalogue, evolution rules |
+| [`spec/ronu-spec.md`](spec/ronu-spec.md) | The specification: container, envelope, node catalogue, evolution rules |
 | [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) | JSON Schema for `module.json` — validate or codegen in any language. **Generated** from the Rust types. |
 | [`rust/`](rust) | The reference implementation — Rust types, validator, and JSON Schema generator. The single source of truth. |
 | [`samples/`](samples) | Real modules, including [`hello-ronu/`](samples/hello-ronu) — an **actual `.ronu` file** with a bundled image you can unzip and inspect |
