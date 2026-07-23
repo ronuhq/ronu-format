@@ -3,54 +3,77 @@
 [![CI](https://github.com/ronuhq/ronu-format/actions/workflows/ci.yml/badge.svg)](https://github.com/ronuhq/ronu-format/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**An open file format for interactive, branching learning experiences.**
+An open file format for interactive, branching learning experiences.
 
-A `.ronu` file is a complete simulation — the scenario graph, the choices, the scoring logic, the media — in a single portable zip you can email, put on a USB stick, or send over WhatsApp. No account, no platform lock-in: the format is open, and anyone can build tools that read or write it.
+A `.ronu` file holds a whole simulation — the scenario graph, the choices, the scoring logic, the media — in one zip. You can email it, drop it on a USB stick, or send it over WhatsApp, and it plays offline with no account. The format is open, so anyone can write tools that read or produce it.
 
-> **Status: draft, unversioned.** It's on trunk — the commit hash is the version and changes may break until a `v1.0` is cut; the skeleton is expected to freeze as `v1.0` essentially unchanged, and some node types are still marked provisional. Real `.ronu` files are being produced and consumed today by [RonuNest](https://ronunest.com), where the format originates.
+> **Status: draft, unversioned.** It lives on trunk: the commit hash is the version, and anything can change until a `v1.0` is cut. The skeleton (§2–§6 of the spec) is expected to freeze at `v1.0` roughly as it stands; some node types are still marked provisional. Real `.ronu` files are produced and played today by [RonuNest](https://ronunest.com), where the format comes from.
 
-## Why
+## Why it exists
 
-Most learning content is locked inside the platform that made it. SCORM solved portability for *slideshow-era* content two decades ago; nothing equivalent exists for **simulation-style** learning — branching scenarios, variables and scoring, immersive scenes, AI-driven conversations. `.ronu` is that missing format: expressive enough for real simulations, simple enough that a student can write a player for it.
-
-It is also built for places the always-online assumption fails: the file carries its own media, so experiences can travel peer-to-peer and play fully offline.
+Most learning content is stuck inside the tool that made it. SCORM made slideshow-style content portable twenty years ago, but nothing plays the same role for simulation-style learning: branching scenarios, variables and scoring, explorable scenes, AI-driven conversation. `.ronu` is meant to fill that gap. It's small enough that one person can write a player for it, and it carries its own media so it works where the network doesn't.
 
 ## What's in this repository
 
 | Path | What it is |
 |---|---|
-| [`spec/ronu-spec.md`](spec/ronu-spec.md) | The specification: container, envelope, node catalogue, evolution rules |
-| [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) | JSON Schema for `module.json` — validate or codegen in any language. **Generated** from the Rust types. |
-| [`rust/`](rust) | The reference implementation — Rust types, validator, and JSON Schema generator. The single source of truth. |
-| [`samples/`](samples) | Real modules, including [`hello-ronu/`](samples/hello-ronu) — an **actual `.ronu` file** with a bundled image you can unzip and inspect |
+| [`spec/ronu-spec.md`](spec/ronu-spec.md) | The specification: container, envelope, node catalogue, evolution rules. |
+| [`rust/`](rust) | The reference implementation in Rust: types, validator, schema generator. The single source of truth. |
+| [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) | JSON Schema for `module.json`, for validating or generating types in any language. Generated from the Rust types. |
+| [`bindings/wasm/`](bindings/wasm) | The validator compiled to WebAssembly, so JavaScript and TypeScript can run it directly. |
+| [`samples/`](samples) | Real modules, including [`hello-ronu/`](samples/hello-ronu): an actual `.ronu` file with a bundled image you can unzip and read. |
 
-## Try it in 60 seconds
+## Look inside a file
+
+A `.ronu` file is a zip. Open one, then validate the sample modules (needs [Rust](https://rustup.rs)):
 
 ```bash
 git clone https://github.com/ronuhq/ronu-format
 cd ronu-format
 
-# 1. Look inside a real .ronu file — it's just a zip
+# A .ronu is a zip — look inside
 unzip -l samples/hello-ronu/hello.ronu
 
-# 2. Validate every sample module against the reference validator (needs Rust)
+# Validate the sample modules
 cargo run --manifest-path rust/Cargo.toml --bin ronu -- validate samples/*/module.json
 ```
 
-You should see the zip contain `manifest.json`, `module.json`, and `assets/01-cover.png`, and every sample validate. Now break one — delete a node a connection points at — and run it again.
+The zip holds `manifest.json`, `module.json`, and `assets/01-cover.png`, and each sample reports as valid. Delete a node that a connection points to, run it again, and you'll see it fail.
 
-Prefer a JSON Schema? [`schema/ronu-module.schema.json`](schema/ronu-module.schema.json) validates the same files in any language — e.g. `npx -y ajv-cli@5 validate --spec=draft7 --strict=false -s schema/ronu-module.schema.json -d "samples/*/module.json"`. (The schema checks *shape*; the reference validator additionally checks *semantics* — a single start node, no dangling connections, reachability.)
+For a shape check in any language, there's a JSON Schema:
 
-## The design in three ideas
+```bash
+npx -y ajv-cli@5 validate --spec=draft7 --strict=false \
+  -s schema/ronu-module.schema.json -d "samples/*/module.json"
+```
 
-1. **Two layers, two promises.** A tiny frozen *skeleton* (zip container, manifest, node/variable graph shape, evolution rules) that will never change meaning — and a *node catalogue* that grows freely under it. Players built today keep working as the format grows.
-2. **Liberal readers, canonical writers.** Unknown fields are ignored; unknown node types render a graceful fallback and the flow continues. Old files never break; new features never strand old players.
-3. **Extensions without permission.** Namespaced node types (`x-yourlab:experiment`) let anyone extend the format for their own domain. Good extensions can graduate into the core.
+The schema checks structure. The validator also checks meaning: one start node, no connection pointing at a node that isn't there, every node reachable. A real conformance check runs both.
 
-## What's most wanted
+## Design
 
-**A reference player.** An offline-first app (web or native) that opens any conformant `.ronu` and plays it — no account, no server. The spec's conformance level 1 (§6) defines the minimum viable player, and the samples give you files to test against. If you're a student or a lab looking for a project with real users waiting: this is it. Open an issue and say hello — see [CONTRIBUTING](CONTRIBUTING.md).
+The format is in two layers, with different promises.
+
+- The **skeleton** — the zip container, the manifest, the node-and-variable graph, and the rules for how the format changes — is meant to freeze at `v1.0` and keep its meaning after that.
+- The **node catalogue** — what each node type's config means — keeps growing. New node types get added; the ones already there don't change under you.
+
+Three rules keep old files and old players working as it grows:
+
+- A reader ignores fields it doesn't recognise.
+- A player that meets a node type it doesn't know shows a plain fallback and continues, instead of failing.
+- Anyone can add node types under their own namespace (`x-yourlab:experiment`) without asking. Ones that prove broadly useful can move into the core later.
+
+The [spec](spec/ronu-spec.md) has the rest.
+
+## Using it in your own code
+
+- **Rust** — the [`ronu`](rust) crate: types, validator, and schema generator.
+- **JavaScript / TypeScript** — [`bindings/wasm`](bindings/wasm) compiles that same validator to WebAssembly, so you get the real rules in a browser or Node without rewriting them.
+- **Any language** — the generated [JSON Schema](schema) covers structure.
+
+## Help wanted
+
+The biggest missing piece is a **reference player**: an offline app, web or native, that opens any conformant `.ronu` and plays it with no account or server. The spec sets out the minimum a player has to do (conformance level 1), and the samples are there to test against. If you want to build one, open an issue. See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Licence
 
-[Apache-2.0](LICENSE). The format is open for anyone to implement, commercially or otherwise.
+[Apache-2.0](LICENSE). Implement it freely, commercially or not.

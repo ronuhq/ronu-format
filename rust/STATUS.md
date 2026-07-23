@@ -95,9 +95,11 @@ the oracle (matches). CI builds it to the wasm target. `pkg/` is git-ignored
 2. **Binding niceties** — type the wasm return as `ValidationResult` (wasm-pack
    emits `any`); generate TS types from the schema (`json-schema-to-typescript`)
    for the module-content shape; Python via `pyo3` later.
-3. **README** — plain, de-slopped draft for Hameed to voice (Cameron's #1);
-   done LAST per plan. Factual bits already corrected; the *voice* rewrite is
-   the open piece.
+3. **README** — a plain, de-slopped rewrite is now in place (rule-of-three
+   headers, "in 60 seconds", the pitch closer all gone; surfaces the wasm
+   binding). It's still an AI-written *scaffold* — Hameed's own voice pass (or
+   `/hameed-voice`) is the real finish, per Cameron's point that the surest fix
+   for "sounds like AI" is a human's hand.
 
 Done 22 Jul: **version strings stripped** — spec renamed `spec/ronu-spec.md`
 and reframed unversioned/trunk-based; README / CHANGELOG / CONTRIBUTING /
