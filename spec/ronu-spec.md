@@ -1,8 +1,8 @@
-# The `.ronu` File Format — Specification
+# The `.ronu` File Format: Specification
 
-**Status:** DRAFT, and **unversioned** — a living draft on trunk. Until a `v1.0` is cut, the commit hash of the [repository](https://github.com/ronuhq/ronu-format) is the effective version and every change is assumed potentially breaking; don't pin production tooling to it yet. The skeleton (§2–§6) is expected to freeze essentially as-is at `v1.0`; catalogue entries tagged `provisional` (§7) may still change shape.
+**Status:** DRAFT, and **unversioned**: a living draft on trunk. Until a `v1.0` is cut, the commit hash of the [repository](https://github.com/ronuhq/ronu-format) is the effective version and every change is assumed potentially breaking; don't pin production tooling to it yet. The skeleton (§2–§6) is expected to freeze essentially as-is at `v1.0`; catalogue entries tagged `provisional` (§7) may still change shape.
 **Schema baseline:** the RonuNest platform build of 9 September 2026 (platform commit `5aa3ce4`). The catalogue documents the module content schema as of that build; catalogue entries evolve, the skeleton does not.
-**Companions in this repository:** [`rust/`](../rust) (the reference implementation — the executable arbiter of a valid `module.json`, in Rust) and [`samples/`](../samples) (real exported modules to test against).
+**Companions in this repository:** [`rust/`](../rust) (the reference implementation, the executable arbiter of a valid `module.json`, in Rust) and [`samples/`](../samples) (real exported modules to test against).
 
 ---
 
@@ -17,7 +17,7 @@ A `.ronu` file is a **portable, self-contained learning experience**: a branchin
 | **Skeleton** (§2–§6) | Container, envelope, graph shape, variables, evolution rules, extension mechanism | Frozen at v1.0. Fields may be *added*; existing fields never change meaning, are never renamed, never removed. |
 | **Catalogue** (§7) | Each node type's config profile, tagged `stable` or `provisional` | Grows freely. `stable` entries follow the skeleton promise; `provisional` entries may still change shape and are excluded from conformance claims. |
 
-Once the format is versioned (at `v1.0`), the envelope's `formatVersion` will version the **skeleton**, and catalogue growth will not bump it. During the current unversioned draft phase there is no version number to rely on — the repository commit is the version.
+Once the format is versioned (at `v1.0`), the envelope's `formatVersion` will version the **skeleton**, and catalogue growth will not bump it. During the current unversioned draft phase there is no version number to rely on: the repository commit is the version.
 
 ## 2. Container
 
@@ -25,17 +25,17 @@ A `.ronu` file is a **ZIP archive** (like `.docx`/`.epub`) containing:
 
 ```
 module.ronu (zip)
-├── manifest.json     — envelope: identity, versions, integrity (REQUIRED)
-├── module.json       — the experience: nodes, variables, settings (REQUIRED)
-└── assets/           — bundled media, flat, prefixed names (OPTIONAL)
+├── manifest.json     the envelope: identity, versions, integrity (REQUIRED)
+├── module.json       the experience: nodes, variables, settings (REQUIRED)
+└── assets/           bundled media, flat, prefixed names (OPTIONAL)
     ├── 01-intro.jpg
     └── 02-scene.mp4
 ```
 
 - `manifest.json` and `module.json` are UTF-8 JSON.
-- A JSON-only interchange form (just `module.json`, no zip) is legal for tooling/tests, but a conforming *exporter* always emits the zip so media travels with the file — the whole point is USB/WhatsApp shareability.
+- A JSON-only interchange form (just `module.json`, no zip) is legal for tooling/tests, but a conforming *exporter* always emits the zip so media travels with the file; the whole point is USB/WhatsApp shareability.
 
-## 3. Envelope — `manifest.json`
+## 3. Envelope: `manifest.json`
 
 ```json
 {
@@ -45,7 +45,7 @@ module.ronu (zip)
     "familyId": "efc6b26a-e7f1-4c91-ba2f-0861fff4334b",
     "versionId": "…uuid…",
     "versionNumber": 6,
-    "title": "Restaurant Floor — Reading the Room",
+    "title": "Restaurant Floor: Reading the Room",
     "description": "…",
     "language": "en",
     "thumbnail": "assets/01-cover.jpg"
@@ -61,12 +61,12 @@ module.ronu (zip)
 }
 ```
 
-- **`familyId` is the permanent identity** of the learning experience: it survives republishing and versioning (all versions of one module share it, while `versionId`/`versionNumber` identify the specific cut). Records keyed by `familyId` — completions, certificates, xAPI statements — stay attached to the experience across revisions.
+- **`familyId` is the permanent identity** of the learning experience: it survives republishing and versioning (all versions of one module share it, while `versionId`/`versionNumber` identify the specific cut). Records keyed by `familyId` (completions, certificates, xAPI statements) stay attached to the experience across revisions.
 - **`activityIri`** is the stable xAPI activity identifier, derived from the family: `{origin}/xapi/modules/{familyId}` for the module and `{activityIri}/nodes/{nodeId}` for a node within it. Any player emitting learning records about a .ronu file should use these IRIs so records from different players aggregate instead of fragmenting.
-- `formatVersion` will be semver-ish once the format is versioned at `v1.0` (see §6). **The format is unversioned today** — files from this draft phase carry `"0.9"` for historical reasons, but readers MUST NOT gate compatibility on it yet; treat every trunk change as potentially breaking.
+- `formatVersion` will be semver-ish once the format is versioned at `v1.0` (see §6). **The format is unversioned today**: files from this draft phase carry `"0.9"` for historical reasons, but readers MUST NOT gate compatibility on it yet; treat every trunk change as potentially breaking.
 - Everything except `format`, `module.familyId`, and `module.title` is optional.
 
-## 4. The experience — `module.json` (the skeleton part)
+## 4. The experience: `module.json` (the skeleton part)
 
 Top level:
 
@@ -74,7 +74,7 @@ Top level:
 { "nodes": [ … ], "variables": [ … ], "settings": { … } }
 ```
 
-**Node shape** — every node is:
+**Node shape**: every node is:
 
 ```json
 {
@@ -88,13 +88,13 @@ Top level:
 }
 ```
 
-- `id` — unique within the file; stable within a module version. Node sub-activity IRIs hang off it.
-- `type` — a catalogue type (§7) or a namespaced extension type (§5).
-- `connection` — the default next node. Branching types carry additional edges inside `config` (per-choice `connection`, hotspot `targetNodeId`, condition `criteriaSets[].targetNodeId` and `defaultTargetNodeId`, timer `onExpire.targetNodeId`, scene `abortWhen.targetNodeId`).
-- `position`/`color` — canvas metadata for editors; players MUST ignore them. Kept in the format so a file re-opens in an editor exactly as authored.
-- `config` — the type-specific profile (§7). Exactly one node has `config.isStart: true`.
+- `id`: unique within the file; stable within a module version. Node sub-activity IRIs hang off it.
+- `type`: a catalogue type (§7) or a namespaced extension type (§5).
+- `connection`: the default next node. Branching types carry additional edges inside `config` (per-choice `connection`, hotspot `targetNodeId`, condition `criteriaSets[].targetNodeId` and `defaultTargetNodeId`, timer `onExpire.targetNodeId`, scene `abortWhen.targetNodeId`).
+- `position`/`color`: canvas metadata for editors; players MUST ignore them. Kept in the format so a file re-opens in an editor exactly as authored.
+- `config`: the type-specific profile (§7). Exactly one node has `config.isStart: true`.
 
-**Variables** — the logic layer that makes this a simulation format rather than a slideshow format:
+**Variables**: the logic layer that makes this a simulation format rather than a slideshow format:
 
 ```json
 {
@@ -103,29 +103,29 @@ Top level:
 }
 ```
 
-`type` ∈ `number | boolean | text`. `computed` variables derive from a `formula` (arithmetic over non-computed variable names). `scope` ∈ `module` (per-session, default) | `learner` (durable across modules — a platform feature; an offline player treats it as module-scoped).
+`type` ∈ `number | boolean | text`. `computed` variables derive from a `formula` (arithmetic over non-computed variable names). `scope` ∈ `module` (per-session, default) | `learner` (durable across modules, a platform feature; an offline player treats it as module-scoped).
 
-**Settings** — module-level globals: `settings.timer` (whole-module timer, `TimerConfig`) and `settings.completion` (the pass/fail rule — mode `variable` | `reachedNode` | `nodeScore`, operator, threshold, certificate flags). Completion rules are structural (they define what the experience *means*), so they belong in the file; certificate *issuance* is a platform behaviour layered on top.
+**Settings**: module-level globals: `settings.timer` (whole-module timer, `TimerConfig`) and `settings.completion` (the pass/fail rule: mode `variable` | `reachedNode` | `nodeScore`, operator, threshold, certificate flags). Completion rules are structural (they define what the experience *means*), so they belong in the file; certificate *issuance* is a platform behaviour layered on top.
 
 **What is deliberately NOT in the file:** creator branding/theming, tenancy, pricing/access control, analytics, learner records. The format describes structure and content, not rendering or platform services.
 
-## 5. Evolution rules (normative — this is what makes the format future-proof)
+## 5. Evolution rules (normative: this is what makes the format future-proof)
 
-1. **Must-ignore.** A reader encountering an unrecognised JSON field MUST ignore it and continue. Writers MUST NOT change the meaning of existing fields — evolution is additive.
+1. **Must-ignore.** A reader encountering an unrecognised JSON field MUST ignore it and continue. Writers MUST NOT change the meaning of existing fields; evolution is additive.
 2. **Unknown node type.** A player encountering a node whose `type` it does not implement MUST NOT abort. It presents a neutral fallback (at minimum the node's `title` and a "this step needs a newer player" affordance) and follows the node's `connection` onward. Authors of exotic modules should keep critical routing out of nodes their audience's players may not support.
 3. **Namespaced extensions.** Third-party node types use a `prefix:name` type (e.g. `"x-mubs:chemistry-lab"`). The bare (unprefixed) namespace is reserved for this spec's catalogue. Extension configs live entirely inside `config`. An extension that proves broadly useful can graduate into the catalogue with a `stable`/`provisional` tag; graduation never breaks the prefixed form.
 4. **Legacy tolerance, canonical output.** Readers MUST accept the documented legacy forms (§8); writers MUST emit only canonical forms. This is how the format sheds warts without breaking old files.
 
 ## 6. Versioning & conformance
 
-- **The format is unversioned during the current trunk-based draft phase** — the repository commit is the version and any change may break. The scheme below takes effect only when `v1.0` is cut.
+- **The format is unversioned during the current trunk-based draft phase**: the repository commit is the version and any change may break. The scheme below takes effect only when `v1.0` is cut.
 - Once versioned, `formatVersion` is `MAJOR.MINOR`: MINOR bumps are always additive (rule 5.1 makes them safe); a MAJOR bump is a breaking change and is expected to be rare-to-never.
 - **Minimal player** (conformance level 1): implements the skeleton + the `stable` catalogue types, rules 5.1–5.3, and plays fully offline from the zip. May treat `code`, `conversation`, and 3-D scene kinds as unknown (rule 5.2).
-- **Full player** (level 2): additionally implements the `provisional` types it declares, the code-node sandbox, and AI-backed conversation (which requires connectivity — a full player degrades to the fallback offline).
-- The [reference validator](../rust) (Rust) is the executable arbiter of "valid module.json" — it checks both shape and semantics (single start, no dangling edges, reachability, action/variable type agreement).
+- **Full player** (level 2): additionally implements the `provisional` types it declares, the code-node sandbox, and AI-backed conversation (which requires connectivity; a full player degrades to the fallback offline).
+- The [reference validator](../rust) (Rust) is the executable arbiter of "valid module.json": it checks both shape and semantics (single start, no dangling edges, reachability, action/variable type agreement).
 - A [JSON Schema](../schema/ronu-module.schema.json) (draft-07), **generated from the same Rust types**, covers the *structural* contract for any language; it intentionally does not (and cannot) express the cross-node semantic rules the validator enforces.
 
-A worked example of the container — an actual `.ronu` file with a bundled image, plus its unpacked contents — is in [`samples/hello-ronu/`](../samples/hello-ronu).
+A worked example of the container, an actual `.ronu` file with a bundled image plus its unpacked contents, is in [`samples/hello-ronu/`](../samples/hello-ronu).
 
 ## 7. The node catalogue (as of the 9 Sep 2026 baseline)
 
@@ -133,21 +133,21 @@ Fifteen types. Tags: **stable** = shape settled, follows the skeleton promise fr
 
 | Type | Tag | Config essentials |
 |---|---|---|
-| `message` | **stable** | `content` (rich text/HTML), `files[]` (attachments — bundled under `assets/`), `showContinueButton`, `advanceOnAnswer` |
+| `message` | **stable** | `content` (rich text/HTML), `files[]` (attachments, bundled under `assets/`), `showContinueButton`, `advanceOnAnswer` |
 | `video` | **stable** | `videoUrl` (bundled), `thumbnailUrl`, `subtitlesUrl`, `videoControls{autoplay, showPlayPause, showVolume, showSubtitles, allowSeeking}` |
-| `choice` | **stable** | `question`, `choices[]{id, text, connection, actions[], condition}` — the core branching primitive |
+| `choice` | **stable** | `question`, `choices[]{id, text, connection, actions[], condition}`: the core branching primitive |
 | `textInput` | **stable** | `question`; free-text answer recorded to the session |
 | `multipleChoice` | **stable** | `question`, `choices[]` (no per-choice routing), `allowMultiple`, `advanceOnAnswer` |
 | `ranking` | **stable** | `question`, `rankingItems[]` |
 | `matching` | **stable** | `matchingLeftItems[]{id, text, correctRightId, actions[]}`, `matchingRightItems[]{id, text}`, `matchingGraded` |
 | `rating` | **stable** | `ratingVariableId`, `ratingMin/Max`, `ratingStyle` (`stars|numbers|emoji`), low/high labels |
-| `condition` | **stable** (canonical form) | `criteria{criteriaSets[]{conditions[]{field, operator, value}, targetNodeId, pathLabel}, defaultTargetNodeId, defaultPathLabel}` — see §8 for the legacy stringified form. Conditions within a set are joined by connector entries of the form `{field: "operator", operator: "", value: "AND"|"OR"|"("|")"}`; a validator skips these, a player evaluates them as the boolean expression they spell out. |
+| `condition` | **stable** (canonical form) | `criteria{criteriaSets[]{conditions[]{field, operator, value}, targetNodeId, pathLabel}, defaultTargetNodeId, defaultPathLabel}`; see §8 for the legacy stringified form. Conditions within a set are joined by connector entries of the form `{field: "operator", operator: "", value: "AND"|"OR"|"("|")"}`; a validator skips these, a player evaluates them as the boolean expression they spell out. |
 | `procedure` | **provisional** | `question`, `procedureSteps[]{text, critical, ifEarly, earlyActions[]}`, `procedureHaltOnCritical`. Performed one step at a time, in order; a step taken out of turn is reported AS IT HAPPENS, not scored at the end. Deliberately not `ranking`: ranking sorts a list and grades on submit, which cannot express "you applied the cream before gaining consent". The answer records the order actually performed plus each misstep, so the stream carries what the learner did rather than only whether they passed. |
 | `dragToTarget` | **provisional** | `question`, `dragTargets[]{id, label, image}`, `dragItems[]{id, label, image, targetId}`. Put the right thing in the right place. An item with **no** `targetId` belongs nowhere and is a distractor: choosing to use it at all is the mistake, which is often the thing worth assessing. Players SHOULD implement it as tap-to-place rather than literal dragging: HTML5 drag is unreliable on touch, and two ordinary buttons are far kinder on assistive tech. |
 | `note` | **stable** | Canvas-only annotation. Players MUST skip it entirely; it is never part of the flow. |
 | `scene` | **partially stable** | Stable: `environment{kind: photo360|photo2d, source}`, `hotspots[]{position, label, required, hidden, reveal, targetNodeId, variableActions, conversation{persona, firstMessage, objective, criteria[], maxTurns, scoreVariableId}, interaction}`, `completion` (`free|allRequired`), `hotspotSequence` (`free|ordered`), `discoveryRadius`, `missActions`, `abortWhen{variableId, operator, value, targetNodeId}` (see §7.2). **Provisional:** `kind: splat|embed3d` (renderers still landing). |
-| `conversation` | **provisional** | `persona`, `firstMessage`, `objective`, `rubric[]{id, label, weight}`, `maxTurns`, `scoreVariableId`, `visual{background, characterName, characterKey, voice, states[]}`. Requires an AI backend — minimal players fall back per rule 5.2. The rubric names the things the grader must judge separately (a label and a relative weight, never an operator), so one opaque score becomes something a creator can read back; absent, grading is holistic. Voice/visual surface still moving. |
-| `code` | **provisional** | `source` (a sandboxed `run({ctx, ui, emit})` body), `assetPack`, `assetPacks[]`, `assets3d{}`, `room{}`, `layout{version, placements[]{key, pack, kind, x, z, y, rotationY, size, animation, hookId, inspect, interaction, conversation}, intro}`, `hooks[]{id, label, trigger}`, `hookBindings{<hookId>: {interaction, conversation}}`, `effects[]{id, label, values[]}`, `effectRules[]{id, effectId, value, variableId, operator, compareValue}`, `orderingSpec`, `sourceHistory[]`. The 3-D room/asset surface is under active development (Sep 2026); see §7.1 for how the fields beside `source` are meant to be read. Executing `source` requires a sandbox; players that don't ship one use the fallback. **Security note:** a player MUST NOT execute `source` outside a sandbox — .ronu files arrive from untrusted channels by design. |
+| `conversation` | **provisional** | `persona`, `firstMessage`, `objective`, `rubric[]{id, label, weight}`, `maxTurns`, `scoreVariableId`, `visual{background, characterName, characterKey, voice, states[]}`. Requires an AI backend; minimal players fall back per rule 5.2. The rubric names the things the grader must judge separately (a label and a relative weight, never an operator), so one opaque score becomes something a creator can read back; absent, grading is holistic. Voice/visual surface still moving. |
+| `code` | **provisional** | `source` (a sandboxed `run({ctx, ui, emit})` body), `assetPack`, `assetPacks[]`, `assets3d{}`, `room{}`, `layout{version, placements[]{key, pack, kind, x, z, y, rotationY, size, animation, hookId, inspect, interaction, conversation}, intro}`, `hooks[]{id, label, trigger}`, `hookBindings{<hookId>: {interaction, conversation}}`, `effects[]{id, label, values[]}`, `effectRules[]{id, effectId, value, variableId, operator, compareValue}`, `orderingSpec`, `sourceHistory[]`. The 3-D room/asset surface is under active development (Sep 2026); see §7.1 for how the fields beside `source` are meant to be read. Executing `source` requires a sandbox; players that don't ship one use the fallback. **Security note:** a player MUST NOT execute `source` outside a sandbox: .ronu files arrive from untrusted channels by design. |
 
 ### 7.1 The assessment seam (code nodes)
 
@@ -179,14 +179,14 @@ The [Rust types](../rust/src/types.rs) carry the definitions for every profile a
 |---|---|---|
 | Condition config | `config.criteria` as a **parsed object** `{criteriaSets, defaultTargetNodeId, defaultPathLabel}` | `config.choices` as a **JSON-encoded string** of the same object |
 | Node types | `choice`, `condition` | `router` → `choice`, `decisionPath` → `condition` |
-| Media references | Relative bundle paths (`assets/<name>`) | Platform storage refs and absolute URLs — playable only online |
-| Message attachments | `files[].path` → bundle path | `files[].data` base64 data-URLs — readers may play them; exporters convert to bundled assets |
+| Media references | Relative bundle paths (`assets/<name>`) | Platform storage refs and absolute URLs, playable only online |
+| Message attachments | `files[].path` → bundle path | `files[].data` base64 data-URLs; readers may play them; exporters convert to bundled assets |
 
 Export rewrites every media reference in `module.json` to its bundle path and records it in the manifest; import re-uploads assets and rewrites back to platform refs.
 
 ## 9. What the spec does NOT define
 
-Learner records and reporting (that's xAPI's job — the envelope carries the activity IRIs it needs), DRM (deliberately none — access control is a platform concern), rendering/theming, the AI backends behind `conversation`, and platform services (groups, certificates, analytics). Open format, closed platform.
+Learner records and reporting (that's xAPI's job; the envelope carries the activity IRIs it needs), DRM (deliberately none; access control is a platform concern), rendering/theming, the AI backends behind `conversation`, and platform services (groups, certificates, analytics). Open format, closed platform.
 
 ## 10. Appendix: guidance for editor/platform implementers
 
@@ -194,13 +194,13 @@ Look-and-feel is not the format's business: fonts, animations, transitions, layo
 
 1. **New authoring options that must travel with the file** (a theme, background audio, a layout variant) → **new optional config fields**: purely additive, covered by must-ignore (rule 5.1).
 2. **New interaction patterns** → a **new node type**: additive catalogue entry, `provisional` at first.
-3. **Reshaping existing fields** — the only dangerous one. That is a *meaning change*, forbidden for `stable` entries — it must go through the canonical/legacy mechanism (§5.4/§8).
+3. **Reshaping existing fields**: the only dangerous one. That is a *meaning change*, forbidden for `stable` entries, so it must go through the canonical/legacy mechanism (§5.4/§8).
 
 The one-question discipline: **"is this a player behaviour, or an author's choice that must survive export?"** Player behaviour → not in the file. Author choice → additive optional config field.
 
 ## 11. Road to v1.0
 
-1. Freeze the **skeleton** (§2–§6) — nothing in it is contentious.
+1. Freeze the **skeleton** (§2–§6); nothing in it is contentious.
 2. Let the catalogue's `provisional` entries (code/3-D, conversation visuals) settle; re-tag as `stable` when their configs stop moving.
 3. Cut `v1.0` = frozen skeleton + the then-stable catalogue; start versioning, and publish the crate + generated bindings (npm, PyPI).
-4. The **reference player** — an offline app that plays any conformant `.ronu` with no account — is the format's most-wanted missing piece, and an intentionally open invitation: see [CONTRIBUTING](../CONTRIBUTING.md).
+4. The **reference player**, an offline app that plays any conformant `.ronu` with no account, is the format's most-wanted missing piece, and an intentionally open invitation: see [CONTRIBUTING](../CONTRIBUTING.md).
