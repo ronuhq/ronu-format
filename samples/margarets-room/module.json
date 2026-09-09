@@ -1,0 +1,306 @@
+{
+  "nodes": [
+    {
+      "id": "brief",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Before you knock",
+      "config": {
+        "title": "Before you knock",
+        "content": "<p>Margaret, 84, Room 4. Barrier cream to both heels, twice daily. She is awake and a little tired. Everything you need is in the room. Look around, and do things in the order you would do them for real. If you get a critical step wrong, the visit ends there.</p>",
+        "isStart": true,
+        "allowPrevious": false
+      },
+      "position": { "x": 200, "y": 200 },
+      "connection": "room"
+    },
+    {
+      "id": "room",
+      "type": "scene",
+      "color": "#0EA5E9",
+      "title": "Margaret's room",
+      "config": {
+        "title": "Margaret's room",
+        "instructions": "Look around. Click what you would use, in the order you would use it.",
+        "environment": {
+          "kind": "photo360",
+          "source": "module-content/7f1c9b3d-2e4a-4c6b-8a5d-1b2c3d4e5f60/margarets-room-360.jpg"
+        },
+        "completion": "allRequired",
+        "hotspotSequence": "free",
+        "discoveryRadius": 0.3,
+        "missActions": [
+          { "variableId": "missteps", "operator": "increment", "value": 1 }
+        ],
+        "abortWhen": {
+          "variableId": "critical_failure",
+          "operator": "is_true",
+          "targetNodeId": "stop"
+        },
+        "hotspots": [
+          {
+            "id": "h-basin",
+            "label": "Hand-wash basin",
+            "position": { "yaw": -2.1, "pitch": -0.2 },
+            "required": true,
+            "interaction": {
+              "type": "procedure",
+              "config": {
+                "question": "Wash your hands before you touch anything else in the room.",
+                "procedureSteps": [
+                  { "text": "Wet your hands and apply soap" },
+                  {
+                    "text": "Rub palms, backs, between fingers and thumbs for at least 20 seconds",
+                    "critical": true,
+                    "ifEarly": "Twenty seconds of rubbing is the step that actually removes anything. Soap first, then the full rub.",
+                    "earlyActions": [
+                      { "variableId": "missteps", "operator": "increment", "value": 1 }
+                    ]
+                  },
+                  { "text": "Rinse under running water" },
+                  { "text": "Dry with a paper towel" },
+                  {
+                    "text": "Turn the tap off using the paper towel",
+                    "ifEarly": "Turning the tap off with a bare wet hand undoes the wash.",
+                    "earlyActions": [
+                      { "variableId": "missteps", "operator": "increment", "value": 1 }
+                    ]
+                  }
+                ],
+                "procedureHaltOnCritical": false
+              }
+            }
+          },
+          {
+            "id": "h-margaret",
+            "label": "Margaret",
+            "position": { "yaw": 0.3, "pitch": -0.1 },
+            "required": true,
+            "conversation": {
+              "persona": "You are Margaret, 84, sitting up in bed at 7am. You are tired, a little hard of hearing, and you do not like being rushed. You will agree to your cream if someone explains what they are doing and asks you properly. If they just start, you say so.",
+              "firstMessage": "Morning, love. What are you after?",
+              "objective": "The learner should introduce themselves, say what they would like to do and why, and ask for Margaret's agreement before doing anything. Grade the rubric on the transcript alone.",
+              "criteria": [
+                { "id": "r-intro", "label": "Introduced themselves and said what they were there to do", "weight": 1 },
+                { "id": "r-ask", "label": "Asked for consent and waited for an answer", "weight": 2 },
+                { "id": "r-tone", "label": "Was unhurried and spoke so Margaret could follow", "weight": 1 }
+              ],
+              "maxTurns": 4,
+              "scoreVariableId": "consent_score"
+            }
+          },
+          {
+            "id": "h-cream",
+            "label": "Two tubes on the bedside table",
+            "position": { "yaw": 0.9, "pitch": -0.35 },
+            "required": true,
+            "interaction": {
+              "type": "multipleChoice",
+              "config": {
+                "question": "Two tubes are on the table. Which one goes on Margaret's heels?",
+                "allowMultiple": false,
+                "choices": [
+                  {
+                    "id": "c-labelled",
+                    "text": "The one with the pharmacy label in Margaret's name",
+                    "actions": [
+                      { "variableId": "right_cream", "operator": "set_true" }
+                    ]
+                  },
+                  {
+                    "id": "c-nearest",
+                    "text": "The one nearest her hand; she must have been using it",
+                    "actions": [
+                      { "variableId": "right_cream", "operator": "set_false" },
+                      { "variableId": "missteps", "operator": "increment", "value": 1 }
+                    ]
+                  },
+                  {
+                    "id": "c-either",
+                    "text": "Either. They look the same",
+                    "actions": [
+                      { "variableId": "critical_failure", "operator": "set_true" }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "h-careplan",
+            "label": "Care plan folder",
+            "position": { "yaw": 1.8, "pitch": -0.3 },
+            "reveal": {
+              "kind": "text",
+              "body": "Barrier cream, both heels, twice daily. Last applied 21:10 yesterday by SM. Margaret prefers to be told before anything is applied and likes her left heel done first."
+            },
+            "variableActions": [
+              { "variableId": "checks", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "id": "h-bins",
+            "label": "Bins by the door",
+            "position": { "yaw": 2.7, "pitch": -0.45 },
+            "interaction": {
+              "type": "dragToTarget",
+              "config": {
+                "question": "When you are done, where does each of these go?",
+                "dragTargets": [
+                  { "id": "t-clinical", "label": "Clinical waste (yellow)" },
+                  { "id": "t-general", "label": "General waste" }
+                ],
+                "dragItems": [
+                  { "id": "i-gloves", "label": "Used gloves", "targetId": "t-clinical" },
+                  { "id": "i-towel", "label": "Paper towel from drying your hands", "targetId": "t-general" },
+                  { "id": "i-box", "label": "Empty cream carton", "targetId": "t-general" },
+                  { "id": "i-glasses", "label": "Margaret's reading glasses" }
+                ]
+              }
+            }
+          },
+          {
+            "id": "h-window",
+            "label": "Window",
+            "position": { "yaw": -0.8, "pitch": 0.15 },
+            "interaction": {
+              "type": "message",
+              "config": {
+                "content": "<p>Margaret likes the blind half up in the morning. Small things are most of the job.</p>"
+              }
+            }
+          },
+          {
+            "id": "h-callbell",
+            "label": "Call bell",
+            "position": { "yaw": 0.55, "pitch": -0.6 },
+            "hidden": true,
+            "reveal": {
+              "kind": "text",
+              "body": "The call bell has slipped down behind the bed. Put it back within reach before you leave."
+            },
+            "variableActions": [
+              { "variableId": "checks", "operator": "increment", "value": 1 }
+            ]
+          }
+        ],
+        "allowPrevious": false
+      },
+      "position": { "x": 520, "y": 200 },
+      "connection": "gate"
+    },
+    {
+      "id": "gate",
+      "type": "condition",
+      "color": "#0D9488",
+      "title": "Consent gained and the right tube?",
+      "config": {
+        "title": "Consent gained and the right tube?",
+        "criteria": {
+          "criteriaSets": [
+            {
+              "id": "cs-pass",
+              "pathLabel": "Consent gained, right cream",
+              "targetNodeId": "debrief-pass",
+              "conditions": [
+                { "id": "c-consent", "field": "consent_score", "operator": ">=", "value": 60 },
+                { "id": "c-and", "field": "operator", "operator": "", "value": "AND" },
+                { "id": "c-cream", "field": "right_cream", "operator": "is_true" }
+              ]
+            }
+          ],
+          "defaultTargetNodeId": "debrief-retry",
+          "defaultPathLabel": "Not yet",
+          "useRealEvaluation": true
+        }
+      },
+      "position": { "x": 840, "y": 200 }
+    },
+    {
+      "id": "stop",
+      "type": "message",
+      "color": "#DC2626",
+      "title": "The visit ends here",
+      "config": {
+        "title": "The visit ends here",
+        "content": "<p>You reached for a tube without knowing whose it was. In a real home that is a medication error, and the visit stops. Start again from the door.</p>",
+        "allowPrevious": false
+      },
+      "position": { "x": 1160, "y": 40 }
+    },
+    {
+      "id": "debrief-pass",
+      "type": "message",
+      "color": "#16A34A",
+      "title": "Well done",
+      "config": {
+        "title": "Well done",
+        "content": "<p>Clean hands, Margaret's agreement, the right tube. You checked {checks} thing(s) you did not have to and made {missteps} misstep(s). That is a visit Margaret would be happy to have again.</p>",
+        "allowPrevious": false
+      },
+      "position": { "x": 1160, "y": 200 }
+    },
+    {
+      "id": "debrief-retry",
+      "type": "message",
+      "color": "#F59E0B",
+      "title": "Go back in",
+      "config": {
+        "title": "Go back in",
+        "content": "<p>Either Margaret did not clearly agree, or the tube was wrong. Consent scored {consent_score} out of 100. Go back into the room and try the visit again.</p>",
+        "allowPrevious": false
+      },
+      "position": { "x": 1160, "y": 360 },
+      "connection": "room"
+    }
+  ],
+  "variables": [
+    {
+      "id": "consent_score",
+      "name": "consent_score",
+      "type": "number",
+      "initialValue": 0,
+      "visible": true,
+      "description": "How well consent was gained from Margaret (0 to 100)"
+    },
+    {
+      "id": "right_cream",
+      "name": "right_cream",
+      "type": "boolean",
+      "initialValue": false,
+      "visible": false,
+      "description": "Chose the tube with Margaret's name on it"
+    },
+    {
+      "id": "critical_failure",
+      "name": "critical_failure",
+      "type": "boolean",
+      "initialValue": false,
+      "visible": false,
+      "description": "Set when a critical step goes wrong; the scene exits early"
+    },
+    {
+      "id": "checks",
+      "name": "checks",
+      "type": "number",
+      "initialValue": 0,
+      "visible": true,
+      "description": "Optional things checked in the room"
+    },
+    {
+      "id": "missteps",
+      "name": "missteps",
+      "type": "number",
+      "initialValue": 0,
+      "visible": true,
+      "description": "Wrong guesses and steps out of turn"
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "reachedNode",
+      "passNodeId": "debrief-pass",
+      "certificate": true
+    }
+  }
+}

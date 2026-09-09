@@ -3,6 +3,25 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": true,
   "definitions": {
+    "BackdropConfig": {
+      "additionalProperties": true,
+      "properties": {
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intensity": {
+          "description": "`\"subtle\"` | `\"medium\"` (default) | `\"bold\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "Choice": {
       "additionalProperties": true,
       "properties": {
@@ -196,9 +215,75 @@
       },
       "type": "object"
     },
+    "DragItem": {
+      "additionalProperties": true,
+      "description": "A thing to place. No `targetId` means it belongs nowhere: a distractor.",
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "DragTarget": {
+      "additionalProperties": true,
+      "description": "A place something belongs.",
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "HotspotConversation": {
       "additionalProperties": true,
       "properties": {
+        "criteria": {
+          "description": "The grader's rubric (same shape as a conversation node's `rubric`).",
+          "items": {
+            "$ref": "#/definitions/RubricCriterion"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "firstMessage": {
           "type": [
             "string",
@@ -257,6 +342,36 @@
             "null"
           ]
         },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "MatchingRightItem": {
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "text": {
           "type": [
             "string",
@@ -269,6 +384,17 @@
     "ModuleSettings": {
       "additionalProperties": true,
       "properties": {
+        "backdrop": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BackdropConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Default decorative image behind learner-facing nodes; a node overrides it with `config.backgroundImage` (the empty string means none)."
+        },
         "completion": {
           "anyOf": [
             {
@@ -354,6 +480,17 @@
       "additionalProperties": true,
       "description": "The per-node config bag. Only the fields the skeleton + validator need are typed; everything else (the growing node *catalogue*) rides in `extra`.",
       "properties": {
+        "abortWhen": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneAbortRule"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Leave the scene early (to a debrief) when a variable crosses a line."
+        },
         "choices": {
           "anyOf": [
             {
@@ -377,6 +514,13 @@
             "null"
           ]
         },
+        "content": {
+          "description": "`message` body (rich text / HTML).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "criteria": {
           "anyOf": [
             {
@@ -388,6 +532,24 @@
           ],
           "description": "Canonical condition criteria (spec §8). Exporters emit this; readers accept this OR the legacy stringified `choices`."
         },
+        "dragItems": {
+          "items": {
+            "$ref": "#/definitions/DragItem"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "dragTargets": {
+          "items": {
+            "$ref": "#/definitions/DragTarget"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "environment": {
           "anyOf": [
             {
@@ -396,6 +558,12 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "firstMessage": {
+          "type": [
+            "string",
+            "null"
           ]
         },
         "hotspots": {
@@ -422,6 +590,22 @@
             "null"
           ]
         },
+        "matchingRightItems": {
+          "items": {
+            "$ref": "#/definitions/MatchingRightItem"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "maxTurns": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "missActions": {
           "items": {
             "$ref": "#/definitions/VariableAction"
@@ -443,13 +627,75 @@
             "null"
           ]
         },
+        "procedureHaltOnCritical": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "procedureSteps": {
+          "items": {
+            "$ref": "#/definitions/ProcedureStep"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "question": {
+          "description": "The prompt for any question-shaped type (also read on a nested scene interaction, where a question type with no text is flagged).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rankingItems": {
+          "items": {
+            "$ref": "#/definitions/RankingItem"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "ratingMax": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ratingMin": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "ratingVariableId": {
           "type": [
             "string",
             "null"
           ]
         },
+        "rubric": {
+          "description": "Named things the AI grader judges separately. Called `rubric` here because `criteria` is the condition node's name on this same config.",
+          "items": {
+            "$ref": "#/definitions/RubricCriterion"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "scoreVariableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "description": "The sandboxed `run({ctx, ui, emit})` body. Never execute it outside a sandbox.",
           "type": [
             "string",
             "null"
@@ -518,6 +764,127 @@
       },
       "type": "object"
     },
+    "ProcedureStep": {
+      "additionalProperties": true,
+      "description": "One step of a `procedure`, in the order it must be performed.",
+      "properties": {
+        "critical": {
+          "description": "A step that must never be skipped; skipping it fails the procedure.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "earlyActions": {
+          "description": "Fired when this step is taken out of turn: the consequence.",
+          "items": {
+            "$ref": "#/definitions/VariableAction"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "ifEarly": {
+          "description": "Shown when this step is taken out of turn.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RankingItem": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/RankingItemRich"
+        },
+        true
+      ],
+      "description": "A ranking item is a plain string, or an object once an image is attached. Untagged so both forms parse; the last variant keeps the reader liberal."
+    },
+    "RankingItemRich": {
+      "additionalProperties": true,
+      "properties": {
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RubricCriterion": {
+      "additionalProperties": true,
+      "description": "One thing the AI grader is asked to judge. A name and a weight, never an operator: deterministic pass/fail stays with the comparison rules.",
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "weight": {
+          "description": "Relative importance; defaults to 1.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "SceneAbortRule": {
+      "additionalProperties": true,
+      "description": "Early-exit rule for a scene: when the variable satisfies the comparison the learner leaves for `targetNodeId` (a debrief) instead of finishing the room. The same variable/operator/value triple as a completion rule.",
+      "properties": {
+        "operator": {
+          "description": "Defaults to `\"is_true\"`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true,
+        "variableId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "SceneEnvironment": {
       "additionalProperties": true,
       "properties": {
@@ -562,6 +929,17 @@
             "null"
           ]
         },
+        "interaction": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SceneHotspotInteraction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Clicking opens an inline question or message, answered in the room."
+        },
         "label": {
           "type": [
             "string",
@@ -590,6 +968,29 @@
           },
           "type": [
             "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "SceneHotspotInteraction": {
+      "additionalProperties": true,
+      "description": "A node rendered inline inside a scene when its hotspot is clicked. The learner is assessed at the point of action and stays in the room. `type` is one of the nestable types (message, multipleChoice, textInput, matching, ranking, rating, procedure, dragToTarget); routing types never nest, so the canvas stays the single source of truth for flow. `config` is an ordinary node config, so the same profiles apply.",
+      "properties": {
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NodeConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
             "null"
           ]
         }
@@ -689,6 +1090,13 @@
       "additionalProperties": true,
       "description": "`type` and `initialValue` stay loose (string / arbitrary JSON) so mismatches surface as validation issues, not parse failures.",
       "properties": {
+        "carriedInFrom": {
+          "description": "The module a learner-scope variable was carried in from.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "computed": {
           "type": [
             "boolean",

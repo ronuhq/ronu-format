@@ -174,15 +174,27 @@ pub fn identifiers(formula: &str) -> Result<Vec<String>, FormulaError> {
 /// Evaluate a formula against name→number values. Unknown identifiers and
 /// division by zero degrade to 0 — a computed variable should never crash a
 /// learner session.
+///
+/// The result is rounded to six decimals, as the reference does: `92 * 0.6 +
+/// 40 * 0.4` is `71.19999999999999` in IEEE-754, and that string once reached
+/// a learner's debrief verbatim. Six decimals keeps any real precision a
+/// formula could want.
 pub fn evaluate(formula: &str, values: &std::collections::HashMap<String, f64>) -> f64 {
     let ast = match parse_to_ast(formula) {
         Ok(a) => a,
         Err(_) => return 0.0,
     };
     fn eval(e: &Expr, values: &std::collections::HashMap<String, f64>) -> f64 {
-        let result = match e {
+        match e {
             Expr::Number(v) => *v,
-            Expr::Ident(name) => values.get(name).copied().unwrap_or(0.0),
+            Expr::Ident(name) => {
+                let v = values.get(name).copied().unwrap_or(0.0);
+                if v.is_finite() {
+                    v
+                } else {
+                    0.0
+                }
+            }
             Expr::Negate(inner) => -eval(inner, values),
             Expr::Binary(op, l, r) => {
                 let l = eval(l, values);
@@ -201,14 +213,24 @@ pub fn evaluate(formula: &str, values: &std::collections::HashMap<String, f64>) 
                     _ => 0.0,
                 }
             }
-        };
-        if result.is_finite() {
-            result
-        } else {
-            0.0
         }
     }
-    eval(&ast, values)
+    let result = eval(&ast, values);
+    if !result.is_finite() {
+        return 0.0;
+    }
+    js_round(result * 1e6) / 1e6
+}
+
+/// JavaScript `Math.round`: halves round toward positive infinity, unlike
+/// Rust's `f64::round` (halves away from zero), so -2.5 gives -2 here.
+fn js_round(x: f64) -> f64 {
+    let floor = x.floor();
+    if x - floor >= 0.5 {
+        floor + 1.0
+    } else {
+        floor
+    }
 }
 
 #[cfg(test)]
@@ -237,5 +259,16 @@ mod tests {
         assert_eq!(evaluate("correct / total * 100", &v), 75.0);
         assert_eq!(evaluate("1 + 2 * 3", &v), 7.0);
         assert_eq!(evaluate("x / 0", &v), 0.0); // unknown → 0, div by zero → 0
+    }
+
+    #[test]
+    fn rounds_away_binary_float_noise() {
+        // 92 * 0.6 + 40 * 0.4 is 71.19999999999999 in IEEE-754.
+        let mut v = std::collections::HashMap::new();
+        v.insert("conv".to_string(), 92.0);
+        v.insert("dec".to_string(), 40.0);
+        assert_eq!(evaluate("conv * 0.6 + dec * 0.4", &v), 71.2);
+        assert_eq!(js_round(-2.5), -2.0);
+        assert_eq!(js_round(2.5), 3.0);
     }
 }
