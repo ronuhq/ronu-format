@@ -1024,10 +1024,9 @@ fn check_thresholds(content: &Value, module: &Module, v: &mut Validator) {
     let ceiling_of = |var: &crate::types::Variable| -> Option<f64> {
         if var.computed.unwrap_or(false) {
             let formula = var.formula.as_deref().filter(|s| !s.is_empty())?;
-            // The reference calls parseFormula here unguarded, so an invalid
-            // formula would throw out of the whole validation. Treat it as
-            // "no ceiling" instead; the variable already carries
-            // variable/formula-invalid.
+            // An invalid formula is already reported as variable/formula-invalid;
+            // here it simply has no ceiling. (The platform once threw out of the
+            // whole validation at this point; fixed Sep 2026 to match.)
             let refs = formula::identifiers(formula).ok()?;
             if refs.iter().any(|name| !by_name.contains_key(name)) {
                 return None;

@@ -94,10 +94,11 @@ issue codes. Method: a scratch `tsx` wrapper prints the oracle's result as JSON,
 `ronu validate --json` prints ours, a script diffs the sorted `code@nodeId`
 pairs. Re-run that whenever the platform validator changes.
 
-One known, deliberate divergence: the platform's threshold pass calls
-`parseFormula` unguarded, so a pass rule on a computed variable whose formula
-does not parse makes the platform validator throw. Ours reports
-`variable/formula-invalid` and treats the variable as having no ceiling.
+The port found one platform bug: the threshold pass called `parseFormula`
+unguarded, so a pass rule on a computed variable whose formula does not parse
+made the platform validator throw. The platform was fixed the same day (it now
+reports `variable/formula-invalid` and gives the variable no ceiling, exactly
+as this crate does), so there is no known divergence.
 
 ## What remains 🔜  (rough order)
 
