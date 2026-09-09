@@ -43,6 +43,18 @@ function autoAnswer(e, v) {
     case 'rating':
       e.answerRating(v.config.ratingMin ?? 1);
       return e.continue();
+    case 'procedure': {
+      // Perform every step in the authored order: a clean run.
+      const n = e.procedureSteps(v.node).length;
+      for (let i = 0; i < n; i++) e.performStep(i);
+      return e.continue();
+    }
+    case 'dragToTarget': {
+      // Put each item where it belongs and leave the distractors alone.
+      for (const it of v.config.dragItems ?? []) if (it && it.id && it.targetId) e.placeItem(it.id, it.targetId);
+      e.submitPlacements();
+      return e.continue();
+    }
     case 'scene':
       for (const hs of e.sceneHotspots(v.node)) {
         if (e.ended || e.currentNodeId !== v.node.id) break;
