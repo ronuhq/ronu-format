@@ -65,15 +65,35 @@ Three rules keep old files and old players working as it grows.
 
 The [spec](spec/ronu-spec.md) has the rest.
 
-## Using it in your own code
+## Play a file
+
+[`player/`](player) is the reference player: plain JavaScript, no build step, installable as an offline PWA. Serve this repository with any static server and open `player/index.html`, then drop a `.ronu` on it or press "Try a sample". It implements conformance level 1 (the skeleton and every `stable` node type) plus the provisional `procedure` and `dragToTarget`, and it was written from the spec rather than from RonuNest's code. What the spec failed to tell it is recorded in [`player/SPEC-GAPS.md`](player/SPEC-GAPS.md); that file is how the spec gets better.
+
+## Write your own
+
+[Build a player in an afternoon](docs/build-a-player.md) walks the format in the order an implementer meets it, and the 200-line terminal player it describes is checked in at [`docs/examples/tiny-player.mjs`](docs/examples/tiny-player.mjs). CI runs it over every sample.
 
 - **Rust**: the [`ronu`](rust) crate gives you the types, the validator, and the schema generator.
 - **JavaScript or TypeScript**: [`bindings/wasm`](bindings/wasm) compiles the same validator to WebAssembly, so you get the real rules in a browser or Node without rewriting them.
 - **Any language**: the generated [JSON Schema](schema) covers structure.
 
+## Implementations
+
+| What | Where | Notes |
+|---|---|---|
+| Reference player (web, offline PWA) | [`player/`](player) | level 1 + procedure, dragToTarget |
+| Tutorial player (terminal) | [`docs/examples/tiny-player.mjs`](docs/examples/tiny-player.mjs) | skeleton + message, choice, condition |
+| Authoring, export, import | [RonuNest](https://ronunest.com) | the originating implementation |
+
+Built something? Open an issue and it gets a row here.
+
+## Teaching with it
+
+[`docs/for-universities.md`](docs/for-universities.md) sizes student projects from an afternoon to a semester and says what we commit to in return.
+
 ## Help wanted
 
-The biggest missing piece is a reference player: an offline app, web or native, that opens any conformant `.ronu` and plays it with no account or server. The spec sets out the minimum a player has to do (conformance level 1), and the samples are there to test against. If you want to build one, open an issue. See [CONTRIBUTING](CONTRIBUTING.md).
+A conformance suite: a language-neutral set of files plus expected outcomes that any player can run. The samples and the reference player's tests are the seed. See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Licence
 

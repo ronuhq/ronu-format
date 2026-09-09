@@ -83,3 +83,23 @@ jobs:
       # unzip path the UI uses. No npm install: Node's built-in runner only.
       - name: node --test
         run: node --test player/test/*.test.mjs
+
+  tiny-player:
+    name: Tutorial player plays every sample
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # docs/build-a-player.md promises its 200-line player opens a real
+      # .ronu and every interchange sample without an exception.
+      - name: tiny-player.mjs walks the samples
+        run: |
+          set -e
+          ANSWERS=1,1,1,1,1,1 node docs/examples/tiny-player.mjs samples/hello-ronu/hello.ronu
+          for f in samples/*/module.json; do
+            echo "== $f"
+            ANSWERS=1,1,1,1,1,1,1,1 node docs/examples/tiny-player.mjs "$f" > /dev/null
+          done
