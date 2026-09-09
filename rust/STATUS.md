@@ -84,6 +84,21 @@ the oracle (matches). CI builds it to the wasm target. `pkg/` is git-ignored
 (rebuild to consume). To make this pay off, the core got `Serialize` on
 `Issue`/`ValidationResult` (camelCase, `nodeId` omitted when absent).
 
+## Sync with the platform, 9 Sep 2026
+
+The platform validator had moved on since July (two node types, nested scene
+interactions, the pass-mark reachability pass, rubrics). Ported in full and
+re-verified differentially against the platform's `validateModuleContent` at
+commit `5aa3ce4`: all six samples plus ~70 negative fixtures produce identical
+issue codes. Method: a scratch `tsx` wrapper prints the oracle's result as JSON,
+`ronu validate --json` prints ours, a script diffs the sorted `code@nodeId`
+pairs. Re-run that whenever the platform validator changes.
+
+One known, deliberate divergence: the platform's threshold pass calls
+`parseFormula` unguarded, so a pass rule on a computed variable whose formula
+does not parse makes the platform validator throw. Ours reports
+`variable/formula-invalid` and treats the variable as having no ceiling.
+
 ## What remains 🔜  (rough order)
 
 1. **Platform integration** — RonuNest imports `@ronu/wasm` and drops its

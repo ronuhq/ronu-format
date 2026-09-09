@@ -4,6 +4,18 @@ All notable changes to the `.ronu` format and this repository are recorded here.
 
 ## Unreleased
 
+### 2026-09-09: catalogue sync with the platform build of 9 Sep 2026 (commit `5aa3ce4`)
+
+- **Two new node types**, both `provisional`: `procedure` (perform steps in order; a step taken out of turn has its consequence straight away) and `dragToTarget` (put the right thing in the right place; an item with no `targetId` is a distractor). Spec §7.
+- **Answering inside a scene**: a hotspot may carry an `interaction` (a nested message, multipleChoice, textInput, matching, ranking, rating, procedure or dragToTarget, answered in the room), and a scene may carry an `abortWhen` early-exit rule. Nested interactions never route. Spec §7.2.
+- **Rubrics for AI-graded conversation**: `rubric[]{id, label, weight}` on a conversation node and `criteria[]` on a hotspot character. Spec §7.
+- **Code nodes** gained the assessment seam (`hooks`, `hookBindings`, `effects`, `effectRules`, `layout`, `sourceHistory`). Spec §7.1.
+- **Validator**: new checks ported from the platform, with identical issue codes: `procedure/no-steps`, `procedure/critical-no-reason`, `dragToTarget/incomplete`, `dragToTarget/orphan-item`, `matching/empty`, `matching/dangling-match`, `ranking/too-few`, `code/no-source`, `scene/abort-*`, `scene/interaction-unanswerable`, `scene/interaction-no-question`, and the pass-mark reachability pass (`threshold/unreachable`, `threshold/tight`). Computed-variable evaluation now rounds to six decimals, as the platform does. `ronu validate --json` prints machine-readable results.
+- **Samples**: `barrier-cream-round` (procedure + dragToTarget + rubric) and `margarets-room` (a scene with nested interactions and an early exit). All six samples are differentially tested against the platform validator.
+- **Schema** regenerated from the types (the new profiles are now described, not just tolerated).
+
+### Earlier
+
 - **Reference implementation moved to Rust** ([`rust/`](rust)) — one set of Rust types now drives (de)serialization, semantic validation, and the **generated** JSON Schema, so the three can never disagree. The previous TypeScript validator is retired; TS/Python bindings generated from the Rust are planned.
 - **Trunk-based from here** — the commit hash is the version until the tooling ecosystem settles (see the format dossier). The JSON Schema is standardised on draft-07.
 

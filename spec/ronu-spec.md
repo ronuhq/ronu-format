@@ -1,7 +1,7 @@
 # The `.ronu` File Format — Specification
 
 **Status:** DRAFT, and **unversioned** — a living draft on trunk. Until a `v1.0` is cut, the commit hash of the [repository](https://github.com/ronuhq/ronu-format) is the effective version and every change is assumed potentially breaking; don't pin production tooling to it yet. The skeleton (§2–§6) is expected to freeze essentially as-is at `v1.0`; catalogue entries tagged `provisional` (§7) may still change shape.
-**Schema baseline:** the RonuNest platform build of 12 July 2026. The catalogue documents the module content schema as of that build; catalogue entries evolve, the skeleton does not.
+**Schema baseline:** the RonuNest platform build of 9 September 2026 (platform commit `5aa3ce4`). The catalogue documents the module content schema as of that build; catalogue entries evolve, the skeleton does not.
 **Companions in this repository:** [`rust/`](../rust) (the reference implementation — the executable arbiter of a valid `module.json`, in Rust) and [`samples/`](../samples) (real exported modules to test against).
 
 ---
@@ -90,7 +90,7 @@ Top level:
 
 - `id` — unique within the file; stable within a module version. Node sub-activity IRIs hang off it.
 - `type` — a catalogue type (§7) or a namespaced extension type (§5).
-- `connection` — the default next node. Branching types carry additional edges inside `config` (per-choice `connection`, hotspot `targetNodeId`, condition `criteriaSets[].targetNodeId`, timer `onExpire.targetNodeId`).
+- `connection` — the default next node. Branching types carry additional edges inside `config` (per-choice `connection`, hotspot `targetNodeId`, condition `criteriaSets[].targetNodeId` and `defaultTargetNodeId`, timer `onExpire.targetNodeId`, scene `abortWhen.targetNodeId`).
 - `position`/`color` — canvas metadata for editors; players MUST ignore them. Kept in the format so a file re-opens in an editor exactly as authored.
 - `config` — the type-specific profile (§7). Exactly one node has `config.isStart: true`.
 
@@ -127,9 +127,9 @@ Top level:
 
 A worked example of the container — an actual `.ronu` file with a bundled image, plus its unpacked contents — is in [`samples/hello-ronu/`](../samples/hello-ronu).
 
-## 7. The node catalogue (as of the 12 Jul 2026 baseline)
+## 7. The node catalogue (as of the 9 Sep 2026 baseline)
 
-Thirteen types. Tags: **stable** = shape settled, follows the skeleton promise from v1.0; **provisional** = actively evolving, expect additions/reshaping.
+Fifteen types. Tags: **stable** = shape settled, follows the skeleton promise from v1.0; **provisional** = actively evolving, expect additions/reshaping.
 
 | Type | Tag | Config essentials |
 |---|---|---|
@@ -141,11 +141,33 @@ Thirteen types. Tags: **stable** = shape settled, follows the skeleton promise f
 | `ranking` | **stable** | `question`, `rankingItems[]` |
 | `matching` | **stable** | `matchingLeftItems[]{id, text, correctRightId, actions[]}`, `matchingRightItems[]{id, text}`, `matchingGraded` |
 | `rating` | **stable** | `ratingVariableId`, `ratingMin/Max`, `ratingStyle` (`stars|numbers|emoji`), low/high labels |
-| `condition` | **stable** (canonical form) | `criteria{criteriaSets[]{conditions[]{field, operator, value}, targetNodeId, pathLabel}, defaultTargetNodeId}` — see §8 for the legacy stringified form |
+| `condition` | **stable** (canonical form) | `criteria{criteriaSets[]{conditions[]{field, operator, value}, targetNodeId, pathLabel}, defaultTargetNodeId, defaultPathLabel}` — see §8 for the legacy stringified form. Conditions within a set are joined by connector entries of the form `{field: "operator", operator: "", value: "AND"|"OR"|"("|")"}`; a validator skips these, a player evaluates them as the boolean expression they spell out. |
+| `procedure` | **provisional** | `question`, `procedureSteps[]{text, critical, ifEarly, earlyActions[]}`, `procedureHaltOnCritical`. Performed one step at a time, in order; a step taken out of turn is reported AS IT HAPPENS, not scored at the end. Deliberately not `ranking`: ranking sorts a list and grades on submit, which cannot express "you applied the cream before gaining consent". The answer records the order actually performed plus each misstep, so the stream carries what the learner did rather than only whether they passed. |
+| `dragToTarget` | **provisional** | `question`, `dragTargets[]{id, label, image}`, `dragItems[]{id, label, image, targetId}`. Put the right thing in the right place. An item with **no** `targetId` belongs nowhere and is a distractor: choosing to use it at all is the mistake, which is often the thing worth assessing. Players SHOULD implement it as tap-to-place rather than literal dragging: HTML5 drag is unreliable on touch, and two ordinary buttons are far kinder on assistive tech. |
 | `note` | **stable** | Canvas-only annotation. Players MUST skip it entirely; it is never part of the flow. |
-| `scene` | **partially stable** | Stable: `environment{kind: photo360|photo2d, source}`, `hotspots[]{position, label, required, hidden, reveal, targetNodeId, variableActions, conversation}`, `completion` (`free|allRequired`), `hotspotSequence` (`free|ordered`), `discoveryRadius`, `missActions`. **Provisional:** `kind: splat|embed3d` (renderers still landing). |
-| `conversation` | **provisional** | `persona`, `firstMessage`, `objective`, `maxTurns`, `scoreVariableId`, `visual{background, characterName, voice, states[]}`. Requires an AI backend — minimal players fall back per rule 5.2. Voice/visual surface still moving. |
-| `code` | **provisional** | `source` (a sandboxed `run({ctx, ui, emit})` body), `assetPack`, `assets3d{}`, `room{}`. The 3-D surface is under active development (Jul 2026). Executing `source` requires a sandbox; players that don't ship one use the fallback. **Security note:** a player MUST NOT execute `source` outside a sandbox — .ronu files arrive from untrusted channels by design. |
+| `scene` | **partially stable** | Stable: `environment{kind: photo360|photo2d, source}`, `hotspots[]{position, label, required, hidden, reveal, targetNodeId, variableActions, conversation{persona, firstMessage, objective, criteria[], maxTurns, scoreVariableId}, interaction}`, `completion` (`free|allRequired`), `hotspotSequence` (`free|ordered`), `discoveryRadius`, `missActions`, `abortWhen{variableId, operator, value, targetNodeId}` (see §7.2). **Provisional:** `kind: splat|embed3d` (renderers still landing). |
+| `conversation` | **provisional** | `persona`, `firstMessage`, `objective`, `rubric[]{id, label, weight}`, `maxTurns`, `scoreVariableId`, `visual{background, characterName, characterKey, voice, states[]}`. Requires an AI backend — minimal players fall back per rule 5.2. The rubric names the things the grader must judge separately (a label and a relative weight, never an operator), so one opaque score becomes something a creator can read back; absent, grading is holistic. Voice/visual surface still moving. |
+| `code` | **provisional** | `source` (a sandboxed `run({ctx, ui, emit})` body), `assetPack`, `assetPacks[]`, `assets3d{}`, `room{}`, `layout{version, placements[]{key, pack, kind, x, z, y, rotationY, size, animation, hookId, inspect, interaction, conversation}, intro}`, `hooks[]{id, label, trigger}`, `hookBindings{<hookId>: {interaction, conversation}}`, `effects[]{id, label, values[]}`, `effectRules[]{id, effectId, value, variableId, operator, compareValue}`, `orderingSpec`, `sourceHistory[]`. The 3-D room/asset surface is under active development (Sep 2026); see §7.1 for how the fields beside `source` are meant to be read. Executing `source` requires a sandbox; players that don't ship one use the fallback. **Security note:** a player MUST NOT execute `source` outside a sandbox — .ronu files arrive from untrusted channels by design. |
+
+### 7.1 The assessment seam (code nodes)
+
+A code node's `source` describes **what can happen**; the fields beside it describe **what it means**. That split is what lets a world written by any tool, or generated by a model nobody here has seen, still be assessed by the player rather than by the world itself.
+
+- `hooks[]` is what the world DECLARES it can offer, recorded from the world actually running (`ui.hooks`), never parsed from `source`.
+- `hookBindings` is the author's meaning, keyed by hook id and stored **outside** the code, so regenerating the world keeps the questions. A binding whose hook has gone is *orphaned*: a conforming player SHOULD surface it, and MUST NOT silently discard it.
+- `effects[]` / `effectRules[]` are the same split for consequence. The world declares what it can change; the rules decide when, using the platform's one comparison triple (`variableId` / `operator` / `compareValue`), the same shape completion and abort rules use. No new operators, no nesting.
+- `layout.placements[].hookId` is an optional STABLE id. Placements are otherwise addressed by index (`p0`, `p3`), which is safe inside a layout but not as a general id: reordering would repoint every binding. Readers MUST accept both, resolving `hookId` first and falling back to the index form.
+
+A player that cannot execute `source` still reads all of this, and can present the bound questions on their own. A player that executes it but ignores the bindings is **not conforming**: it would grade the learner by whatever the world's own code decided, which is exactly what this separation prevents.
+
+### 7.2 Answering inside a scene
+
+A hotspot may carry an `interaction`: `{type, config}` where `type` is one of the nestable catalogue types (`message`, `multipleChoice`, `textInput`, `matching`, `ranking`, `rating`, `procedure`, `dragToTarget`) and `config` is that type's ordinary profile. The learner answers it in the room and stays there. Two rules follow from that:
+
+- **A nested interaction never routes.** The routing types (`choice`, `condition`) are deliberately not nestable; the canvas stays the single source of truth for flow. A nested interaction records and scores (its choices' `actions[]` fire as usual); branch on the variables it sets, with a condition node after the scene.
+- **A required hotspot with an interaction is only satisfied once answered.** Clicking and dismissing is not enough. A required interaction with nothing to answer (no choices, steps, items) is therefore a gate the learner can never open; the reference validator flags it.
+
+`abortWhen` is the scene's early exit: when the variable satisfies the comparison, the learner leaves for `targetNodeId` (typically a debrief) instead of finishing the room. It uses the same `variableId` / `operator` / `value` triple as a completion rule, with `operator` defaulting to `is_true`. An in-scene question sets the variable through its actions; the scene decides to bail. That is what keeps nested interactions non-routing. The same `{interaction, conversation}` pair also hangs off a code node's `hookBindings` and `layout.placements[]`, so one editor and one renderer serve all three.
 
 **Shared sub-schemas** (stable, used across types): `VariableAction{variableId, operator, value}` with operators `set|increment|decrement|multiply|divide|set_true|set_false|toggle`; `NodeTrigger{type: onNodeEnter|onNodeExit|onTimerElapsed|onVideoComplete|onVideoTimestamp, actions[], config}`; `TimerConfig{mode: countdown|countup, seconds, visible, label, warnAtSeconds, sound, onExpire{behavior: none|advance|route|end, targetNodeId, actions[]}, recordVariableId}`; text placeholders `{variableName}` substituted at play time.
 
