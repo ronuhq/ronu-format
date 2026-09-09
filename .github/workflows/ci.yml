@@ -68,3 +68,18 @@ jobs:
         run: |
           unzip -l samples/hello-ronu/hello.ronu
           unzip -p samples/hello-ronu/hello.ronu module.json > /dev/null
+
+  player:
+    name: Reference player
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # The player's engine must walk every sample to its end, pass every
+      # operator and fallback test, and open the real .ronu through the same
+      # unzip path the UI uses. No npm install: Node's built-in runner only.
+      - name: node --test
+        run: node --test player/test/*.test.mjs
