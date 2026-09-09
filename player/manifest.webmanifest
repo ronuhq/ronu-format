@@ -1,0 +1,18 @@
+{
+  "name": "ronu player",
+  "short_name": "ronu",
+  "description": "Reference player for .ronu learning-experience files. Offline, no account.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f1ec",
+  "theme_color": "#1f2733",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "file_handlers": [
+    { "action": "./index.html", "accept": { "application/zip": [".ronu"] } }
+  ]
+}
