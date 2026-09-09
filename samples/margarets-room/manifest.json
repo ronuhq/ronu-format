@@ -1,0 +1,17 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "7f1c9b3d-2e4a-4c6b-8a5d-1b2c3d4e5f60",
+    "versionId": "7f1c9b3d-2e4a-4c6b-8a5d-1b2c3d4e5f60",
+    "versionNumber": 1,
+    "title": "Margaret's Room, 7am",
+    "description": "A 360 degree room where the questions are answered in place: wash your hands at the basin, gain consent from Margaret herself, pick the right tube, and dispose of what you used. A critical failure ends the visit early.",
+    "language": "en"
+  },
+  "creator": { "name": "RonuNest", "url": "https://ronunest.com" },
+  "activityIri": "https://ronunest.com/xapi/modules/7f1c9b3d-2e4a-4c6b-8a5d-1b2c3d4e5f60",
+  "exportedAt": "2026-09-09T00:00:00Z",
+  "exportedBy": "ronunest.com (hand-authored sample, JSON-only interchange form)",
+  "assets": []
+}

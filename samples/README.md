@@ -25,8 +25,10 @@ The other folders are real public modules exported in the **JSON-only interchang
 | `fantasy-series-quiz` | The classic assessment types: video, message, textInput, multipleChoice, ranking, matching, rating |
 | `under-the-sink` | Immersive surface: scene (hotspots), choice, conversation, condition — plus variables and scoring |
 | `legacy-branching-sample` | The **legacy tolerance rule** ([spec](../spec/ronu-spec.md) §5.4/§8): old `router`/`decisionPath` node types and the stringified condition config, which readers MUST still accept |
+| `barrier-cream-round` | Assessed by doing: `procedure` (a care-home cream round with critical steps and their consequences), `dragToTarget` (with a distractor), canonical condition criteria, and a `conversation` graded against a rubric |
+| `margarets-room` | Answering inside a scene ([spec](../spec/ronu-spec.md) §7.2): a 360 room whose hotspots carry nested `procedure`, `multipleChoice`, `dragToTarget` and `message` interactions, a character with rubric criteria, a hidden discovery hotspot, and an `abortWhen` early exit |
 
-Their media references are in the legacy platform form (storage refs), so they're playable online only — `hello-ronu` is the one to study for the offline, bundled-media form.
+The two care-home samples are hand-authored in the interchange form rather than exported from a live module. Their media references (where any) are in the legacy platform form (storage refs), so the interchange samples are playable online only — `hello-ronu` is the one to study for the offline, bundled-media form.
 
 ## Validate them all
 
@@ -39,4 +41,4 @@ npx -y ajv-cli@5 validate --spec=draft7 --strict=false \
   -s ../schema/ronu-module.schema.json -d "*/module.json"
 ```
 
-All four validate clean.
+All six validate clean (zero errors; `under-the-sink` and `legacy-branching-sample` carry deliberate warnings), and the [differential test](../rust/tests/samples.rs) pins each one's exact issue codes to what the platform validator reports.

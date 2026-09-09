@@ -1,0 +1,17 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "c4d1a2e6-8b3f-4f7a-9d21-5e6f7a8b9c0d",
+    "versionId": "c4d1a2e6-8b3f-4f7a-9d21-5e6f7a8b9c0d",
+    "versionNumber": 1,
+    "title": "Barrier Cream Round: Margaret, Room 4",
+    "description": "Set up the trolley, then apply a resident's prescribed barrier cream in the right order. Consent and hand hygiene are the two steps that end the round if they are missed. Explain what you did to her daughter afterwards.",
+    "language": "en"
+  },
+  "creator": { "name": "RonuNest", "url": "https://ronunest.com" },
+  "activityIri": "https://ronunest.com/xapi/modules/c4d1a2e6-8b3f-4f7a-9d21-5e6f7a8b9c0d",
+  "exportedAt": "2026-09-09T00:00:00Z",
+  "exportedBy": "ronunest.com (hand-authored sample, JSON-only interchange form)",
+  "assets": []
+}
