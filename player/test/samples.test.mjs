@@ -22,48 +22,84 @@ test('every sample loads, starts, and can be walked to an end', () => {
   }
 });
 
-/** Generic scripted answering: first choice, first option, defaults. */
-function autoAnswer(e, v) {
-  if (!v.supported) return e.continue();
+/**
+ * A clean scripted answer for one answerable view: the first choice, the
+ * authored order, items on their targets, the lowest rating. Works for a
+ * top-level node view and for a scene's nested `interaction` view alike
+ * (spec section 7.2), because the engine routes the answer to whichever is
+ * open. Never continues or dismisses; the caller does that.
+ */
+function answer(e, v) {
   switch (v.type) {
-    case 'choice':
-      return e.choose(v.config.choices[0].id);
     case 'textInput':
       e.answerText('auto');
-      return e.continue();
+      break;
     case 'multipleChoice':
       e.answerMultiple([v.config.choices[0].id]);
-      return e.continue();
+      break;
     case 'ranking':
       e.answerRanking([]);
-      return e.continue();
+      break;
     case 'matching':
       e.answerMatching({});
-      return e.continue();
+      break;
     case 'rating':
       e.answerRating(v.config.ratingMin ?? 1);
-      return e.continue();
+      break;
     case 'procedure': {
       // Perform every step in the authored order: a clean run.
       const n = e.procedureSteps(v.node).length;
       for (let i = 0; i < n; i++) e.performStep(i);
-      return e.continue();
+      break;
     }
-    case 'dragToTarget': {
+    case 'dragToTarget':
       // Put each item where it belongs and leave the distractors alone.
       for (const it of v.config.dragItems ?? []) if (it && it.id && it.targetId) e.placeItem(it.id, it.targetId);
       e.submitPlacements();
-      return e.continue();
-    }
+      break;
+    default:
+      break; // message: nothing to answer
+  }
+}
+
+/**
+ * A conversation needs an AI grader, which this player does not have, so the
+ * fallback leaves `scoreVariableId` at its initial value. The walker stands in
+ * for the grader with full marks, exactly as a live player would after a good
+ * transcript, so a gate that waits on the score can be walked through.
+ */
+function gradeConversation(e, conversation) {
+  const id = conversation?.scoreVariableId;
+  if (id && e.findVariable(id)) e.applyActions([{ variableId: id, operator: 'set', value: 100 }], 'test:grader');
+}
+
+/** Generic scripted walking: answer, then continue; choose the first choice. */
+function autoAnswer(e, v) {
+  if (!v.supported) {
+    if (v.type === 'conversation') gradeConversation(e, v.config);
+    return e.continue();
+  }
+  switch (v.type) {
+    case 'choice':
+      return e.choose(v.config.choices[0].id);
     case 'scene':
       for (const hs of e.sceneHotspots(v.node)) {
         if (e.ended || e.currentNodeId !== v.node.id) break;
         e.activateHotspot(hs.id);
-        while (e.view().kind === 'node' && e.view().state?.beat) e.dismissBeat();
+        if (hs.conversation) gradeConversation(e, hs.conversation);
+        // Work through the beats: answer an open interaction, then dismiss each card in turn.
+        for (let guard = 0; guard < 10; guard++) {
+          const sv = e.view();
+          if (sv.kind !== 'node' || sv.node.id !== v.node.id || !sv.state?.beat) break;
+          if (sv.interaction && !sv.interaction.state.answered) answer(e, sv.interaction);
+          if (e.currentNodeId !== v.node.id) break; // abortWhen fired mid-scene
+          e.dismissBeat();
+        }
       }
       return e.ended || e.currentNodeId !== v.node.id ? e.view() : e.continue();
     default:
-      return e.continue();
+      answer(e, v);
+      return e.ended || e.currentNodeId !== v.node.id ? e.view() : e.continue();
   }
 }
 

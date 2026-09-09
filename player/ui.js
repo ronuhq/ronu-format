@@ -78,7 +78,12 @@ export class PlayerUI {
     this.onDownload = o.onDownload ?? (() => {});
     this.lastRevision = -1;
     this.pano = null;
-    this.local = {}; // per-node UI state (selections before submit)
+    this.locals = {}; // per-node UI state (selections before submit), keyed by node id; a nested interaction has its own
+  }
+
+  /** The UI-only state for a view: the node's, or the nested interaction's (its id is `<sceneId>/<hotspotId>`). */
+  loc(view) {
+    return (this.locals[view.node.id] ??= {});
   }
 
   mount() {
@@ -114,7 +119,7 @@ export class PlayerUI {
     this.lastRevision = view.revision;
     this.currentNodeId = view.kind === 'node' ? view.node.id : null;
     if (nodeChanged) {
-      this.local = {};
+      this.locals = {};
       this.pano?.destroy();
       this.pano = null;
     }
@@ -203,7 +208,8 @@ export class PlayerUI {
   }
 
   heading(view, badge) {
-    return h('h2.card-title', view.title, badge ? ' ' : null, badge);
+    // A nested interaction (spec section 7.2) sits inside the scene card, so its heading is one level down.
+    return h(view.nested ? 'h3.card-title.card-title-nested' : 'h2.card-title', view.title, badge ? ' ' : null, badge);
   }
 
   // ---- node renderers -----------------------------------------------------
@@ -251,7 +257,7 @@ export class PlayerUI {
       const done = triggers.filter((t) => t?.type === 'onVideoComplete');
       const stamps = triggers.filter((t) => t?.type === 'onVideoTimestamp').map((t) => ({ t, at: Number(t.config?.timestamp ?? 0), fired: false }));
       video.addEventListener('ended', () => {
-        this.local.videoEnded = true;
+        this.loc(view).videoEnded = true;
         for (const t of done) this.engine.applyActions(t.actions, 'trigger:onVideoComplete');
         this.engine.bump();
         this.render();
@@ -295,8 +301,9 @@ export class PlayerUI {
       card.append(h('blockquote.answer', String(this.engine.responses[view.node.id]?.response ?? '')));
       return;
     }
-    const ta = h('textarea.input', { rows: 4, placeholder: 'Type your answer', value: this.local.text ?? '', oninput: (e) => (this.local.text = e.target.value) });
-    const submit = h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerText(ta.value); if (!this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit');
+    const local = this.loc(view);
+    const ta = h('textarea.input', { rows: 4, placeholder: 'Type your answer', value: local.text ?? '', oninput: (e) => (local.text = e.target.value) });
+    const submit = h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerText(ta.value); if (!view.nested && !this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit');
     card.append(ta, h('div.actions', submit));
   }
 
@@ -307,7 +314,8 @@ export class PlayerUI {
     const multi = cfg.allowMultiple === true;
     const choices = Array.isArray(cfg.choices) ? cfg.choices : [];
     const st = view.state;
-    const picked = new Set(this.local.picked ?? []);
+    const local = this.loc(view);
+    const picked = new Set(local.picked ?? []);
     if (st.answered) {
       const ids = this.engine.responses[view.node.id]?.response ?? [];
       card.append(h('ul.picked', choices.filter((c) => ids.includes(c.id)).map((c) => h('li', this.engine.substitute(c.text ?? '')))));
@@ -326,12 +334,12 @@ export class PlayerUI {
           picked.clear();
           picked.add(id);
         }
-        this.local.picked = [...picked];
-        if (!multi && cfg.advanceOnAnswer) setTimeout(() => this.act(() => { this.engine.answerMultiple([...picked]); if (!this.engine.ended) this.engine.continue(); }), 300);
+        local.picked = [...picked];
+        if (!multi && cfg.advanceOnAnswer) setTimeout(() => this.act(() => { this.engine.answerMultiple([...picked]); if (!view.nested && !this.engine.ended) this.engine.continue(); }), 300);
       });
       list.append(h('label.option', input, h('span', this.engine.substitute(c.text ?? ''))));
     });
-    card.append(list, h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerMultiple([...picked]); if (!this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit')));
+    card.append(list, h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerMultiple([...picked]); if (!view.nested && !this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit')));
   }
 
   render_ranking(view, card, _n, badge) {
@@ -342,8 +350,9 @@ export class PlayerUI {
       card.append(h('ol.ranked', (this.engine.responses[view.node.id]?.response ?? []).map((t) => h('li', t))));
       return;
     }
-    const order = this.local.order ?? items.slice();
-    this.local.order = order;
+    const local = this.loc(view);
+    const order = local.order ?? items.slice();
+    local.order = order;
     const list = h('ol.rank-list');
     order.forEach((text, i) => {
       const move = (d) => {
@@ -362,7 +371,7 @@ export class PlayerUI {
       ));
     });
     card.append(h('p.hint', 'Use the arrows to put these in order, best first.'), list,
-      h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerRanking(order); if (!this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit')));
+      h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerRanking(order); if (!view.nested && !this.engine.ended && this.engine.canContinue()) this.engine.continue(); }) }, 'Submit')));
   }
 
   render_matching(view, card, _n, badge) {
@@ -372,8 +381,9 @@ export class PlayerUI {
     const left = Array.isArray(cfg.matchingLeftItems) ? cfg.matchingLeftItems : [];
     const right = Array.isArray(cfg.matchingRightItems) ? cfg.matchingRightItems : [];
     const st = view.state;
-    const matches = this.local.matches ?? {};
-    this.local.matches = matches;
+    const local = this.loc(view);
+    const matches = local.matches ?? {};
+    local.matches = matches;
     const table = h('div.match-table');
     for (const l of left) {
       if (!l || !l.id) continue;
@@ -397,7 +407,7 @@ export class PlayerUI {
       if (st.feedback) card.append(h('p.score', `${st.feedback.correct} of ${st.feedback.total} correct`));
       return;
     }
-    card.append(h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerMatching(matches); if (cfg.matchingGraded === false && !this.engine.ended) this.engine.continue(); }) }, 'Submit')));
+    card.append(h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => { this.engine.answerMatching(matches); if (!view.nested && cfg.matchingGraded === false && !this.engine.ended) this.engine.continue(); }) }, 'Submit')));
   }
 
   render_rating(view, card, _n, badge) {
@@ -425,13 +435,15 @@ export class PlayerUI {
     card.append(this.heading(view, badge));
     if (view.instructions) card.append(h('p.hint', view.instructions));
 
+    const local = this.loc(view);
     const markers = hotspots.map((hs) => {
       const visited = st.visited.includes(hs.id);
-      return { id: hs.id, label: hs.label ?? '', visible: !hs.hidden || visited, found: visited, locked: this.engine.hotspotLocked(view.node, hs), yaw: hs.position?.yaw ?? 0, pitch: hs.position?.pitch ?? 0, x: hs.position?.x ?? 0, y: hs.position?.y ?? 0 };
+      // A hotspot with an interaction only reads as done once it is answered (spec section 7.2).
+      return { id: hs.id, label: hs.label ?? '', visible: !hs.hidden || visited, found: this.engine.hotspotSatisfied(view.node, hs), locked: this.engine.hotspotLocked(view.node, hs), yaw: hs.position?.yaw ?? 0, pitch: hs.position?.pitch ?? 0, x: hs.position?.x ?? 0, y: hs.position?.y ?? 0 };
     });
     const src = this.resolver.resolve(cfg.environment?.source);
-    const viewport = this.local.viewport ?? h('div.scene-viewport');
-    this.local.viewport = viewport;
+    const viewport = local.viewport ?? h('div.scene-viewport');
+    local.viewport = viewport;
     card.append(viewport);
 
     if (kind === 'photo360') {
@@ -441,7 +453,7 @@ export class PlayerUI {
       }
       this.pano.setMarkers(markers);
     } else {
-      if (!this.local.flat) {
+      if (!local.flat) {
         const flat = h('div.scene-flat');
         const img = src ? h('img', { src, alt: view.title || 'Scene', draggable: false }) : h('div.scene-blank');
         flat.append(img);
@@ -451,9 +463,9 @@ export class PlayerUI {
           this.act(() => this.engine.tapScene({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }));
         });
         viewport.append(flat);
-        this.local.flat = flat;
+        local.flat = flat;
       }
-      const flat = this.local.flat;
+      const flat = local.flat;
       for (const old of flat.querySelectorAll('.hotspot-marker')) old.remove();
       for (const m of markers) {
         if (!m.visible) continue;
@@ -462,21 +474,23 @@ export class PlayerUI {
       }
     }
 
-    // Status line.
+    // Status line. A required hotspot with a question counts once it is answered.
     const required = hotspots.filter((hs) => hs.required);
-    const foundReq = required.filter((hs) => st.visited.includes(hs.id)).length;
+    const doneReq = required.filter((hs) => this.engine.hotspotSatisfied(view.node, hs)).length;
     const parts = [];
-    if (cfg.completion === 'allRequired' && required.length) parts.push(`${foundReq} of ${required.length} required found`);
+    if (cfg.completion === 'allRequired' && required.length) parts.push(`${doneReq} of ${required.length} required done`);
     else if (hotspots.length) parts.push(`${st.visited.length} of ${hotspots.length} found`);
     if (st.lastTap?.kind === 'miss') parts.push('Nothing there.');
     if (st.lastTap?.kind === 'locked') parts.push('Not yet. Look at the earlier ones first.');
     if (kind === 'photo360') parts.push('Drag to look around.');
     card.append(h('p.scene-status', parts.join(' · ')));
 
-    // Beat overlay: reveal or conversation fallback.
+    // Beat overlay: conversation fallback, the in-room interaction, or the reveal.
     if (st.beat) {
       const hs = hotspots.find((x) => x.id === st.beat.hotspotId);
-      const panel = h('div.reveal');
+      const panel = h('div.reveal', { dataset: { beat: st.beat.kind } });
+      const dismiss = () => this.act(() => this.engine.dismissBeat());
+      const goLabel = hs?.targetNodeId && st.beat.then.length === 1 ? 'Go' : 'OK';
       if (st.beat.kind === 'reveal') {
         const r = hs?.reveal ?? {};
         panel.append(h('h3', r.title ?? hs?.label ?? ''));
@@ -486,11 +500,27 @@ export class PlayerUI {
         else if (kindR === 'video' && media) panel.append(h('video.reveal-media', { src: media, controls: true, playsinline: true }));
         if (r.body) panel.append(h('p', this.engine.substitute(String(r.body))));
         if (!r.body && kindR !== 'text' && !media) panel.append(h('p.muted', 'This reveal is not bundled.'));
+        panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: dismiss }, goLabel)));
+      } else if (st.beat.kind === 'interaction' && view.interaction) {
+        // Spec section 7.2: the hotspot's question, drawn by the same renderer
+        // as the top-level node type, answered here, never routing. The engine
+        // sends answer calls to the nested sub-node while this beat is open.
+        const iv = view.interaction;
+        panel.classList.add('is-interaction');
+        const fn = this[`render_${iv.type}`];
+        if (typeof fn === 'function') fn.call(this, iv, panel, false, null);
+        else panel.append(h('h3', iv.title), h('p.muted', `This question needs a newer player (type "${iv.rawType}").`));
+        const answered = iv.state.answered || iv.type === 'message';
+        panel.append(h('div.actions',
+          answered
+            ? h('button.btn.btn-primary', { onclick: dismiss }, goLabel)
+            : h('button.btn.btn-ghost', { onclick: dismiss, title: hs?.required ? 'Close for now; this one is required, so come back and answer it' : 'Close for now' }, 'Close'),
+        ));
       } else {
         const c = hs?.conversation ?? {};
         panel.append(h('h3', hs?.label ?? 'Conversation'), h('p.muted', 'Talking to characters needs an AI backend and a full player. Here is what they would open with:'), c.firstMessage ? h('blockquote', String(c.firstMessage)) : null);
+        panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: dismiss }, goLabel)));
       }
-      panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => this.engine.dismissBeat()) }, hs?.targetNodeId && st.beat.then.length === 1 ? 'Go' : 'OK')));
       card.append(panel);
     }
   }
@@ -522,9 +552,10 @@ export class PlayerUI {
     if (view.question) card.append(h('p.question', view.question));
     const cfg = view.config;
     const st = view.state;
+    const local = this.loc(view);
     const items = (Array.isArray(cfg.dragItems) ? cfg.dragItems : []).filter((i) => i && i.id);
     const targets = (Array.isArray(cfg.dragTargets) ? cfg.dragTargets : []).filter((t) => t && t.id);
-    const held = this.local.held ?? null;
+    const held = local.held ?? null;
     const media = (m) => {
       const url = this.resolver.resolve(m.image ?? '');
       return url ? h('img.thumb', { src: url, alt: m.label ?? '' }) : null;
@@ -534,17 +565,17 @@ export class PlayerUI {
     for (const it of items) {
       const placedOn = st.placements[it.id];
       const ok = st.feedback?.perItem?.[it.id];
-      pool.append(h(`button.btn.btn-item${held === it.id ? '.is-held' : ''}${placedOn ? '.is-placed' : ''}${ok === true ? '.is-correct' : ok === false ? '.is-wrong' : ''}`, { disabled: st.answered, onclick: () => { this.local.held = held === it.id ? null : it.id; this.render(true); } },
+      pool.append(h(`button.btn.btn-item${held === it.id ? '.is-held' : ''}${placedOn ? '.is-placed' : ''}${ok === true ? '.is-correct' : ok === false ? '.is-wrong' : ''}`, { disabled: st.answered, onclick: () => { local.held = held === it.id ? null : it.id; this.render(true); } },
         media(it), h('span', it.label ?? it.id), placedOn ? h('span.muted', ` → ${targets.find((t) => t.id === placedOn)?.label ?? placedOn}`) : null));
     }
     card.append(pool);
     const zone = h('div.drag-targets');
     for (const t of targets) {
       const inside = items.filter((i) => st.placements[i.id] === t.id);
-      zone.append(h('button.btn.btn-target', { disabled: st.answered || !held, onclick: () => this.act(() => { this.engine.placeItem(held, t.id); this.local.held = null; }) },
+      zone.append(h('button.btn.btn-target', { disabled: st.answered || !held, onclick: () => this.act(() => { this.engine.placeItem(held, t.id); local.held = null; }) },
         media(t), h('span.target-label', t.label ?? t.id), inside.length ? h('span.muted', ` (${inside.map((i) => i.label ?? i.id).join(', ')})`) : null));
     }
-    if (held && st.placements[held]) zone.append(h('button.btn.btn-target.btn-ghost', { onclick: () => this.act(() => { this.engine.placeItem(held, null); this.local.held = null; }) }, 'Leave unused'));
+    if (held && st.placements[held]) zone.append(h('button.btn.btn-target.btn-ghost', { onclick: () => this.act(() => { this.engine.placeItem(held, null); local.held = null; }) }, 'Leave unused'));
     card.append(zone);
     if (st.answered) card.append(h('p.score', `${st.feedback.correct} of ${st.feedback.total} right. Score ${this.engine.nodeScores[view.node.id] ?? 0}%`));
     else card.append(h('div.actions', h('button.btn.btn-primary', { onclick: () => this.act(() => this.engine.submitPlacements()) }, 'Check')));
@@ -569,15 +600,29 @@ export class PlayerUI {
     const scores = Object.entries(view.nodeScores);
     if (scores.length) {
       card.append(h('h3.section-title', 'Node scores'));
-      card.append(h('table.vars', h('tbody', scores.map(([id, s]) => h('tr', h('td', this.engine.nodesById.get(id)?.config?.title ?? this.engine.nodesById.get(id)?.title ?? id), h('td.num', `${s}%`))))));
+      card.append(h('table.vars', h('tbody', scores.map(([id, s]) => h('tr', h('td', this.scoreLabel(id)), h('td.num', `${s}%`))))));
     }
     card.append(h('p.muted.small', `Path: ${view.trail.join(' → ')}`));
     card.append(h('div.actions.actions-wrap',
       h('button.btn.btn-primary', { onclick: () => this.onDownload() }, 'Download session record'),
-      h('button.btn', { onclick: () => { this.engine.start(); this.local = {}; this.pano?.destroy(); this.pano = null; this.render(true); } }, 'Play again'),
+      h('button.btn', { onclick: () => { this.engine.start(); this.locals = {}; this.pano?.destroy(); this.pano = null; this.render(true); } }, 'Play again'),
       h('button.btn.btn-ghost', { onclick: () => this.onClose() }, 'Open another file'),
     ));
     return card;
+  }
+
+  /** A node score's label: the node title, or "Scene title: hotspot label" for an answer given inside a scene. */
+  scoreLabel(id) {
+    const nodeTitle = (n) => n?.config?.title ?? n?.title ?? null;
+    const node = this.engine.nodesById.get(id);
+    if (node) return nodeTitle(node) ?? id;
+    const slash = id.indexOf('/');
+    if (slash > 0) {
+      const scene = this.engine.nodesById.get(id.slice(0, slash));
+      const hs = (scene?.config?.hotspots ?? []).find((x) => x?.id === id.slice(slash + 1));
+      if (scene) return `${nodeTitle(scene) ?? scene.id}: ${hs?.label ?? id.slice(slash + 1)}`;
+    }
+    return id;
   }
 }
 

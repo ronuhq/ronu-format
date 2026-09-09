@@ -45,6 +45,15 @@ export function buildStatements(events, manifest, opts = {}) {
     const n = nodes.get(nodeId);
     return { id: `${iri}/nodes/${encodeURIComponent(nodeId ?? '')}`, objectType: 'Activity', definition: { name: { en: n?.config?.title ?? n?.title ?? nodeId ?? '' }, type: n ? `${EXT}node/${n.type}` : undefined } };
   };
+  // A hotspot is a sub-activity of its scene; an answer given inside one
+  // (spec section 7.2) is recorded against the hotspot, not the scene.
+  const hotspotObject = (nodeId, hotspotId, label) => {
+    const scene = nodes.get(nodeId);
+    const hs = (scene?.config?.hotspots ?? []).find((x) => x?.id === hotspotId);
+    const itype = hs?.interaction?.type;
+    return { id: `${iri}/nodes/${encodeURIComponent(nodeId ?? '')}/hotspots/${encodeURIComponent(hotspotId ?? '')}`, objectType: 'Activity', definition: { name: { en: label ?? hs?.label ?? hotspotId ?? '' }, type: itype ? `${EXT}node/${itype}` : undefined } };
+  };
+  const objectFor = (e) => (e.hotspotId ? hotspotObject(e.nodeId, e.hotspotId, e.label) : nodeObject(e.nodeId));
   const context = { contextActivities: { parent: [{ id: iri, objectType: 'Activity' }] } };
   if (opts.registration) context.registration = opts.registration;
   const base = (e, verb, object, extra = {}) => ({
@@ -66,7 +75,7 @@ export function buildStatements(events, manifest, opts = {}) {
         const result = { response: typeof e.response === 'string' ? e.response : JSON.stringify(e.response) };
         if (typeof e.score === 'number') result.score = { raw: e.score, min: 0, max: 100, scaled: e.score / 100 };
         const ext = e.texts ? { [`${EXT}answer-labels`]: e.texts } : undefined;
-        out.push(base(e, VERB.answered, nodeObject(e.nodeId), { result: ext ? { ...result, extensions: ext } : result }));
+        out.push(base(e, VERB.answered, objectFor(e), { result: ext ? { ...result, extensions: ext } : result }));
         break;
       }
       case 'variable':
@@ -75,8 +84,11 @@ export function buildStatements(events, manifest, opts = {}) {
       case 'branch':
         out.push(base(e, VERB.experienced, nodeObject(e.nodeId), { result: { extensions: { [`${EXT}branch-taken`]: { fromNodeId: e.nodeId, targetId: e.targetNodeId } } } }));
         break;
+      case 'scene-abort':
+        out.push(base(e, VERB.exited, nodeObject(e.nodeId), { result: { extensions: { [`${EXT}branch-taken`]: { fromNodeId: e.nodeId, targetId: e.targetNodeId, abortWhen: { variableId: e.variableId } } } } }));
+        break;
       case 'hotspot':
-        out.push(base(e, VERB.experienced, { id: `${iri}/nodes/${encodeURIComponent(e.nodeId)}/hotspots/${encodeURIComponent(e.hotspotId)}`, objectType: 'Activity', definition: { name: { en: e.label ?? e.hotspotId } } }, { result: { extensions: { [`${EXT}scene-hotspot`]: { nodeId: e.nodeId, hotspotId: e.hotspotId } } } }));
+        out.push(base(e, VERB.experienced, hotspotObject(e.nodeId, e.hotspotId, e.label), { result: { extensions: { [`${EXT}scene-hotspot`]: { nodeId: e.nodeId, hotspotId: e.hotspotId } } } }));
         break;
       case 'scene-miss':
         out.push(base(e, VERB.interacted, nodeObject(e.nodeId), { result: { success: false, extensions: { [`${EXT}scene-miss`]: e.point } } }));
@@ -86,7 +98,7 @@ export function buildStatements(events, manifest, opts = {}) {
         break;
       case 'procedure-step':
       case 'procedure-misstep':
-        out.push(base(e, VERB.interacted, nodeObject(e.nodeId), { result: { success: e.type === 'procedure-step', extensions: { [`${EXT}procedure-step`]: { step: e.step, expected: e.expected, critical: e.critical } } } }));
+        out.push(base(e, VERB.interacted, objectFor(e), { result: { success: e.type === 'procedure-step', extensions: { [`${EXT}procedure-step`]: { step: e.step, expected: e.expected, critical: e.critical } } } }));
         break;
       case 'completed': {
         const result = { completion: true };

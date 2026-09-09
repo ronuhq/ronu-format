@@ -170,6 +170,10 @@ textarea.input { resize: vertical; }
 .reveal { margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--accent-soft); }
 .reveal h3 { margin: 0 0 6px; }
 .reveal-media { max-width: 100%; border-radius: 8px; }
+/* A hotspot's in-room question (spec 7.2): the node renderer inside the scene card. */
+.reveal.is-interaction { background: var(--surface); border: 1px solid var(--line); }
+.card-title-nested { font-size: 1.1rem; margin-bottom: 6px; }
+.reveal.is-interaction .actions:last-child { justify-content: flex-end; }
 
 /* Procedure */
 .steps { display: grid; gap: 8px; }
