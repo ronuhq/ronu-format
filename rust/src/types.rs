@@ -98,6 +98,13 @@ pub struct NodeConfig {
     pub is_start: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub connection: Option<String>,
+    /// The prompt for any question-shaped type (also read on a nested scene
+    /// interaction, where a question type with no text is flagged).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub question: Option<String>,
+    /// `message` body (rich text / HTML).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
 
     // Choice / multipleChoice / (legacy) condition
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -112,9 +119,27 @@ pub struct NodeConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timer: Option<TimerConfig>,
 
+    // ranking
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ranking_items: Option<Vec<RankingItem>>,
+
     // matching
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub matching_left_items: Option<Vec<MatchingLeftItem>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub matching_right_items: Option<Vec<MatchingRightItem>>,
+
+    // procedure: perform the steps in order; a wrong step lands immediately
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub procedure_steps: Option<Vec<ProcedureStep>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub procedure_halt_on_critical: Option<bool>,
+
+    // dragToTarget: put the right thing in the right place
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drag_targets: Option<Vec<DragTarget>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drag_items: Option<Vec<DragItem>>,
 
     // scene
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -126,18 +151,39 @@ pub struct NodeConfig {
     pub completion: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub miss_actions: Option<Vec<VariableAction>>,
+    /// Leave the scene early (to a debrief) when a variable crosses a line.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub abort_when: Option<SceneAbortRule>,
 
     // conversation
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub persona: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_message: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub objective: Option<String>,
+    /// Named things the AI grader judges separately. Called `rubric` here
+    /// because `criteria` is the condition node's name on this same config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rubric: Option<Vec<RubricCriterion>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_turns: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score_variable_id: Option<String>,
 
     // rating
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rating_variable_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rating_min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rating_max: Option<f64>,
+
+    // code
+    /// The sandboxed `run({ctx, ui, emit})` body. Never execute it outside a
+    /// sandbox.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 
     #[serde(flatten, default)]
     pub extra: Extra,
@@ -169,6 +215,9 @@ pub struct Variable {
     /// `"module"` (default) | `"learner"`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
+    /// The module a learner-scope variable was carried in from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub carried_in_from: Option<String>,
     #[serde(flatten, default)]
     pub extra: Extra,
 }
@@ -239,6 +288,28 @@ pub struct TimerExpire {
     pub extra: Extra,
 }
 
+// ─── Ranking ──────────────────────────────────────────────────────────────
+
+/// A ranking item is a plain string, or an object once an image is attached.
+/// Untagged so both forms parse; the last variant keeps the reader liberal.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum RankingItem {
+    Text(String),
+    Rich(RankingItemRich),
+    Other(Value),
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct RankingItemRich {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
 // ─── Matching ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
@@ -249,9 +320,92 @@ pub struct MatchingLeftItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub correct_right_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<VariableAction>>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct MatchingRightItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+// ─── Procedure ────────────────────────────────────────────────────────────
+
+/// One step of a `procedure`, in the order it must be performed.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ProcedureStep {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    /// Shown when this step is taken out of turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub if_early: Option<String>,
+    /// Fired when this step is taken out of turn: the consequence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub early_actions: Option<Vec<VariableAction>>,
+    /// A step that must never be skipped; skipping it fails the procedure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub critical: Option<bool>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+// ─── Drag to target ───────────────────────────────────────────────────────
+
+/// A place something belongs.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct DragTarget {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+/// A thing to place. No `targetId` means it belongs nowhere: a distractor.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DragItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_id: Option<String>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+// ─── Rubrics (AI-graded conversation) ─────────────────────────────────────
+
+/// One thing the AI grader is asked to judge. A name and a weight, never an
+/// operator: deterministic pass/fail stays with the comparison rules.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct RubricCriterion {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    /// Relative importance; defaults to 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weight: Option<f64>,
     #[serde(flatten, default)]
     pub extra: Extra,
 }
@@ -291,6 +445,9 @@ pub struct SceneHotspot {
     pub variable_actions: Option<Vec<VariableAction>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub conversation: Option<HotspotConversation>,
+    /// Clicking opens an inline question or message, answered in the room.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction: Option<SceneHotspotInteraction>,
     #[serde(flatten, default)]
     pub extra: Extra,
 }
@@ -304,10 +461,48 @@ pub struct HotspotConversation {
     pub first_message: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub objective: Option<String>,
+    /// The grader's rubric (same shape as a conversation node's `rubric`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub criteria: Option<Vec<RubricCriterion>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_turns: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub score_variable_id: Option<String>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+/// A node rendered inline inside a scene when its hotspot is clicked. The
+/// learner is assessed at the point of action and stays in the room. `type`
+/// is one of the nestable types (message, multipleChoice, textInput,
+/// matching, ranking, rating, procedure, dragToTarget); routing types never
+/// nest, so the canvas stays the single source of truth for flow. `config`
+/// is an ordinary node config, so the same profiles apply.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct SceneHotspotInteraction {
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    pub interaction_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub config: Option<Box<NodeConfig>>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+/// Early-exit rule for a scene: when the variable satisfies the comparison
+/// the learner leaves for `targetNodeId` (a debrief) instead of finishing the
+/// room. The same variable/operator/value triple as a completion rule.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SceneAbortRule {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variable_id: Option<String>,
+    /// Defaults to `"is_true"`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operator: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_node_id: Option<String>,
     #[serde(flatten, default)]
     pub extra: Extra,
 }
@@ -367,6 +562,21 @@ pub struct ModuleSettings {
     pub timer: Option<TimerConfig>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub completion: Option<CompletionRule>,
+    /// Default decorative image behind learner-facing nodes; a node overrides
+    /// it with `config.backgroundImage` (the empty string means none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backdrop: Option<BackdropConfig>,
+    #[serde(flatten, default)]
+    pub extra: Extra,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct BackdropConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    /// `"subtle"` | `"medium"` (default) | `"bold"`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intensity: Option<String>,
     #[serde(flatten, default)]
     pub extra: Extra,
 }
