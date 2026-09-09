@@ -1,0 +1,217 @@
+{
+  "nodes": [
+    {
+      "id": "intro",
+      "type": "message",
+      "color": "#64748B",
+      "title": "The 7am round",
+      "config": {
+        "title": "The 7am round",
+        "content": "<p>Margaret in Room 4 has a prescribed barrier cream for her heels, applied twice a day. It is 7am and you are doing the round. Set up, go in, apply it properly, and then tell her daughter what you did when she visits.</p>",
+        "isStart": true,
+        "allowPrevious": false
+      },
+      "position": { "x": 200, "y": 200 },
+      "connection": "prep"
+    },
+    {
+      "id": "prep",
+      "type": "dragToTarget",
+      "color": "#0EA5E9",
+      "title": "Set up the trolley",
+      "config": {
+        "title": "Set up the trolley",
+        "question": "Put each item where it belongs before you go in. Anything that should not be on the round at all, leave where it is.",
+        "dragTargets": [
+          { "id": "t-trolley", "label": "Care trolley" },
+          { "id": "t-station", "label": "Nurses' station" },
+          { "id": "t-clinical", "label": "Clinical waste bin" }
+        ],
+        "dragItems": [
+          { "id": "i-gloves", "label": "Box of disposable gloves", "targetId": "t-trolley" },
+          { "id": "i-cream", "label": "Margaret's prescribed barrier cream (pharmacy label in her name)", "targetId": "t-trolley" },
+          { "id": "i-mar", "label": "Margaret's MAR chart", "targetId": "t-trolley" },
+          { "id": "i-old-gloves", "label": "Yesterday's used gloves, left on the trolley", "targetId": "t-clinical" },
+          { "id": "i-keys", "label": "Medication cupboard keys", "targetId": "t-station" },
+          { "id": "i-other-cream", "label": "Another resident's steroid cream" }
+        ],
+        "allowPrevious": true
+      },
+      "position": { "x": 520, "y": 200 },
+      "connection": "apply"
+    },
+    {
+      "id": "apply",
+      "type": "procedure",
+      "color": "#F59E0B",
+      "title": "Apply Margaret's barrier cream",
+      "config": {
+        "title": "Apply Margaret's barrier cream",
+        "question": "Perform the steps in the order you would on the floor. A step taken out of turn has its consequence straight away.",
+        "procedureSteps": [
+          {
+            "text": "Check the care plan and MAR chart for what is prescribed, where, and when it was last applied"
+          },
+          {
+            "text": "Wash your hands",
+            "critical": true,
+            "ifEarly": "You have touched the door, the trolley and the chart since you last washed. Hands first, every time.",
+            "earlyActions": [
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "text": "Explain what you are going to do and gain Margaret's consent",
+            "critical": true,
+            "ifEarly": "Margaret has not agreed to anything yet. Touching her without consent is the one thing that ends this round.",
+            "earlyActions": [
+              { "variableId": "critical_failure", "operator": "set_true" },
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "text": "Put on gloves",
+            "ifEarly": "Gloves go on after hand hygiene and after consent, not before either.",
+            "earlyActions": [
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "text": "Apply a thin layer to both heels, in the direction of hair growth",
+            "critical": true,
+            "ifEarly": "Cream on before clean hands and consent is exactly what this round is testing for.",
+            "earlyActions": [
+              { "variableId": "critical_failure", "operator": "set_true" },
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "text": "Remove gloves and wash your hands",
+            "ifEarly": "There is nothing to take off yet. Gloves come off after the cream is on.",
+            "earlyActions": [
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          },
+          {
+            "text": "Record on the MAR chart with the time and your initials",
+            "ifEarly": "You cannot record what you have not yet done.",
+            "earlyActions": [
+              { "variableId": "missteps", "operator": "increment", "value": 1 }
+            ]
+          }
+        ],
+        "procedureHaltOnCritical": true,
+        "allowPrevious": false
+      },
+      "position": { "x": 840, "y": 200 },
+      "connection": "check"
+    },
+    {
+      "id": "check",
+      "type": "condition",
+      "color": "#0D9488",
+      "title": "Was the round safe?",
+      "config": {
+        "title": "Was the round safe?",
+        "criteria": {
+          "criteriaSets": [
+            {
+              "id": "cs-stop",
+              "pathLabel": "Consent or hygiene breached",
+              "targetNodeId": "stop",
+              "conditions": [
+                { "id": "c-fail", "field": "critical_failure", "operator": "is_true" }
+              ]
+            }
+          ],
+          "defaultTargetNodeId": "explain",
+          "defaultPathLabel": "Round completed",
+          "useRealEvaluation": true
+        }
+      },
+      "position": { "x": 1160, "y": 200 }
+    },
+    {
+      "id": "stop",
+      "type": "message",
+      "color": "#DC2626",
+      "title": "Stop there",
+      "config": {
+        "title": "Stop there",
+        "content": "<p>The round stopped the moment a critical step was taken out of turn. In a real home that is a safeguarding conversation, not a score. You made {missteps} misstep(s) before it stopped.</p><p>Go back to the start and run the round again.</p>",
+        "allowPrevious": false
+      },
+      "position": { "x": 1480, "y": 80 }
+    },
+    {
+      "id": "explain",
+      "type": "conversation",
+      "color": "#C026D3",
+      "title": "Tell Margaret's daughter what you did",
+      "config": {
+        "title": "Tell Margaret's daughter what you did",
+        "persona": "You are Claire, Margaret's daughter, visiting after work. You are polite but watchful: you have read about skin damage in care homes and you want to know, in plain words, what was put on your mum, why, and whether she agreed to it. You are not medical. You notice when someone hides behind jargon.",
+        "firstMessage": "Hi, I'm Claire, Margaret's daughter. Did you do her cream this morning? What is it actually for?",
+        "objective": "The learner should explain what the barrier cream is for and where it was applied, say that they gained Margaret's consent before touching her, and be honest about any misstep in the round rather than minimising it. Grade each rubric criterion on the transcript alone.",
+        "rubric": [
+          { "id": "r-plain", "label": "Explained what the cream is for, in plain words", "weight": 2 },
+          { "id": "r-consent", "label": "Said that Margaret's consent was gained before anything was applied", "weight": 2 },
+          { "id": "r-honest", "label": "Was honest about any misstep without minimising it", "weight": 1 }
+        ],
+        "maxTurns": 5,
+        "scoreVariableId": "explain_score",
+        "allowPrevious": false
+      },
+      "position": { "x": 1480, "y": 320 },
+      "connection": "done"
+    },
+    {
+      "id": "done",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Round complete",
+      "config": {
+        "title": "Round complete",
+        "content": "<p>Round complete with {missteps} misstep(s). Claire's conversation is scored out of 100; a pass is 60 or more.</p>",
+        "allowPrevious": false
+      },
+      "position": { "x": 1800, "y": 320 }
+    }
+  ],
+  "variables": [
+    {
+      "id": "missteps",
+      "name": "missteps",
+      "type": "number",
+      "initialValue": 0,
+      "visible": true,
+      "description": "Steps taken out of turn during the round"
+    },
+    {
+      "id": "critical_failure",
+      "name": "critical_failure",
+      "type": "boolean",
+      "initialValue": false,
+      "visible": false,
+      "description": "Set the moment consent or hand hygiene is breached"
+    },
+    {
+      "id": "explain_score",
+      "name": "explain_score",
+      "type": "number",
+      "initialValue": 0,
+      "visible": true,
+      "description": "How well the round was explained to Margaret's daughter (0 to 100)"
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "explain_score",
+      "operator": ">=",
+      "value": 60,
+      "certificate": true,
+      "certificateValidityMonths": 12
+    }
+  }
+}
