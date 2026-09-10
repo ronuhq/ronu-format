@@ -1,0 +1,68 @@
+{
+  "format": "ronu",
+  "formatVersion": "0.9",
+  "module": {
+    "familyId": "efc6b26a-e7f1-4c91-ba2f-0861fff4334b",
+    "versionId": "efc6b26a-e7f1-4c91-ba2f-0861fff4334b",
+    "versionNumber": null,
+    "title": "Restaurant Floor — Reading the Room",
+    "description": "Work a lodge restaurant floor: handle a complaint, an allergy query, an over-served guest, and a flustered colleague. Each is a visual conversation, and your service is scored.",
+    "language": "en",
+    "thumbnail": "assets/10-1781866194596-a-bar-in-a-safari-lodge-dinning-room-1781799703377-omhft.jpg"
+  },
+  "activityIri": "https://ronunest.com/xapi/modules/efc6b26a-e7f1-4c91-ba2f-0861fff4334b",
+  "exportedAt": "2026-09-10T22:14:50.007Z",
+  "exportedBy": "ronunest.com",
+  "assets": [
+    {
+      "path": "assets/01-character-jovial-1781805079580-jxuts.png",
+      "mimeType": "image/png",
+      "bytes": 264043
+    },
+    {
+      "path": "assets/02-character-displeased-1781805092644-feb8s.png",
+      "mimeType": "image/png",
+      "bytes": 225429
+    },
+    {
+      "path": "assets/03-character-reisgned-1781805107507-iel5e.png",
+      "mimeType": "image/png",
+      "bytes": 256453
+    },
+    {
+      "path": "assets/04-a-bar-in-a-dining-room-lodge-from-the-ba-1781800151274-v5hwa.jpg",
+      "mimeType": "image/jpeg",
+      "bytes": 166060
+    },
+    {
+      "path": "assets/05-photorealistic-portrait-photograph-of-a--1781817933849-rtmmp.png",
+      "mimeType": "image/png",
+      "bytes": 243535
+    },
+    {
+      "path": "assets/06-photorealistic-portrait-photograph-of-a--1781817948437-s4mwe.png",
+      "mimeType": "image/png",
+      "bytes": 210550
+    },
+    {
+      "path": "assets/07-photorealistic-portrait-photograph-of-a--1781817961537-inlb3.png",
+      "mimeType": "image/png",
+      "bytes": 227149
+    },
+    {
+      "path": "assets/08-get-rid-of-the-barrier-rope-and-sign-in--1781816170265-jgksb.jpg",
+      "mimeType": "image/jpeg",
+      "bytes": 798483
+    },
+    {
+      "path": "assets/09-polyhaven-bush_restaurant.jpg",
+      "mimeType": "image/jpeg",
+      "bytes": 2210303
+    },
+    {
+      "path": "assets/10-1781866194596-a-bar-in-a-safari-lodge-dinning-room-1781799703377-omhft.jpg",
+      "mimeType": "image/jpeg",
+      "bytes": 167318
+    }
+  ]
+}

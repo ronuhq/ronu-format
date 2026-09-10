@@ -1,0 +1,334 @@
+{
+  "nodes": [
+    {
+      "id": "intro",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Service Tonight",
+      "config": {
+        "title": "Service Tonight",
+        "content": "You're running the floor at a lodge restaurant. Move around the room and handle each guest — and your colleague. Tap a person to talk to them. You'll be scored on how you handle each one.",
+        "isStart": true,
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 320,
+        "y": 200
+      },
+      "connection": "floor"
+    },
+    {
+      "id": "floor",
+      "type": "scene",
+      "color": "#0E7C7B",
+      "title": "Work the Floor",
+      "config": {
+        "title": "Work the Floor",
+        "hotspots": [
+          {
+            "id": "g-complaint",
+            "label": "Guest — cold main",
+            "hidden": false,
+            "position": {
+              "yaw": -1.875,
+              "pitch": 0
+            },
+            "required": true,
+            "conversation": {
+              "visual": {
+                "states": [
+                  {
+                    "id": "s-irritated",
+                    "cue": "arms folded, sharp tone",
+                    "label": "Irritated",
+                    "sprite": ""
+                  },
+                  {
+                    "id": "s-softening",
+                    "cue": "starting to feel heard",
+                    "label": "Softening",
+                    "sprite": ""
+                  },
+                  {
+                    "id": "s-satisfied",
+                    "cue": "reassured, warming up",
+                    "label": "Satisfied",
+                    "sprite": ""
+                  }
+                ],
+                "background": "",
+                "characterName": "Unhappy diner"
+              },
+              "persona": "You are a guest at a lodge restaurant whose main course has arrived stone cold after a long wait. You're irritated but reasonable — this was meant to be a special evening. You calm down if the server acknowledges the problem, apologises sincerely, and offers a concrete fix (replace the dish, take it off the bill). You stay annoyed if they're defensive, make excuses, or blame the kitchen.",
+              "maxTurns": 6,
+              "objective": "The learner should acknowledge the problem, apologise genuinely, and offer a concrete fix — without being defensive or blaming others. Score higher for empathy plus a clear resolution; lower for excuses or dismissiveness.",
+              "firstMessage": "Excuse me — I've been waiting ages and now my food's turned up stone cold. This really isn't what I expected tonight.",
+              "scoreVariableId": "complaint_score"
+            }
+          },
+          {
+            "id": "g-allergy",
+            "label": "Guest — allergy query",
+            "hidden": false,
+            "position": {
+              "yaw": -0.625,
+              "pitch": 0
+            },
+            "required": true,
+            "conversation": {
+              "visual": {
+                "states": [
+                  {
+                    "id": "s-anxious",
+                    "cue": "worried, watchful",
+                    "label": "Anxious",
+                    "sprite": ""
+                  },
+                  {
+                    "id": "s-reassured",
+                    "cue": "relieved they're taking care",
+                    "label": "Reassured",
+                    "sprite": ""
+                  },
+                  {
+                    "id": "s-alarmed",
+                    "cue": "frightened by a careless answer",
+                    "label": "Alarmed",
+                    "sprite": ""
+                  }
+                ],
+                "background": "",
+                "characterName": "Anxious guest"
+              },
+              "persona": "You are a guest with a SEVERE nut allergy, asking whether a dish is safe before you order. You are anxious. You are reassured ONLY if the server takes it seriously and says they will CHECK with the kitchen rather than guessing. You become alarmed if they guess, say 'it should be fine', or brush it off.",
+              "maxTurns": 6,
+              "objective": "The learner must NOT guess. They should take the allergy seriously and offer to verify with the kitchen / check the allergen information before confirming. Score high for verifying plus reassurance; score low for guessing or downplaying.",
+              "firstMessage": "Before I order — I've got a severe nut allergy. Is the lamb tagine safe for me?",
+              "scoreVariableId": "allergy_score"
+            }
+          },
+          {
+            "id": "g-overserved",
+            "label": "Guest at the bar",
+            "hidden": false,
+            "position": {
+              "yaw": 1.890315654169817,
+              "pitch": 0.03739151560702125
+            },
+            "required": true,
+            "conversation": {
+              "visual": {
+                "voice": "daniel",
+                "states": [
+                  {
+                    "id": "s-jovial",
+                    "cue": "loud, friendly, tipsy",
+                    "label": "Jovial",
+                    "sprite": "assets/01-character-jovial-1781805079580-jxuts.png"
+                  },
+                  {
+                    "id": "s-pushing",
+                    "cue": "insisting on another",
+                    "label": "Pushing",
+                    "sprite": "assets/02-character-displeased-1781805092644-feb8s.png"
+                  },
+                  {
+                    "id": "s-accepting",
+                    "cue": "takes the refusal gracefully",
+                    "label": "Accepting",
+                    "sprite": "assets/03-character-reisgned-1781805107507-iel5e.png"
+                  }
+                ],
+                "background": "assets/04-a-bar-in-a-dining-room-lodge-from-the-ba-1781800151274-v5hwa.jpg",
+                "characterName": "Merry guest"
+              },
+              "persona": "You are a guest at the bar who has had a few too many and wants another drink. You're friendly but slurring. You should be refused politely. You accept a graceful refusal (offer water, food, a soft drink, help getting back to the room) but push back if the server is rude, preachy, or abrupt.",
+              "maxTurns": 6,
+              "objective": "The learner should refuse further alcohol politely and offer an alternative (water, food, soft drink, help home), staying warm and non-judgemental. Score high for a kind, firm refusal; low for serving them, being rude, or being preachy.",
+              "firstMessage": "Heyyy — same again, my friend! Keep 'em coming, it's the holidays!",
+              "scoreVariableId": "service_score"
+            }
+          },
+          {
+            "id": "g-colleague",
+            "label": "Flustered colleague",
+            "hidden": false,
+            "position": {
+              "yaw": 3.3995050030115723,
+              "pitch": 0.1681431641019666
+            },
+            "required": true,
+            "conversation": {
+              "visual": {
+                "voice": "bukola",
+                "states": [
+                  {
+                    "id": "s-panicked",
+                    "cue": "wide-eyed, flustered",
+                    "label": "Panicked",
+                    "sprite": "assets/05-photorealistic-portrait-photograph-of-a--1781817933849-rtmmp.png"
+                  },
+                  {
+                    "id": "s-steadying",
+                    "cue": "starting to breathe, taking it in",
+                    "label": "Steadying",
+                    "sprite": "assets/06-photorealistic-portrait-photograph-of-a--1781817948437-s4mwe.png"
+                  },
+                  {
+                    "id": "s-reassured",
+                    "cue": "calm, knows what to do",
+                    "label": "Reassured",
+                    "sprite": "assets/07-photorealistic-portrait-photograph-of-a--1781817961537-inlb3.png"
+                  }
+                ],
+                "background": "assets/08-get-rid-of-the-barrier-rope-and-sign-in--1781816170265-jgksb.jpg",
+                "characterName": "New server"
+              },
+              "persona": "You are a new, flustered server who has accidentally double-booked the same table for two parties both arriving in ten minutes. You're panicking and looking to the learner — a senior colleague — for help. You calm down and act if they give clear, practical steps; you stay panicked if they're vague or just tell you off.",
+              "maxTurns": 6,
+              "objective": "The learner should stay calm, reassure the colleague, and give practical steps (find an alternative table, speak to the host, prepare an apology or small comp if needed). Score high for calm, concrete coaching; low for blame or vagueness.",
+              "firstMessage": "I've messed up — I've put two bookings on table six and they're both due any minute. What do I do?!",
+              "scoreVariableId": "coaching_score"
+            }
+          }
+        ],
+        "completion": "allRequired",
+        "environment": {
+          "kind": "photo360",
+          "source": "assets/09-polyhaven-bush_restaurant.jpg"
+        },
+        "instructions": "Tap each person to handle them. Work the whole room before you continue.",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 640,
+        "y": 200
+      },
+      "connection": "passcheck"
+    },
+    {
+      "id": "passcheck",
+      "type": "condition",
+      "color": "#F59E0B",
+      "title": "Check Floor Score",
+      "config": {
+        "title": "Check Floor Score",
+        "overlay": true,
+        "required": false,
+        "subtitlesUrl": "",
+        "allowPrevious": true,
+        "criteria": {
+          "criteriaSets": [
+            {
+              "id": "cs-pass",
+              "pathLabel": "Scored 60+",
+              "targetNodeId": "pass",
+              "conditions": [
+                {
+                  "id": "c1",
+                  "field": "floor_score",
+                  "operator": ">=",
+                  "value": "60"
+                }
+              ]
+            }
+          ],
+          "defaultTargetNodeId": "retry",
+          "defaultPathLabel": "Below 60",
+          "useRealEvaluation": true
+        }
+      },
+      "position": {
+        "x": 960,
+        "y": 200
+      }
+    },
+    {
+      "id": "pass",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Strong service",
+      "config": {
+        "title": "Strong service",
+        "content": "<p>You read the room: a recovered complaint, an allergy handled safely, a guest looked after at the bar, and a colleague back on their feet. That's the standard that keeps guests coming back.</p>",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1275,
+        "y": -45
+      }
+    },
+    {
+      "id": "retry",
+      "type": "message",
+      "color": "#64748B",
+      "title": "Work the room again",
+      "config": {
+        "title": "Work the room again",
+        "content": "Some of those guests left unsure. Lead with empathy, never guess on allergies, refuse kindly, and coach with concrete steps. Give the floor another go.",
+        "subtitlesUrl": "",
+        "allowPrevious": true
+      },
+      "position": {
+        "x": 1290,
+        "y": 375
+      }
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "value": 60,
+      "operator": ">=",
+      "variableId": "floor_score",
+      "certificate": true
+    }
+  },
+  "variables": [
+    {
+      "id": "complaint_score",
+      "name": "complaint_score",
+      "type": "number",
+      "visible": true,
+      "description": "Service recovery",
+      "initialValue": 0
+    },
+    {
+      "id": "allergy_score",
+      "name": "allergy_score",
+      "type": "number",
+      "visible": true,
+      "description": "Allergen handling",
+      "initialValue": 0
+    },
+    {
+      "id": "service_score",
+      "name": "service_score",
+      "type": "number",
+      "visible": true,
+      "description": "Responsible service",
+      "initialValue": 0
+    },
+    {
+      "id": "coaching_score",
+      "name": "coaching_score",
+      "type": "number",
+      "visible": true,
+      "description": "Team coaching",
+      "initialValue": 0
+    },
+    {
+      "id": "floor_score",
+      "name": "floor_score",
+      "type": "number",
+      "formula": "(complaint_score + allergy_score + service_score + coaching_score) / 4",
+      "visible": true,
+      "computed": true,
+      "description": "Overall floor score",
+      "initialValue": 0
+    }
+  ]
+}
