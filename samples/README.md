@@ -24,13 +24,14 @@ The loose files are exactly the contents of `hello.ronu`, unzipped so you can br
 showcase/
 ├── showcase.ronu       ← the real file (a zip). Try:  unzip -l showcase/showcase.ronu
 ├── manifest.json       ← its envelope, unpacked: ten assets with sizes and MIME types
-├── module.json         ← its experience, unpacked: message → scene → condition → two endings
-└── assets/             ← the bundled media, referenced from module.json as "assets/NN-name.ext"
-    ├── 09-polyhaven-bush_restaurant.jpg   the equirectangular panorama behind the scene
-    ├── 01..03, 05..07 *.png               character sprites (with alpha) for the conversations
-    ├── 04, 08 *.jpg                       conversation backgrounds
-    └── 10 *.jpg                           the cover, named by manifest.module.thumbnail
+└── module.json         ← its experience, unpacked: message → scene → condition → two endings
 ```
+
+The media itself lives only inside the zip (referenced from module.json as
+"assets/NN-name.ext"): the equirectangular panorama behind the scene, six
+character sprites with alpha for the conversations, two conversation
+backgrounds and the cover named by manifest.module.thumbnail. Unzip it to see
+them; keeping a loose copy would double the repository for no reader's benefit.
 
 | Sample | Exercises |
 |---|---|
