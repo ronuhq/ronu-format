@@ -20,11 +20,11 @@ Any static server works (GitHub Pages included). It does not run from `file://` 
 Ways to open a file:
 
 - drop a `.ronu` on the page, or tap the box to pick one (`.ronu`, `.zip`, or a bare `module.json`);
-- "Try a sample" loads `samples/hello-ronu/hello.ronu`, the real zip with a bundled image; "Try Under the sink" loads that sample's `module.json`;
-- `index.html?ronu=<url>` loads a remote file (the server must allow CORS);
+- "Try the showcase" loads `samples/showcase/showcase.ronu`, a real room with its panorama and character sprites bundled (4.8 MB); "Try a sample" loads `samples/hello-ronu/hello.ronu`, the smallest complete file; the "Under the sink" link below the URL box loads that sample's `module.json` (a scene, a choice and an AI conversation);
+- paste any address into the URL box, or open `index.html?ronu=<url>` (the server must allow CORS). A bare `module.json` fetched by URL picks up a `manifest.json` sitting beside it, so the sample folders keep their platform module id (see "Sending a play-through");
 - the last file you opened is kept in IndexedDB, so reopening the installed app offline still has it.
 
-The header has **Record** (download the session record as JSON) and **Close**. The end screen shows pass or fail, the score, every variable, node scores and the path taken.
+The header has **Session record** (a panel listing every event so far, with "Download JSON"), the RonuNest control (**Connect**, or your email and **Disconnect**), and **Close**. The end screen shows pass or fail, the score, every variable, node scores and the path taken, then the actions: Send to RonuNest (when connected), Play again, Open another file, Download session record. A scene card has a **Fullscreen** button (the Fullscreen API on the whole card, so the in-room cards come along); on a phone the panorama fills the height of the screen.
 
 Other samples can be zipped into real `.ronu` files with the helper:
 
@@ -49,17 +49,61 @@ Level 1, "minimal player" (spec section 6): the skeleton, every `stable` catalog
 | `condition` | Full. Canonical `criteria` object and the legacy stringified `choices`; legacy `decisionPath` accepted. All the operators real files use (SPEC-GAPS G1 to G5). |
 | `note` | Skipped, as the spec requires. |
 | `scene` `photo2d` | Full. Markers at fractional x/y; hidden hotspots found by tapping within `discoveryRadius`. |
-| `scene` `photo360` | Full for the stable surface. The 360 view is a simple drag-to-pan render of the equirectangular image, not a perspective projection; the yaw/pitch mapping is documented at the top of `pano.js` and in SPEC-GAPS G10. Hidden and visible hotspots, `required`, `allRequired`, `ordered`, `missActions`, `reveal` (text, image, video), routing. Hotspot `conversation` shows a fallback card (needs an AI backend). |
+| `scene` `photo360` | Full for the stable surface. The 360 view is a simple drag-to-pan render of the equirectangular image, not a perspective projection; the yaw/pitch mapping is documented at the top of `pano.js` and in SPEC-GAPS G10. Hidden and visible hotspots, `required`, `allRequired`, `ordered`, `missActions`, `reveal` (text, image, video), routing. A hotspot `conversation` runs live while connected to RonuNest (see "Conversations through RonuNest"), otherwise it shows a fallback card. |
 | `scene` hotspot `interaction` (spec 7.2) | Full. A hotspot may carry `{type, config}` for any of the eight nestable types (`message`, `multipleChoice`, `textInput`, `matching`, `ranking`, `rating`, `procedure`, `dragToTarget`). It opens as a beat between the conversation and the reveal, is answered in the room by the same engine calls and the same renderer as the top-level type, and never routes; the answer and any score are recorded against the hotspot (`<sceneId>/<hotspotId>`) and its choices', steps' and items' `actions[]` fire as usual. A `required` hotspot with an interaction only counts once answered; Close puts the learner back in the room and the later beats wait. Placeholders apply inside nested content. A non-nestable type is ignored, as if the hotspot had none. |
 | `scene` `abortWhen` (spec 7.2) | Full. `{variableId, operator (default is_true), value, targetNodeId}`, the completion rule's comparison. Re-evaluated after every action fired inside the scene (hotspot `variableActions`, `missActions`, nested interaction actions, a procedure step's `earlyActions`, timer actions); when it holds the learner leaves at once for `targetNodeId`, even mid-procedure. Not evaluated on entry. |
 | `procedure` | Implemented (provisional). Steps shown in a shuffled order; out-of-turn steps are reported as they happen with `ifEarly` and `earlyActions`; `procedureHaltOnCritical`. |
 | `dragToTarget` | Implemented (provisional), as tap-to-place. Distractors count as right only when left unused. |
-| `conversation`, `code`, `scene` `splat` and `embed3d` | Fallback card (rule 5.2): title, "this step needs a newer player", Continue. `code.source` is never executed. |
+| `conversation` | Live while connected to RonuNest (provisional): the character's `firstMessage`, one call per learner line through the receiver's `ai-conversation` function, "End conversation" for the assessment, the score written to `scoreVariableId`. Not connected, or the call fails: the fallback card, and Continue. |
+| `code`, `scene` `splat` and `embed3d` | Fallback card (rule 5.2): title, "this step needs a newer player", Continue. `code.source` is never executed. |
 | Unknown and `x-` namespaced types | Same fallback. |
 
 Runtime semantics implemented: start node, connections, variables with typed initial values and computed formulas, every `VariableAction` operator, `onNodeEnter`, `onNodeExit` and `onTimerElapsed` triggers, node and module `TimerConfig` (countdown and count-up, `onExpire` none, advance, route, end, `recordVariableId`, warning window), `{placeholder}` substitution, completion rules in `variable`, `reachedNode` and `nodeScore` modes, and the end screen.
 
-Not implemented: Back navigation (`allowPrevious`), timer sounds, learner-scoped variables across files (the spec says an offline player treats them as module-scoped), the code sandbox, AI conversation. Because there is no AI grader, a `conversation`'s `scoreVariableId` keeps its initial value; a file whose gate depends on it (the `margarets-room` sample) loops the learner back to the room in this player (SPEC-GAPS G47).
+Not implemented: Back navigation (`allowPrevious`), timer sounds, learner-scoped variables across files (the spec says an offline player treats them as module-scoped), the code sandbox, and AI conversation without a receiver. Offline there is no AI grader, so a `conversation`'s `scoreVariableId` keeps its initial value; a file whose gate depends on it (the `margarets-room` sample) loops the learner back to the room (SPEC-GAPS G47). Connected to RonuNest, the conversation runs for real and the score is written (see below).
+
+## Connecting to RonuNest
+
+A `.ronu` file plays with no account, and by default nothing leaves the device. Optionally the player connects to a **record receiver** (RonuNest is the first; [`docs/record-receiver.md`](../docs/record-receiver.md) is the contract, and any platform can implement it). Connected, two things change: a finished play-through can be sent to the receiver, where it is graded, certified and counted like an online one, and `conversation` steps run through the receiver's AI instead of showing the fallback card.
+
+The flow, as the contract has it:
+
+1. **Connect** (top bar, opener, or the "Connect to RonuNest" prompt on a conversation or the end screen) opens a dialog. The receiver defaults to `https://ronunest.com`; "change" takes another origin (plain `http` only on localhost, for a dev server or the mock below). The player fetches `<origin>/.well-known/ronu-receiver.json` to find the connect page and falls back to `<origin>/player-connect`.
+2. "Open RonuNest sign-in" opens the connect page in a popup, with the player's origin and name in the query string. You sign in on the receiver's own pages (the player never sees a password or embeds a sign-in form) and approve the player. The page posts one `ronu-receiver-connect` message to the player; the player accepts it only from the origin it opened and only while it is waiting for one.
+3. **No popup?** If the browser blocked the window, open the connect page in a tab from the link in the dialog; if the page has no opener it shows a **connection code** (base64url of the same message) with a copy button. Paste it into the dialog and "Use code".
+4. The receiver block, the session and the user are stored in IndexedDB, so the connection survives a reload and the installed app keeps it. The top bar shows your email. Before every call, a session within 60 seconds of expiry is refreshed through the receiver's GoTrue endpoint; a 401 from an endpoint refreshes and retries once. If the refresh fails you are disconnected and told so on the next screen.
+5. **Disconnect** (top bar, or the opener) calls the receiver's logout and forgets everything stored. Do it on a shared device: a stored session is as sensitive as being signed in.
+
+## Sending a play-through
+
+On the end screen, **Send to RonuNest** posts the session record to the receiver's `records` endpoint: `{moduleId, responses, path, variableState}` exactly as section 3 of the contract, built from the engine's final state (`receiver.js`, `buildRecordBody`). Only answered nodes are sent, with a 0 to 100 `score` where the player computed one (matching, procedure, dragToTarget, an assessed conversation); the receiver recomputes pass or fail from its own copy of the rule, so the player's verdict is never sent.
+
+- `moduleId` is the platform id from `manifest.json` (`module.id`, or the exporter's `module.versionId`). A file without one, a bare `module.json` with no manifest beside it or a hand-made zip, cannot be recorded and the end screen says so.
+- **Once per session.** After a 200 the end screen shows the receiver's verdict and score, links the certificate (`<origin>/certificates/<code>`) when one was issued, and the button goes away. The "sent" flag is stored with the last-opened file, so reopening the same file shows "already sent on ..." with the certificate link; Play again starts a new session, which may be sent as a new attempt.
+- 401 refreshes and retries once, then disconnects; 403 (no access) and 404 (the receiver does not have this module) are final and say so; 413 drops long answers, keeps every score, and retries once; a network or 5xx failure keeps the record so you can try again.
+
+The **Session record** panel and its "Download JSON" are the local, xAPI-shaped record described below; it is a superset of what is sent and stays on the device.
+
+## Conversations through RonuNest
+
+While connected, a `conversation` node (and a scene hotspot's `conversation` block) is a live chat with the character: the `firstMessage` opens, each line you send goes to the receiver's `conversation` endpoint with the persona, objective, mood states and the full transcript (section 4 of the contract), and the reply comes back with the character's mood. The creator who owns the module pays for the turns, as online. `maxTurns` (default 6) bounds the exchange; reaching it ends the conversation by itself.
+
+- **End conversation** (tap twice, so one mis-tap does not end it) sends `finalize: true`; the assessment `{score, summary, criteria}` is shown, the score is written to the node's `scoreVariableId` with a `set` action, and the node's answer (transcript plus assessment) is recorded with that score, so the record sent above carries it and a `condition` on the score routes correctly.
+- **Degraded** (`degraded: true`, the creator's allowance is spent): the character can only wrap up; the input closes and "End and assess" is the one thing left.
+- An error (`{error}` with 4xx or 5xx, or no network) is shown; the line you typed comes back into the box to send again, and "Skip the character and continue" takes the fallback card and lets you move on. Not connected at all, the node shows the fallback card with a Connect prompt, as a minimal player would.
+- Inside a scene the same card opens over the room; Close puts you back in the room with the conversation waiting, and the hotspot's later beats (reveal, route) run once it is ended.
+
+## The mock receiver
+
+`player/tools/mock-receiver.mjs` is a fake RonuNest for trying all of the above without an account. Node only, no dependencies:
+
+```bash
+node player/tools/mock-receiver.mjs --static 8000 --receiver 8787
+```
+
+It serves the repository on the static port (the player at `/player/`, the samples at `/samples/`, and `/mock/<sample>.ronu` zips any sample folder with its manifest on the fly) and the receiver on the other: `/.well-known/ronu-receiver.json`, a `/player-connect` page that consents at once and posts the connect message to its opener (or shows a connection code), `/functions/v1/record-completion` (validates the headers and the body shape, answers `passed: true, score: 100` and a `MOCK-1234` certificate), `/functions/v1/ai-conversation` (canned replies; a line containing "degrade" gets the degraded reply, one containing "fail" a 500; finalize returns an assessment, with per-criterion scores when a rubric was sent), and the GoTrue refresh and logout paths. Sessions expire after 45 seconds so the refresh path runs. `MOCK_RECORD_STATUS=403|404|413|500` makes the record call fail that way; `MOCK_MAX_BODY` sets the 413 ceiling.
+
+Then open `http://localhost:8000/player/`, Connect, "change" the receiver to `http://localhost:8787`, and go. The mock only connects players on `http://localhost` or `http://127.0.0.1`.
 
 ## Architecture
 
@@ -75,18 +119,23 @@ player/
   formula.js            computed-variable formulas (mirrors rust/src/formula.rs). No DOM.
   bundle.js             unzip, manifest and module, media resolver. No DOM.
   session.js            the event log as xAPI-like statements. No DOM.
+  receiver.js           the record-receiver bridge: discovery, the connect message, session refresh,
+                        the record body and the once-only send, the conversation calls. No DOM; fetch injected.
+  conversation.js       the conversation state machine over a receiver client. No DOM.
+  receiver-ui.js        the connect dialog (popup, paste-a-code), the stored connection, the top-bar control
+  store.js              IndexedDB key-value store: the last file, the receiver connection
   sw.js                 service worker: app-shell cache
   manifest.webmanifest  PWA manifest
   vendor/fflate.js      unzip (MIT, licence alongside)
   test/                 Node test suite
-  tools/                icon generator, sample zipper
+  tools/                icon generator, sample zipper, the mock receiver
 ```
 
 The engine is a plain state machine. The UI calls `start()`, then `choose()`, `answerText()`, `activateHotspot()`, `tapScene()`, `performStep()`, `dismissBeat()`, `continue()` and so on, and reads `view()` to know what to draw. While a scene's interaction beat is open, `view().interaction` is the nested sub-node in the same shape as a node view, and the answer calls (`answerMultiple()`, `performStep()`, `placeItem()` and the rest) apply to it instead of the scene; the UI draws it with the same `render_<type>` function it uses for the top-level node. A clock is injected, so timers are tested with a fake one. Everything without a DOM runs unchanged in Node, which is what the tests use.
 
 ## Session record
 
-The player keeps an in-memory log (node entered, answer given, variable changed, hotspot found, timer expired, completed) and **Record** downloads it as JSON. Statements are xAPI-like: ADL verbs, the activity IRI from `manifest.json` (`activityIri`, or derived from `module.familyId` per `docs/xapi-activity-ids.md`), node sub-activities at `{iri}/nodes/{id}`, and a placeholder actor `{"account": {"name": "local"}}`. Simulation detail (branches taken, hotspots, timer expiries, variable changes) rides in extensions under `https://ronunest.com/xapi/ext/`. Nothing is sent anywhere.
+The player keeps an in-memory log (node entered, answer given, variable changed, hotspot found, timer expired, completed); **Session record** in the header lists it as it grows, and "Download JSON" there (or on the end screen) downloads it. Statements are xAPI-like: ADL verbs, the activity IRI from `manifest.json` (`activityIri`, or derived from `module.familyId` per `docs/xapi-activity-ids.md`), node sub-activities at `{iri}/nodes/{id}`, and a placeholder actor `{"account": {"name": "local"}}`. Simulation detail (branches taken, hotspots, timer expiries, variable changes) rides in extensions under `https://ronunest.com/xapi/ext/`. Nothing is sent anywhere unless you connect to a receiver and press Send, and then it is the smaller contract shape that goes, not these statements.
 
 ## Security
 
@@ -96,6 +145,7 @@ A `.ronu` file is untrusted by design; it may have arrived over WhatsApp.
 - `code` nodes are never executed. The source is not even displayed.
 - Media is served from `blob:` URLs created from the zip; nothing in the file can name a filesystem path.
 - The only iframes the player creates are for YouTube and Vimeo video URLs, on their own embed hosts.
+- The receiver connection is a real session for the learner (the contract's section 6 explains why, and the scoped player token that will replace it). The player takes it only from a `message` event whose origin is the connect page it opened, or from a code the learner pasted; it is stored in IndexedDB, sent only to the receiver's own endpoints with the public anon key, and cleared by Disconnect. Nothing in a `.ronu` file can name a receiver or trigger a send.
 
 ## Tests
 
@@ -105,9 +155,9 @@ Node 20 or newer, no install:
 node --test player/test/*.test.mjs
 ```
 
-The suite walks every sample under `samples/*/module.json` from its start node with scripted answers (first choice, authored order, items on their targets; nested interactions answered in the room; a conversation's `scoreVariableId` set to full marks to stand in for the AI grader) and asserts on the variables and end state; tests each condition operator and every `VariableAction` operator; covers the unknown-node fallback, namespaced extensions and the legacy forms; timers with a fake clock; scene discovery and sequencing; nested interactions and `abortWhen` (`test/interaction.test.mjs`, including a focused walk of `margarets-room`); `procedure` and `dragToTarget`; the session record; and opens `samples/hello-ronu/hello.ronu` (a real zip) and a fixture zip through the same unzip and resolve path the UI uses. CI runs it in the `player` job of `.github/workflows/ci.yml`.
+The suite walks every sample under `samples/*/module.json` from its start node with scripted answers (first choice, authored order, items on their targets; nested interactions answered in the room; a conversation's `scoreVariableId` set to full marks to stand in for the AI grader) and asserts on the variables and end state; tests each condition operator and every `VariableAction` operator; covers the unknown-node fallback, namespaced extensions and the legacy forms; timers with a fake clock; scene discovery and sequencing; nested interactions and `abortWhen` (`test/interaction.test.mjs`, including a focused walk of `margarets-room`); `procedure` and `dragToTarget`; the session record; opens `samples/hello-ronu/hello.ronu` (a real zip) and a fixture zip through the same unzip and resolve path the UI uses; the receiver bridge against a scripted fetch (`test/receiver.test.mjs`: the section 3 body from a real run, 413 trimming, refresh before a call and on a 401, the connect-message origin rule, connection codes, discovery, the once-only send); and the conversation loop against a fake client (`test/conversation.test.mjs`: turns, moods, degraded, finalize writing the score variable, a hotspot character in a scene). CI runs it in the `player` job of `.github/workflows/ci.yml`.
 
-The DOM side (sanitiser, panorama, rendering) is checked in a browser; see the verification notes in the commit history.
+The DOM side (sanitiser, panorama, rendering, the connect dialog and the live conversation against the mock receiver) is checked in a browser; see the verification notes in the commit history.
 
 ## Licence
 

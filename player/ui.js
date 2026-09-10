@@ -106,6 +106,7 @@ export class PlayerUI {
     this.moduleId = recordModuleId(this.manifest);
     this.sender = null; // createRecordSender for the current session, made on first use
     this.sendError = null;
+    this.sendErrorFinal = false; // a 403, 404 or 413: the contract says nothing to retry
     this.sending = false;
     this.lastRevision = -1;
     this.pano = null;
@@ -335,16 +336,16 @@ export class PlayerUI {
       log.append(box);
     }
     wrap.append(log);
+    // The log scrolls inside the card; keep the newest line in view.
+    queueMicrotask(() => { log.scrollTop = log.scrollHeight; });
     if (run.error) wrap.append(h('p.error', run.error));
     if (run.status === 'degraded') wrap.append(h('p.note', `${name} can only wrap up now (the creator's conversation allowance on ${this.receiver?.name ?? 'the receiver'} is spent). End the conversation to get your assessment.`));
 
     if (!run.done) {
-      const local = { focus: false };
       const ta = h('textarea.input', { rows: 2, placeholder: run.canSend ? 'Type your reply. Enter sends, Shift+Enter for a new line.' : run.status === 'degraded' ? 'No more replies. End the conversation.' : 'Waiting…', value: run.draft ?? '', disabled: !run.canSend, 'aria-label': 'Your reply' });
       const send = () => {
         const text = ta.value;
         if (!text.trim() || !run.canSend) return;
-        local.focus = true;
         run.send(text);
       };
       ta.addEventListener('keydown', (e) => {
@@ -382,7 +383,8 @@ export class PlayerUI {
         h('div.chat-meta', h('span.small.muted', `${run.turnsLeft} repl${run.turnsLeft === 1 ? 'y' : 'ies'} left`), endBtn),
       );
       if (run.error && onGiveUp) wrap.append(h('div.actions', h('button.btn.btn-ghost', { onclick: onGiveUp }, 'Skip the character and continue')));
-      if (run.draft && !run.busy) queueMicrotask(() => ta.focus());
+      // The card is rebuilt on every change, so put the cursor back once the learner has started talking.
+      if (run.canSend && (run.draft || run.learnerTurns > 0)) queueMicrotask(() => ta.focus());
     }
     if (after) wrap.append(after);
     return wrap;
@@ -638,8 +640,14 @@ export class PlayerUI {
     if (typeof card.requestFullscreen === 'function' || typeof document.exitFullscreen === 'function') {
       const isFull = document.fullscreenElement === card;
       const fsBtn = h('button.btn.btn-small.btn-fullscreen', { 'aria-pressed': isFull, title: isFull ? 'Exit fullscreen' : 'Fullscreen', onclick: () => {
-        if (document.fullscreenElement === card) document.exitFullscreen?.().catch?.(() => {});
-        else card.requestFullscreen?.()?.catch?.((e) => this.toast(`Fullscreen is not available: ${e.message}`));
+        const notAvailable = (e) => this.toast(`Fullscreen is not available here${e?.message ? `: ${e.message}` : ''}.`);
+        try {
+          // The API rejects (or throws, in some embedders) without a user gesture or when a permission policy forbids it.
+          if (document.fullscreenElement === card) document.exitFullscreen?.()?.catch?.(() => {});
+          else card.requestFullscreen?.()?.catch?.(notAvailable);
+        } catch (e) {
+          notAvailable(e);
+        }
       } }, isFull ? 'Exit fullscreen' : 'Fullscreen');
       if (!local.fsListener) {
         local.fsListener = () => this.render(true);
@@ -813,9 +821,10 @@ export class PlayerUI {
     const card = h('article.card.card-end', h('h2.card-title', status));
     if (view.error) card.append(h('p.note', view.error));
     if (typeof r.score === 'number') {
+      // A variable rule on a number shows that number by name; otherwise the score is the average node score.
       const isVar = (r.rule?.mode ?? 'variable') === 'variable' && r.rule;
-      const name = isVar ? this.engine.findVariable(r.rule.variableId)?.name : null;
-      card.append(h('p.score-big', name ? `${name}: ${r.score}` : `${r.score}%`));
+      const ruleVar = isVar ? view.variables.find((v) => v.id === r.rule.variableId) : null;
+      card.append(h('p.score-big', ruleVar && typeof ruleVar.value === 'number' ? `${ruleVar.name}: ${ruleVar.value}` : `${r.score}%`));
     }
     if (r.rule) card.append(h('p.muted', describeRule(r.rule, this.engine)));
     const vars = view.variables;
@@ -847,6 +856,7 @@ export class PlayerUI {
     this.pano = null;
     this.sender = null;
     this.sendError = null;
+    this.sendErrorFinal = false;
     this.render(true);
   }
 
@@ -883,6 +893,8 @@ export class PlayerUI {
   renderSendButton() {
     const ctl = this.receiver;
     if (!ctl || !this.moduleId || this.sender?.sent) return null;
+    // Section 3: 403, 404 and a 413 that survived the trim are final; there is nothing to retry.
+    if (this.sendErrorFinal) return null;
     if (!ctl.connected) return h('button.btn.btn-primary', { onclick: async () => { await ctl.connect(); this.render(true); } }, 'Connect to RonuNest to record this');
     if (this.sending) return h('button.btn.btn-primary', { disabled: true }, `Sending to ${ctl.name}…`);
     const label = this.sendError ? 'Try again' : this.priorSent ? `Send this play-through to ${ctl.name} as a new attempt` : `Send to ${ctl.name}`;
@@ -905,6 +917,7 @@ export class PlayerUI {
     }
     this.sending = true;
     this.sendError = null;
+    this.sendErrorFinal = false;
     this.render(true);
     try {
       const sent = await this.sender.send(body);
@@ -913,6 +926,7 @@ export class PlayerUI {
     } catch (e) {
       // 401 was refreshed and retried inside the client; a disconnect surfaces through the controller's notice.
       this.sendError = e.code === 'disconnected' ? `${e.message} Your record is kept; connect and send it again.` : e.code === 'network' || e.code === 'server' ? `${e.message} Your record is kept.` : e.message;
+      this.sendErrorFinal = ['forbidden', 'not-found', 'too-large'].includes(e.code);
       if (e.code === 'disconnected') this.sender = null;
     } finally {
       this.sending = false;

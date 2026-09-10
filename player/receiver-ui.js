@@ -274,13 +274,17 @@ function openConnectDialog(ctl) {
   });
 }
 
-/** The "RonuNest" control: connect, or the user's email with Disconnect. Used in the top bar and on the opener. */
-export function receiverControl(ctl, { compact = false, onChange } = {}) {
+/**
+ * The "RonuNest" control: connect, or the user's email with Disconnect. Used
+ * in the top bar (`compact`: the email only) and on the opener (`bare`: the
+ * Disconnect button only, the opener names the user itself).
+ */
+export function receiverControl(ctl, { compact = false, bare = false, onChange } = {}) {
   const changed = () => onChange?.();
   if (ctl.connected) {
     const email = ctl.connection.user.email || ctl.connection.user.name || 'connected';
     return h('span.receiver-control.is-connected',
-      h('span.receiver-user', { title: `${ctl.name}: ${email}` }, compact ? email : `${ctl.name}: ${email}`),
+      bare ? null : h('span.receiver-user', { title: `${ctl.name}: ${email}` }, compact ? email : `${ctl.name}: ${email}`),
       h('button.btn.btn-ghost.btn-small', { onclick: async () => { await ctl.disconnect(); changed(); }, title: `Disconnect from ${ctl.name}` }, 'Disconnect'),
     );
   }

@@ -10,6 +10,7 @@ import { dbGet, dbPut } from './store.js';
 import { ReceiverController, receiverControl } from './receiver-ui.js';
 
 const SAMPLE_URL = '../samples/hello-ronu/hello.ronu';
+const SHOWCASE_URL = '../samples/showcase/showcase.ronu';
 const SAMPLE_JSON_URL = '../samples/under-the-sink/module.json';
 
 const app = document.getElementById('app');
@@ -28,17 +29,21 @@ receiver.subscribe(() => {
 
 // ---- opening ---------------------------------------------------------------
 
-function bundleFromBytes(bytes, name) {
+function looksLikeZip(bytes) {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const looksZip = u8.length > 3 && u8[0] === 0x50 && u8[1] === 0x4b;
-  if (looksZip || /\.(ronu|zip)$/i.test(name)) return openBundle(u8, { unzip: window.fflate.unzipSync, name });
-  return openModuleJson(new TextDecoder().decode(u8), { name });
+  return u8.length > 3 && u8[0] === 0x50 && u8[1] === 0x4b;
 }
 
-async function openBytes(bytes, name, { remember = true } = {}) {
+function bundleFromBytes(bytes, name, { manifest = null } = {}) {
+  const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (looksLikeZip(u8) || /\.(ronu|zip)$/i.test(name)) return openBundle(u8, { unzip: window.fflate.unzipSync, name });
+  return openModuleJson(new TextDecoder().decode(u8), { name, manifest });
+}
+
+async function openBytes(bytes, name, { remember = true, manifest = null } = {}) {
   let bundle;
   try {
-    bundle = bundleFromBytes(bytes, name);
+    bundle = bundleFromBytes(bytes, name, { manifest });
   } catch (e) {
     showOpener(`Could not open ${name}: ${e.message}`);
     return;
@@ -50,7 +55,7 @@ async function openBytes(bytes, name, { remember = true } = {}) {
   if (remember) {
     // The "sent to the receiver" flag stays with the file when the same file is opened again.
     const same = last && last.name === name && last.bytes?.byteLength === buffer.byteLength;
-    last = { name, title: bundleTitle(bundle), bytes: buffer, at: Date.now(), sent: same ? last.sent ?? null : null };
+    last = { name, title: bundleTitle(bundle), bytes: buffer, manifest: bundle.manifest.synthesized ? null : bundle.manifest, at: Date.now(), sent: same ? last.sent ?? null : null };
     await dbPut('last', last);
   }
   const priorSent = last && last.name === name && last.bytes?.byteLength === buffer.byteLength ? last.sent ?? null : null;
@@ -108,6 +113,22 @@ function downloadSession(engine, bundle) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+/**
+ * A bare module.json fetched by URL may have its manifest.json beside it (the
+ * sample folders do). Reading it keeps the platform module id, so the file can
+ * be recorded on a receiver. Missing or broken: null, and one is synthesised.
+ */
+async function siblingManifest(url) {
+  try {
+    const res = await fetch(new URL('manifest.json', new URL(url, location.href)).href, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    return doc && typeof doc === 'object' && doc.module ? doc : null;
+  } catch {
+    return null;
+  }
+}
+
 async function openUrl(url, { remember = true } = {}) {
   showOpener(null, `Loading ${url}`);
   try {
@@ -115,7 +136,9 @@ async function openUrl(url, { remember = true } = {}) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const bytes = new Uint8Array(await res.arrayBuffer());
     const name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'module.ronu');
-    await openBytes(bytes, name, { remember });
+    const bare = !looksLikeZip(bytes) && /\.json$/i.test(name) && !/manifest\.json$/i.test(name);
+    const manifest = bare ? await siblingManifest(url) : null;
+    await openBytes(bytes, name, { remember, manifest });
   } catch (e) {
     showOpener(`Could not load ${url}: ${e.message}`);
   }
@@ -144,16 +167,18 @@ async function showOpener(error = null, status = null) {
       h('strong', 'Tap to choose a file'), h('span.muted', ' or drop one here'), h('div.small.muted', '.ronu, .zip, or a bare module.json')),
     input,
     h('div.actions.actions-wrap',
-      h('button.btn.btn-primary', { onclick: () => openUrl(SAMPLE_URL) }, 'Try a sample'),
-      h('button.btn', { onclick: () => openUrl(SAMPLE_JSON_URL) }, 'Try "Under the sink"'),
-      last ? h('button.btn', { onclick: () => openBytes(new Uint8Array(last.bytes), last.name, { remember: false }), title: last.name }, `Reopen "${last.title || last.name}"`) : null,
+      h('button.btn.btn-primary', { onclick: () => openUrl(SHOWCASE_URL), title: 'A real room with its panorama bundled (4.8 MB)' }, 'Try the showcase'),
+      h('button.btn', { onclick: () => openUrl(SAMPLE_URL), title: 'The smallest complete file' }, 'Try a sample'),
+      last ? h('button.btn', { onclick: () => openBytes(new Uint8Array(last.bytes), last.name, { remember: false, manifest: last.manifest ?? null }), title: last.name }, `Reopen "${last.title || last.name}"`) : null,
     ),
+    last?.sent ? h('p.small.muted', `"${last.title || last.name}" was sent to ${last.sent.receiverName ?? 'the receiver'} on ${new Date(last.sent.at).toLocaleString()}${typeof last.sent.score === 'number' ? ` (score ${last.sent.score})` : ''}.`) : null,
     h('form.url-form', { onsubmit: (e) => { e.preventDefault(); if (urlInput.value) openUrl(urlInput.value); } }, urlInput, h('button.btn', { type: 'submit' }, 'Load URL')),
+    h('p.small.muted', 'More samples: ', h('button.btn-link', { onclick: () => openUrl(SAMPLE_JSON_URL) }, 'Under the sink'), ' (a scene, a choice and an AI conversation), or paste any ', h('code', 'samples/*/module.json'), ' address above.'),
     h('div.receiver-row',
-      h('strong', 'RonuNest: '),
+      h('strong', `${receiver.connected ? receiver.name : 'RonuNest'}: `),
       receiver.connected ? h('span', 'connected as ', h('span.receiver-user', receiver.connection.user.email || receiver.connection.user.name || 'a learner'), '. Play-throughs can be sent there and AI characters talk back.') : h('span.muted', 'not connected. Connect to record play-throughs on RonuNest and to talk to AI characters.'),
       ' ',
-      receiverControl(receiver, { onChange: () => showOpener() }),
+      receiverControl(receiver, { bare: true, onChange: () => showOpener() }),
       receiver.connected ? null : h('span.small.muted', ` Receiver: ${receiver.origin}`),
       notice ? h('p.error.small', notice) : null,
     ),

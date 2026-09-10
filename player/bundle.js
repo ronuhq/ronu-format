@@ -70,11 +70,17 @@ export function openBundle(bytes, { unzip, name = 'module.ronu' } = {}) {
   return { manifest, module, assets, name };
 }
 
-/** The JSON-only interchange form (spec section 2): a bare module.json. */
-export function openModuleJson(text, { name = 'module.json' } = {}) {
+/**
+ * The JSON-only interchange form (spec section 2): a bare module.json. A
+ * `manifest` found beside it (the sample folders keep one) is used as the
+ * envelope, so the file keeps its platform module id and can be recorded
+ * (docs/record-receiver.md section 3); otherwise one is synthesised.
+ */
+export function openModuleJson(text, { name = 'module.json', manifest = null } = {}) {
   const module = typeof text === 'string' ? parseJson(new TextEncoder().encode(text), name) : text;
   if (!module || typeof module !== 'object' || !Array.isArray(module.nodes)) throw new Error('module.json must contain a nodes array');
-  return { manifest: synthesizeManifest(module, name), module, assets: new Map(), name };
+  const given = manifest && typeof manifest === 'object' && manifest.module && typeof manifest.module === 'object' ? manifest : null;
+  return { manifest: given ?? synthesizeManifest(module, name), module, assets: new Map(), name };
 }
 
 function synthesizeManifest(module, name) {
