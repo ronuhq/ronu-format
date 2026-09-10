@@ -1,55 +1,30 @@
 // Bootstrap: open a file (drop, picker, sample, ?ronu= URL, last-opened from
-// IndexedDB), build the engine + UI, register the service worker.
+// IndexedDB), build the engine + UI, keep the receiver connection, register
+// the service worker.
 
 import { openBundle, openModuleJson, createResolver, checkManifest, bundleTitle } from './bundle.js';
 import { Engine } from './engine.js';
 import { PlayerUI, h } from './ui.js';
 import { sessionRecord } from './session.js';
+import { dbGet, dbPut } from './store.js';
+import { ReceiverController, receiverControl } from './receiver-ui.js';
 
-const DB_NAME = 'ronu-player';
-const STORE = 'files';
 const SAMPLE_URL = '../samples/hello-ronu/hello.ronu';
 const SAMPLE_JSON_URL = '../samples/under-the-sink/module.json';
 
 const app = document.getElementById('app');
 let current = null; // { ui, engine, resolver, bundle }
+let openerShowing = false;
 
-// ---- IndexedDB: remember the last opened file ------------------------------
-
-function openDb() {
-  return new Promise((resolve, reject) => {
-    if (!('indexedDB' in window)) return reject(new Error('no IndexedDB'));
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-async function dbPut(key, value) {
-  try {
-    const db = await openDb();
-    await new Promise((res, rej) => {
-      const tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put(value, key);
-      tx.oncomplete = res;
-      tx.onerror = () => rej(tx.error);
-    });
-  } catch (e) {
-    console.warn('Could not remember file', e);
-  }
-}
-async function dbGet(key) {
-  try {
-    const db = await openDb();
-    return await new Promise((res, rej) => {
-      const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
-      req.onsuccess = () => res(req.result ?? null);
-      req.onerror = () => rej(req.error);
-    });
-  } catch {
-    return null;
-  }
-}
+// The one receiver connection (docs/record-receiver.md). Loaded before the
+// first screen so the opener and the top bar can show it.
+const receiver = new ReceiverController();
+receiver.subscribe(() => {
+  if (current) {
+    current.engine.setServices({ conversation: receiver.connected });
+    current.ui.render(true);
+  } else if (openerShowing) showOpener();
+});
 
 // ---- opening ---------------------------------------------------------------
 
@@ -70,11 +45,19 @@ async function openBytes(bytes, name, { remember = true } = {}) {
   }
   const problems = checkManifest(bundle.manifest);
   if (problems.length) console.warn('manifest.json problems (continuing):', problems);
-  if (remember) await dbPut('last', { name, title: bundleTitle(bundle), bytes: bytes instanceof Uint8Array ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) : bytes, at: Date.now() });
-  play(bundle);
+  const buffer = bytes instanceof Uint8Array ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) : bytes;
+  let last = await dbGet('last');
+  if (remember) {
+    // The "sent to the receiver" flag stays with the file when the same file is opened again.
+    const same = last && last.name === name && last.bytes?.byteLength === buffer.byteLength;
+    last = { name, title: bundleTitle(bundle), bytes: buffer, at: Date.now(), sent: same ? last.sent ?? null : null };
+    await dbPut('last', last);
+  }
+  const priorSent = last && last.name === name && last.bytes?.byteLength === buffer.byteLength ? last.sent ?? null : null;
+  play(bundle, { priorSent });
 }
 
-function play(bundle) {
+function play(bundle, { priorSent = null } = {}) {
   closeCurrent();
   const resolver = createResolver(bundle, {
     makeUrl: (bytes, mime) => URL.createObjectURL(new Blob([bytes], { type: mime })),
@@ -82,7 +65,7 @@ function play(bundle) {
   });
   let engine;
   try {
-    engine = new Engine(bundle.module);
+    engine = new Engine(bundle.module, { services: { conversation: receiver.connected } });
   } catch (e) {
     resolver.revoke();
     showOpener(`Could not read module.json: ${e.message}`);
@@ -92,8 +75,16 @@ function play(bundle) {
     root: app, engine, resolver, manifest: bundle.manifest,
     onClose: () => showOpener(),
     onDownload: () => downloadSession(engine, bundle),
+    receiver,
+    receiverControl,
+    priorSent,
+    onSent: async (sent) => {
+      const last = await dbGet('last');
+      if (last && last.name === bundle.name) await dbPut('last', { ...last, sent });
+    },
   });
   current = { ui, engine, resolver, bundle };
+  openerShowing = false;
   document.title = `${bundleTitle(bundle)} · ronu player`;
   ui.mount();
 }
@@ -139,9 +130,11 @@ async function openFile(file) {
 
 async function showOpener(error = null, status = null) {
   closeCurrent();
+  openerShowing = true;
   const last = await dbGet('last');
   const input = h('input', { type: 'file', accept: '.ronu,.zip,.json,application/zip,application/json', hidden: true, onchange: (e) => e.target.files[0] && openFile(e.target.files[0]) });
   const urlInput = h('input.input', { type: 'text', inputmode: 'url', autocapitalize: 'off', spellcheck: false, placeholder: 'https://example.com/module.ronu', 'aria-label': 'URL of a .ronu file' });
+  const notice = receiver.takeNotice();
   const drop = h('section.opener',
     h('h1', 'ronu player'),
     h('p.lede', 'Open a ', h('code', '.ronu'), ' file. It plays here, offline, with no account.'),
@@ -156,9 +149,18 @@ async function showOpener(error = null, status = null) {
       last ? h('button.btn', { onclick: () => openBytes(new Uint8Array(last.bytes), last.name, { remember: false }), title: last.name }, `Reopen "${last.title || last.name}"`) : null,
     ),
     h('form.url-form', { onsubmit: (e) => { e.preventDefault(); if (urlInput.value) openUrl(urlInput.value); } }, urlInput, h('button.btn', { type: 'submit' }, 'Load URL')),
-    h('p.small.muted', 'Files are untrusted content: rich text is sanitised and code steps are never executed. Nothing leaves your device.'),
-    h('p.small.muted', h('a', { href: 'README.md' }, 'About this player'), ' · ', h('a', { href: '../spec/ronu-spec.md' }, 'The format')),
+    h('div.receiver-row',
+      h('strong', 'RonuNest: '),
+      receiver.connected ? h('span', 'connected as ', h('span.receiver-user', receiver.connection.user.email || receiver.connection.user.name || 'a learner'), '. Play-throughs can be sent there and AI characters talk back.') : h('span.muted', 'not connected. Connect to record play-throughs on RonuNest and to talk to AI characters.'),
+      ' ',
+      receiverControl(receiver, { onChange: () => showOpener() }),
+      receiver.connected ? null : h('span.small.muted', ` Receiver: ${receiver.origin}`),
+      notice ? h('p.error.small', notice) : null,
+    ),
+    h('p.small.muted', 'Files are untrusted content: rich text is sanitised and code steps are never executed. Nothing leaves your device unless you connect to a receiver and send a play-through.'),
+    h('p.small.muted', h('a', { href: 'README.md' }, 'About this player'), ' · ', h('a', { href: '../spec/ronu-spec.md' }, 'The format'), ' · ', h('a', { href: '../docs/record-receiver.md' }, 'Receivers')),
   );
+  if (!openerShowing) return; // a file opened while the store was read
   app.replaceChildren(drop);
 }
 
@@ -186,10 +188,13 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('Service worker not registered', e));
 }
 
-const params = new URLSearchParams(location.search);
-const remote = params.get('ronu');
-if (remote) openUrl(remote);
-else showOpener();
+(async () => {
+  await receiver.load();
+  const params = new URLSearchParams(location.search);
+  const remote = params.get('ronu');
+  if (remote) openUrl(remote);
+  else showOpener();
+})();
 
 // Expose a little for debugging and browser-level checks.
-window.ronuPlayer = { get current() { return current; }, openUrl, openBytes };
+window.ronuPlayer = { get current() { return current; }, openUrl, openBytes, receiver };

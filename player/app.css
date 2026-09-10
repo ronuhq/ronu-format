@@ -207,3 +207,62 @@ textarea.input { resize: vertical; }
 .url-form .input { flex: 1; }
 
 .toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 999px; z-index: 20; max-width: 90vw; }
+
+/* Top bar: the receiver control */
+.header-actions { flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.receiver-control { display: inline-flex; align-items: center; gap: 4px; }
+.receiver-user { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; }
+.player-header .receiver-user { opacity: 0.85; }
+.receiver-row { padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.receiver-row .receiver-control { margin-left: 4px; }
+.receiver-row .btn-ghost { border-color: var(--line); }
+.btn-link { font: inherit; background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+/* Dialogs: connect, session record */
+dialog { border: 0; border-radius: var(--radius); padding: 20px 18px; max-width: min(560px, 92vw); width: 100%; background: var(--surface); color: var(--ink); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+dialog::backdrop { background: rgba(0,0,0,0.5); }
+dialog h2 { margin: 0 0 10px; font-size: 1.3rem; }
+.connect-status { min-height: 1.4em; margin: 10px 0 0; }
+.connect-status.is-error { color: var(--bad); }
+.origin-form { display: flex; gap: 8px; margin: 8px 0; }
+.origin-form[hidden] { display: none; }
+.origin-form .input { flex: 1; }
+.connect-code { margin-top: 12px; }
+.connect-code summary { cursor: pointer; color: var(--muted); }
+.connect-code textarea { margin-top: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+.record-panel { max-height: 85vh; display: flex; flex-direction: column; }
+.record-panel[open] { display: flex; }
+.record-list { flex: 1; overflow: auto; margin: 0; padding: 0 0 0 4px; list-style: none; border-top: 1px solid var(--line); }
+.record-list li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.record-time { font-variant-numeric: tabular-nums; color: var(--muted); flex: 0 0 auto; }
+
+/* End screen: the receiver block */
+.send-block { margin: 14px 0 0; padding: 12px; border-radius: 10px; background: var(--bg); }
+.send-block p { margin: 4px 0; }
+
+/* Conversation through the receiver */
+.chat { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); max-height: 50vh; overflow: auto; }
+.bubble { max-width: 85%; padding: 8px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.bubble.is-learner { justify-self: end; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.bubble.is-pending { opacity: 0.8; }
+.bubble-who { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+.bubble-text { margin: 2px 0 0; white-space: pre-wrap; }
+.mood { display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 0 8px; border-radius: 999px; background: var(--line); color: var(--ink); }
+.assessment { padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); }
+.assessment p { margin: 0 0 6px; }
+.assessment .criteria { margin: 0; padding-left: 18px; }
+.chat-input { display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; }
+.chat-input .input { flex: 1; }
+.chat-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+.btn.is-armed { border-color: var(--warn); color: var(--warn); }
+.conversation.is-nested .chat { max-height: 40vh; }
+
+/* Scene: fullscreen and phones */
+.card-scene { position: relative; }
+.btn-fullscreen { position: absolute; top: 12px; right: 12px; z-index: 2; background: rgba(0,0,0,0.6); color: #fff; border-color: transparent; }
+.card-scene:fullscreen { max-width: none; border-radius: 0; overflow: auto; padding: 8px; background: var(--surface); }
+.card-scene:fullscreen .scene-viewport { height: calc(100vh - 110px); border-radius: 6px; }
+.card-scene.has-beat:fullscreen .scene-viewport { height: 45vh; }
+@media (max-width: 640px) {
+  .scene-viewport { height: calc(100dvh - 200px); min-height: 240px; }
+}
