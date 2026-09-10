@@ -2,10 +2,11 @@
 // first visit. Same-origin GETs (including a sample .ronu you opened) are
 // cached on first use; the last opened file itself lives in IndexedDB.
 
-const VERSION = 'ronu-player-v1';
+const VERSION = 'ronu-player-v2';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './ui.js', './engine.js', './formula.js', './conditions.js',
-  './bundle.js', './session.js', './sanitize.js', './pano.js', './vendor/fflate.js', './manifest.webmanifest',
+  './bundle.js', './session.js', './sanitize.js', './pano.js', './store.js', './receiver.js', './receiver-ui.js', './conversation.js',
+  './vendor/fflate.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png',
 ];
 

@@ -101,6 +101,8 @@ export class Engine {
    * @param {object} module   parsed module.json
    * @param {object} [opts]
    * @param {() => number} [opts.now]   clock in ms (injectable for tests)
+   * @param {object} [opts.services]   { conversation: boolean }: a receiver is connected
+   *   (docs/record-receiver.md section 4), so `conversation` nodes play live instead of falling back
    */
   constructor(module, opts = {}) {
     if (!module || typeof module !== 'object' || !Array.isArray(module.nodes)) {
@@ -108,6 +110,7 @@ export class Engine {
     }
     this.module = module;
     this.now = opts.now ?? (() => Date.now());
+    this.services = { conversation: Boolean(opts.services?.conversation) };
     this.nodes = module.nodes.filter((n) => n && typeof n === 'object');
     this.nodesById = new Map();
     for (const n of this.nodes) if (typeof n.id === 'string' && n.id !== '' && !this.nodesById.has(n.id)) this.nodesById.set(n.id, n);
@@ -167,6 +170,18 @@ export class Engine {
 
   bump() {
     this.revision += 1;
+  }
+
+  /** Turn receiver-backed services on or off mid-play (a connection made or dropped). */
+  setServices(services) {
+    this.services = { ...this.services, ...(services ?? {}) };
+    this.bump();
+  }
+
+  /** isNodeSupported, plus `conversation` while a receiver provides the character. */
+  nodeSupported(node) {
+    if (isNodeSupported(node)) return true;
+    return normalizeType(node?.type) === 'conversation' && this.services.conversation;
   }
 
   record(type, data) {
@@ -240,6 +255,9 @@ export class Engine {
       state.misses = 0;
       state.lastTap = null;
       state.interactions = {}; // hotspot id -> the nested interaction's own node state (section 7.2)
+      state.conversations = {}; // hotspot id -> {answered, fallback} for a live character (record-receiver section 4)
+    } else if (type === 'conversation') {
+      state.fallback = false; // the live character failed and the learner took the fallback card
     } else if (type === 'procedure') {
       const steps = Array.isArray(cfg.procedureSteps) ? cfg.procedureSteps : [];
       state.order = seededShuffle(steps.map((_, i) => i), node.id);
@@ -566,6 +584,8 @@ export class Engine {
       return true;
     }
     if (type === 'choice') return false;
+    // A live conversation must be ended (assessed) or given up on before the learner moves on.
+    if (type === 'conversation') return !this.services.conversation || st.answered || st.fallback;
     if (type === 'procedure' || type === 'dragToTarget') return st.answered;
     if (['textInput', 'multipleChoice', 'ranking', 'matching', 'rating'].includes(type)) {
       return st.answered || cfg.required !== true;
@@ -665,6 +685,71 @@ export class Engine {
     if (node.config?.ratingVariableId) this.applyActions([{ variableId: node.config.ratingVariableId, operator: 'set', value: n }], 'rating');
     this.afterAnswer(target);
     return this.view();
+  }
+
+  // ---- conversation (provisional; live only through a receiver) ----------
+
+  /**
+   * The assessment of a live conversation (record-receiver section 4): the
+   * node's answer is the transcript plus the assessment, its score is the
+   * node score, and `scoreVariableId` is written with a `set` action.
+   */
+  answerConversation({ messages, assessment }) {
+    const target = this.answerTarget('conversation');
+    if (target.st.answered) return this.view();
+    const score = Number(assessment?.score);
+    const extra = Number.isFinite(score) ? { score: Math.max(0, Math.min(100, Math.round(score))) } : {};
+    this.recordAnswer(target, { messages: Array.isArray(messages) ? messages : [], assessment: assessment ?? null }, extra);
+    const varId = target.node.config?.scoreVariableId;
+    if (varId && extra.score !== undefined) this.applyActions([{ variableId: varId, operator: 'set', value: extra.score }], 'conversation');
+    this.afterAnswer(target);
+    return this.view();
+  }
+
+  /** The live character failed; the learner takes the spec's fallback card and may continue. */
+  conversationFallback() {
+    const target = this.answerTarget('conversation');
+    target.st.fallback = true;
+    this.bump();
+    return this.view();
+  }
+
+  /**
+   * The same for a hotspot's `conversation` block inside a scene: recorded
+   * against `<sceneId>/<hotspotId>` (as a nested interaction is, G45), the
+   * score variable written, then `abortWhen` re-checked.
+   */
+  answerHotspotConversation(hotspotId, { messages, assessment }) {
+    const node = this.requireNode('scene');
+    const hotspot = this.sceneHotspots(node).find((h) => h.id === hotspotId);
+    if (!hotspot || !hotspot.conversation) throw new Error(`Unknown hotspot conversation ${hotspotId}`);
+    const st = this.nodeState;
+    const cst = (st.conversations[hotspotId] ??= { answered: false, fallback: false });
+    if (cst.answered) return this.view();
+    const score = Number(assessment?.score);
+    const extra = Number.isFinite(score) ? { score: Math.max(0, Math.min(100, Math.round(score))) } : {};
+    const sub = { id: `${node.id}/${hotspot.id}` };
+    this.recordAnswer({ node: sub, st: cst, scene: node, hotspot }, { messages: Array.isArray(messages) ? messages : [], assessment: assessment ?? null }, extra);
+    const varId = hotspot.conversation.scoreVariableId;
+    if (varId && extra.score !== undefined) this.applyActions([{ variableId: varId, operator: 'set', value: extra.score }], 'conversation');
+    this.checkAbort();
+    return this.view();
+  }
+
+  hotspotConversationFallback(hotspotId) {
+    const node = this.requireNode('scene');
+    const cst = (this.nodeState.conversations[hotspotId] ??= { answered: false, fallback: false });
+    cst.fallback = true;
+    this.bump();
+    return this.view();
+  }
+
+  /** The state of a hotspot's live conversation, or null when the receiver is not providing one. */
+  hotspotConversationState(hotspotId) {
+    if (!this.services.conversation) return null;
+    const st = this.nodeState;
+    if (!st || !st.conversations) return null;
+    return st.conversations[hotspotId] ?? { answered: false, fallback: false };
   }
 
   // ---- scene --------------------------------------------------------------
@@ -813,6 +898,11 @@ export class Engine {
     const beat = st.beat;
     const hotspot = this.sceneHotspots(node).find((h) => h.id === beat.hotspotId);
     let rest = beat.then;
+    if (beat.kind === 'conversation' && hotspot && this.services.conversation) {
+      // A live character that has not been ended: closing returns to the room and the later beats wait, as for an interaction (G41).
+      const cst = this.hotspotConversationState(hotspot.id);
+      if (cst && !cst.answered && !cst.fallback) rest = [];
+    }
     if (beat.kind === 'interaction' && hotspot) {
       const sub = this.hotspotInteraction(node, hotspot);
       const ist = sub ? this.interactionState(node, hotspot) : null;
@@ -973,7 +1063,7 @@ export class Engine {
     const node = this.currentNode;
     const type = normalizeType(node.type);
     const cfg = node.config && typeof node.config === 'object' ? node.config : {};
-    const supported = isNodeSupported(node);
+    const supported = this.nodeSupported(node);
     const st = this.nodeState;
     return {
       kind: 'node',
@@ -983,6 +1073,7 @@ export class Engine {
       rawType: node.type,
       config: cfg,
       supported,
+      services: { ...this.services },
       provisional: PROVISIONAL_TYPES.has(type) || (type === 'scene' && !STABLE_SCENE_KINDS.has(cfg.environment?.kind ?? 'photo360')),
       title: this.substitute(cfg.title ?? node.title ?? ''),
       question: this.substitute(cfg.question ?? ''),

@@ -122,3 +122,33 @@ The section numbers refer to the spec.
 ## Session records (section 3, `xapi-activity-ids.md`)
 
 **G40. Statement shapes for a local player.** The companion note fixes IRIs and verbs but assumes a platform actor and registration. For an offline player with no identity, this player uses `{"account": {"name": "local"}}` and no registration, and adds `answer-labels`, `variable-changed`, `scene-miss` and `procedure-step` extension keys beside the note's `branch-taken`, `scene-hotspot` and `timer-expiry`. The spec (or the note) should say what a player with no actor should emit, and whether the extra keys are welcome.
+
+## Record receivers (`docs/record-receiver.md`, added 11 September 2026)
+
+The contract is short and the player follows it as written. These are the places where it stops short and the player had to choose. They are all *decided*.
+
+**G48. Which manifest field is `moduleId`.** Section 3 says `manifest.module.id`. The platform's exporter does not write `module.id`; it writes `module.familyId` and `module.versionId` (the sample manifests show this), and the receiver keys records by the version row. *Decided:* the player reads `module.id`, then `module.versionId`, and never `familyId`. A synthesised manifest (a bare `module.json`, G35) has neither, so the file cannot be recorded and the end screen says so; a bare `module.json` fetched by URL is given the `manifest.json` found beside it, if any, so the sample folders stay recordable. The contract should name `versionId` or the exporter should write `id`.
+
+**G49. `maxTurns` and what ends a conversation.** Neither the spec's `conversation` profile nor section 4 says how many learner turns a conversation allows or what happens at the limit. *Decided:* `config.maxTurns`, default 6 (the platform's default); reaching it finalises at once, without waiting for a tap. Something must have been said before "End conversation" is offered, as online.
+
+**G50. Degraded replies.** Section 4 says a `degraded: true` reply means the player "should end the conversation and finalize". *Decided:* the player shows the scripted wrap-up line, closes the input, and waits for one tap ("End and assess") rather than finalising behind the learner's back. The contract could say whether the finalize is automatic.
+
+**G51. Sending the rubric.** Section 4 says the assessment carries `criteria` "when the node has `criteria` (a rubric)" but not whether the player sends the rubric or the receiver reads it from its copy of the module. *Decided:* the player sends `criteria` (`[{id, label, weight}]`, from the node's `rubric` or a hotspot character's `criteria`) on the finalize body as an extra field the receiver may ignore. The two names for the same thing (`rubric` on a node, `criteria` on a hotspot character) are a spec inconsistency worth fixing.
+
+**G52. The assessment envelope.** Section 4 gives the finalize response as the bare assessment "plus `model` and `promptVersion`". The platform's function wraps it: `{assessment: {score, summary, criteria, model, promptVersion, gradedAt}, usage, degraded}`. *Decided:* the player accepts both shapes (`body.assessment` if present, else `body`). The contract should show the wrapper.
+
+**G53. What "a session" is for the once-only rule.** Section 3 says a record is sent at most once per session and the player keeps a "sent" flag. *Decided:* a session is one run of the engine from its start node to the end screen. "Play again" starts a new session and may be sent as a new attempt. The flag is stored with the last-opened file (matched by name and size) and shown on reopening as "already sent on ...", with the button relabelled "send as a new attempt", so a learner who reloads does not send the same play-through twice by accident but is not stopped from trying again.
+
+**G54. Characters inside a scene.** Section 4 covers `conversation` nodes; a scene hotspot's `conversation` block (spec section 7) has the same shape and the contract does not mention it. *Decided:* it runs through the same endpoint with the same body, the answer and score are recorded against `<sceneId>/<hotspotId>` (G45) and `scoreVariableId` is written the same way, the scene's `abortWhen` is re-checked afterwards, and, as for a nested interaction (G41), closing the card leaves the conversation waiting in the room and the hotspot's later beats run once it is ended. The platform sends `hotspotId` in its own calls; this player does not.
+
+**G55. The 401 row.** Section 3 says "refresh, then reconnect". *Decided:* the player refreshes and retries the call once; a second 401 disconnects (forgets the session) and asks the learner to connect again. A refresh that fails for any reason also disconnects, as section 2 says.
+
+**G56. The no-popup route.** Section 2 says the connect page shows a code when it has no `window.opener`. A tab opened with `window.open` from the player still has an opener, so the message route works from a tab as well; *decided:* the dialog offers "open the connect page in a tab" (a blank tab opened inside the click, then navigated, which popup blockers allow) before falling back to the pasted code. The popup is opened the same way, because the connect URL is only known after the discovery fetch and a late `window.open` is blocked.
+
+**G57. The refresh response.** Section 2 says the refresh returns "a new session in the same shape". GoTrue returns `expires_in` and `expires_at` (and a new `refresh_token`, single use). *Decided:* the player takes `expires_at`, else now plus `expires_in`, else no expiry (which leaves the 401 path to catch it), and keeps the old refresh token only if none comes back.
+
+**G58. The 413 trim.** Section 3 says "drop bulky answer payloads and retry once" without a size. *Decided:* any answer whose JSON is over 512 bytes is dropped (its `score` kept) and the record is sent again once; a 413 on the trimmed body is final.
+
+**G59. Plain `http`.** Section 6 allows plain http on localhost during development. *Decided:* the receiver address field refuses `http://` anywhere but `localhost`, `127.0.0.1` and `[::1]`; the message's `receiver.*` URLs are not re-checked because they come from a page the learner just signed in to.
+
+**G60. Which origin the certificate link uses.** The connect page's origin (what the player opened) and the message's `receiver.origin` are the same for RonuNest but need not be. *Decided:* `receiver.origin` from the message, since that is what the receiver says its pages live on. The message is accepted from the opened origin only (section 2 step 4); `receiver.origin` is not required to match it.

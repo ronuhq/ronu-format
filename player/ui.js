@@ -4,6 +4,8 @@
 
 import { sanitizeHtml } from './sanitize.js';
 import { PanoView } from './pano.js';
+import { buildRecordBody, createRecordSender, certificateUrl, recordModuleId } from './receiver.js';
+import { attachConversation, attachHotspotConversation } from './conversation.js';
 
 /** Tiny element helper: h('div.card', {onclick}, child, 'text') */
 export function h(tag, attrs, ...children) {
@@ -65,9 +67,30 @@ function fmtTime(sec) {
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 }
 
+function fmtClock(ms) {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+}
+
+function fmtWhen(ms) {
+  try {
+    return new Date(ms).toLocaleString();
+  } catch {
+    return new Date(ms).toISOString();
+  }
+}
+
+function short(value, max = 60) {
+  const s = typeof value === 'string' ? value : JSON.stringify(value);
+  if (s == null) return '';
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
 export class PlayerUI {
   /**
-   * @param {object} o  { root, engine, resolver, manifest, onClose, onDownload }
+   * @param {object} o  { root, engine, resolver, manifest, onClose, onDownload,
+   *   receiver (ReceiverController, optional), receiverControl (fn(ctl, opts) -> element),
+   *   priorSent (a stored "sent" flag for this file, optional), onSent(sent) }
    */
   constructor(o) {
     this.root = o.root;
@@ -76,6 +99,15 @@ export class PlayerUI {
     this.manifest = o.manifest;
     this.onClose = o.onClose ?? (() => {});
     this.onDownload = o.onDownload ?? (() => {});
+    this.receiver = o.receiver ?? null;
+    this.receiverControl = o.receiverControl ?? null;
+    this.priorSent = o.priorSent ?? null;
+    this.onSent = o.onSent ?? (() => {});
+    this.moduleId = recordModuleId(this.manifest);
+    this.sender = null; // createRecordSender for the current session, made on first use
+    this.sendError = null;
+    this.sendErrorFinal = false; // a 403, 404 or 413: the contract says nothing to retry
+    this.sending = false;
     this.lastRevision = -1;
     this.pano = null;
     this.locals = {}; // per-node UI state (selections before submit), keyed by node id; a nested interaction has its own
@@ -103,9 +135,22 @@ export class PlayerUI {
 
   destroy() {
     clearInterval(this.timer);
+    this.clearLocals();
     this.pano?.destroy();
     this.pano = null;
     this.root.replaceChildren();
+  }
+
+  /** Drop per-node UI state, running any cleanup a node registered (a fullscreen listener, for one). */
+  clearLocals() {
+    for (const local of Object.values(this.locals)) {
+      try {
+        local?.cleanup?.();
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    this.locals = {};
   }
 
   refresh() {
@@ -119,7 +164,7 @@ export class PlayerUI {
     this.lastRevision = view.revision;
     this.currentNodeId = view.kind === 'node' ? view.node.id : null;
     if (nodeChanged) {
-      this.locals = {};
+      this.clearLocals();
       this.pano?.destroy();
       this.pano = null;
     }
@@ -140,10 +185,34 @@ export class PlayerUI {
       h('div.header-title', { title }, title),
       h('div.header-timers', timers),
       h('div.header-actions',
-        h('button.btn.btn-ghost.btn-small', { onclick: () => this.onDownload(), title: 'Download session record' }, 'Record'),
+        h('button.btn.btn-ghost.btn-small', { onclick: () => this.openRecordPanel(), title: 'What has happened in this session so far' }, 'Session record'),
+        this.receiver && this.receiverControl ? this.receiverControl(this.receiver, { compact: true, onChange: () => this.render(true) }) : null,
         h('button.btn.btn-ghost.btn-small', { onclick: () => this.onClose(), title: 'Close this file' }, 'Close'),
       ),
     );
+  }
+
+  /** The Session record panel: every engine event so far, and Download JSON. */
+  openRecordPanel() {
+    const dialog = h('dialog.record-panel', { 'aria-labelledby': 'record-title' });
+    const list = h('ol.record-list');
+    const events = this.engine.events;
+    if (!events.length) list.append(h('li.muted', 'Nothing yet.'));
+    for (const e of events) {
+      list.append(h('li', h('time.record-time', { datetime: new Date(e.at).toISOString() }, fmtClock(e.at)), h('span.record-what', describeEvent(e, this.engine))));
+    }
+    dialog.append(
+      h('h2', { id: 'record-title' }, 'Session record'),
+      h('p.small.muted', `${events.length} event${events.length === 1 ? '' : 's'} so far. The download is the full record: xAPI-shaped statements plus the raw events, variables, answers and scores.`),
+      list,
+      h('div.actions.actions-wrap',
+        h('button.btn.btn-primary', { onclick: () => this.onDownload() }, 'Download JSON'),
+        h('button.btn', { onclick: () => dialog.close() }, 'Close'),
+      ),
+    );
+    dialog.addEventListener('close', () => dialog.remove());
+    document.body.append(dialog);
+    dialog.showModal();
   }
 
   updateTimers() {
@@ -170,6 +239,8 @@ export class PlayerUI {
     const hasOtherExit = Boolean(cfg.timer && cfg.timer.mode === 'countdown' && ['advance', 'route', 'end'].includes(cfg.timer.onExpire?.behavior)) || cfg.advanceOnAnswer === true;
     if (cfg.showContinueButton === false && hasOtherExit) return;
     if (['textInput', 'multipleChoice', 'ranking', 'matching', 'rating', 'procedure', 'dragToTarget'].includes(type) && !view.state.answered) return;
+    // A live conversation has its own End button; Continue appears once it is assessed or given up on.
+    if (type === 'conversation' && view.supported && !view.state.answered && !view.state.fallback) return;
     const label = view.connection ? 'Continue' : 'Finish';
     this.footer.append(h('button.btn.btn-primary.btn-wide', { disabled: !view.canContinue, onclick: () => this.act(() => this.engine.continue()) }, label));
   }
@@ -196,7 +267,13 @@ export class PlayerUI {
       return;
     }
     if (view.kind !== 'node') return;
-    const card = h('article.card', { dataset: { type: view.type } });
+    // A scene keeps one card element across renders so the Fullscreen API has a stable target.
+    let card;
+    if (view.type === 'scene' && view.supported) {
+      const local = this.loc(view);
+      card = local.card ??= h('article.card.card-scene', { dataset: { type: 'scene' } });
+      card.replaceChildren();
+    } else card = h('article.card', { dataset: { type: view.type } });
     const badge = view.provisional ? h('span.badge.badge-provisional', 'provisional') : null;
     if (!view.supported) card.append(this.renderFallback(view));
     else {
@@ -204,7 +281,7 @@ export class PlayerUI {
       if (typeof fn === 'function') fn.call(this, view, card, nodeChanged, badge);
       else card.append(this.renderFallback(view));
     }
-    this.stage.replaceChildren(card);
+    if (this.stage.childNodes.length !== 1 || this.stage.firstChild !== card) this.stage.replaceChildren(card);
   }
 
   heading(view, badge) {
@@ -215,12 +292,124 @@ export class PlayerUI {
   // ---- node renderers -----------------------------------------------------
 
   renderFallback(view) {
+    const conversation = view.type === 'conversation';
     return h('div.fallback',
       h('h2.card-title', view.title || view.node.id),
-      h('p.muted', `This step needs a newer player (node type "${view.rawType}").`),
-      view.type === 'conversation' && view.config.firstMessage ? h('blockquote', String(view.config.firstMessage)) : null,
+      conversation ? h('p.muted', 'This step is a conversation with an AI character, which needs a connected receiver to run.') : h('p.muted', `This step needs a newer player (node type "${view.rawType}").`),
+      conversation && view.config.firstMessage ? h('blockquote', String(view.config.firstMessage)) : null,
+      conversation && this.receiver && !this.receiver.connected ? this.connectPrompt('Connect to RonuNest to talk to the character') : null,
       view.type === 'code' ? h('p.muted', 'Code steps run in a sandbox this player does not ship. The code was not executed.') : null,
     );
+  }
+
+  /** A button that runs the connect flow and redraws whatever screen is showing. */
+  connectPrompt(label) {
+    return h('div.actions', h('button.btn.btn-primary', { onclick: async () => { await this.receiver.connect(); this.render(true); } }, label));
+  }
+
+  // ---- conversation through the receiver (record-receiver section 4) ----
+
+  /** The live chat card. `run` is a ConversationRun; `onGiveUp` shows the fallback instead; `after` is drawn below the assessment. */
+  renderConversationCard(run, { title, badge, intro, onGiveUp, after = null, nested = false } = {}) {
+    const wrap = h(nested ? 'div.conversation.is-nested' : 'div.conversation');
+    if (title) wrap.append(h(nested ? 'h3.card-title.card-title-nested' : 'h2.card-title', title, badge ? ' ' : null, badge));
+    if (intro) wrap.append(h('p.hint', intro));
+    const name = run.config.visual?.characterName || 'Character';
+    const log = h('div.chat', { role: 'log', 'aria-live': 'polite', 'aria-label': 'Conversation' });
+    if (!run.messages.length) log.append(h('p.muted.small', 'Say hello to start the conversation.'));
+    for (const m of run.messages) {
+      const bubble = h(`div.bubble${m.role === 'learner' ? '.is-learner' : '.is-character'}`, h('span.bubble-who', m.role === 'learner' ? 'You' : name), h('p.bubble-text', m.content));
+      if (m.role === 'character' && m.mood) bubble.append(h('span.mood', { title: 'How the character feels' }, m.mood));
+      log.append(bubble);
+    }
+    if (run.status === 'replying') log.append(h('div.bubble.is-character.is-pending', h('span.bubble-who', name), h('p.bubble-text.muted', 'replying…')));
+    if (run.status === 'assessing') log.append(h('p.muted.small', 'Assessing the conversation…'));
+    if (run.assessment) {
+      const a = run.assessment;
+      const box = h('div.assessment', h('p.score', `Conversation complete. Score: ${a.score}/100`), a.summary ? h('p', a.summary) : null);
+      if (Array.isArray(a.criteria) && a.criteria.length) {
+        box.append(h('ul.criteria', a.criteria.map((c) => {
+          const label = run.criteria.find((r) => r.id === c.id)?.label ?? c.id;
+          return h('li', h('strong', label), typeof c.score === 'number' ? ` ${c.score}/100` : '', c.comment ? `: ${c.comment}` : '');
+        })));
+      }
+      log.append(box);
+    }
+    wrap.append(log);
+    // The log scrolls inside the card; keep the newest line in view.
+    queueMicrotask(() => { log.scrollTop = log.scrollHeight; });
+    if (run.error) wrap.append(h('p.error', run.error));
+    if (run.status === 'degraded') wrap.append(h('p.note', `${name} can only wrap up now (the creator's conversation allowance on ${this.receiver?.name ?? 'the receiver'} is spent). End the conversation to get your assessment.`));
+
+    if (!run.done) {
+      const ta = h('textarea.input', { rows: 2, placeholder: run.canSend ? 'Type your reply. Enter sends, Shift+Enter for a new line.' : run.status === 'degraded' ? 'No more replies. End the conversation.' : 'Waiting…', value: run.draft ?? '', disabled: !run.canSend, 'aria-label': 'Your reply' });
+      const send = () => {
+        const text = ta.value;
+        if (!text.trim() || !run.canSend) return;
+        run.send(text);
+      };
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          send();
+        }
+      });
+      ta.addEventListener('input', () => {
+        run.draft = ta.value;
+      });
+      const sendBtn = h('button.btn.btn-primary', { disabled: !run.canSend, onclick: send }, 'Send');
+      // One mis-tap must not end the chat: the first tap arms, the second ends (as online).
+      const endBtn = h('button.btn', { disabled: !run.canEnd, title: run.canEnd ? undefined : 'Say something first; you can end the conversation once you have spoken.' }, run.status === 'degraded' ? 'End and assess' : 'End conversation');
+      let armed = false;
+      let armTimer = null;
+      endBtn.addEventListener('click', () => {
+        if (!run.canEnd) return;
+        if (armed || run.status === 'degraded') {
+          clearTimeout(armTimer);
+          run.end();
+          return;
+        }
+        armed = true;
+        endBtn.textContent = 'Tap again to end and get feedback';
+        endBtn.classList.add('is-armed');
+        armTimer = setTimeout(() => {
+          armed = false;
+          endBtn.textContent = 'End conversation';
+          endBtn.classList.remove('is-armed');
+        }, 4000);
+      });
+      wrap.append(
+        h('div.chat-input', ta, sendBtn),
+        h('div.chat-meta', h('span.small.muted', `${run.turnsLeft} repl${run.turnsLeft === 1 ? 'y' : 'ies'} left`), endBtn),
+      );
+      if (run.error && onGiveUp) wrap.append(h('div.actions', h('button.btn.btn-ghost', { onclick: onGiveUp }, 'Skip the character and continue')));
+      // The card is rebuilt on every change, so put the cursor back once the learner has started talking.
+      if (run.canSend && (run.draft || run.learnerTurns > 0)) queueMicrotask(() => ta.focus());
+    }
+    if (after) wrap.append(after);
+    return wrap;
+  }
+
+  render_conversation(view, card, _n, badge) {
+    if (!this.receiver?.connected || !this.receiver.client) {
+      card.append(this.renderFallback(view));
+      return;
+    }
+    const st = view.state;
+    if (st.fallback) {
+      card.append(this.renderFallback(view), h('p.muted.small', 'The character could not be reached; this step was skipped.'));
+      return;
+    }
+    const local = this.loc(view);
+    if (!local.run || local.run.client !== this.receiver.client) {
+      local.run = attachConversation(this.engine, this.receiver.client, view, { moduleId: this.moduleId, onChange: () => this.render(true) });
+    }
+    card.append(this.renderConversationCard(local.run, {
+      title: view.title,
+      badge: badge ?? h('span.badge.badge-provisional', 'provisional'),
+      intro: view.instructions || view.question || null,
+      onGiveUp: () => this.act(() => this.engine.conversationFallback()),
+    }));
   }
 
   render_message(view, card, _n, badge) {
@@ -445,6 +634,28 @@ export class PlayerUI {
     const viewport = local.viewport ?? h('div.scene-viewport');
     local.viewport = viewport;
     card.append(viewport);
+    card.classList.toggle('has-beat', Boolean(st.beat));
+
+    // Fullscreen: the whole scene card (viewport plus the in-room cards) fills the screen.
+    if (typeof card.requestFullscreen === 'function' || typeof document.exitFullscreen === 'function') {
+      const isFull = document.fullscreenElement === card;
+      const fsBtn = h('button.btn.btn-small.btn-fullscreen', { 'aria-pressed': isFull, title: isFull ? 'Exit fullscreen' : 'Fullscreen', onclick: () => {
+        const notAvailable = (e) => this.toast(`Fullscreen is not available here${e?.message ? `: ${e.message}` : ''}.`);
+        try {
+          // The API rejects (or throws, in some embedders) without a user gesture or when a permission policy forbids it.
+          if (document.fullscreenElement === card) document.exitFullscreen?.()?.catch?.(() => {});
+          else card.requestFullscreen?.()?.catch?.(notAvailable);
+        } catch (e) {
+          notAvailable(e);
+        }
+      } }, isFull ? 'Exit fullscreen' : 'Fullscreen');
+      if (!local.fsListener) {
+        local.fsListener = () => this.render(true);
+        document.addEventListener('fullscreenchange', local.fsListener);
+        local.cleanup = () => document.removeEventListener('fullscreenchange', local.fsListener);
+      }
+      card.append(fsBtn);
+    }
 
     if (kind === 'photo360') {
       if (!this.pano) {
@@ -518,8 +729,31 @@ export class PlayerUI {
         ));
       } else {
         const c = hs?.conversation ?? {};
-        panel.append(h('h3', hs?.label ?? 'Conversation'), h('p.muted', 'Talking to characters needs an AI backend and a full player. Here is what they would open with:'), c.firstMessage ? h('blockquote', String(c.firstMessage)) : null);
-        panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: dismiss }, goLabel)));
+        const cst = hs ? this.engine.hotspotConversationState(hs.id) : null;
+        const live = Boolean(cst && this.receiver?.connected && this.receiver.client && !cst.fallback);
+        if (live) {
+          // A character in the room, through the receiver (record-receiver section 4).
+          panel.classList.add('is-interaction');
+          const runs = (local.runs ??= {});
+          if (!runs[hs.id] || runs[hs.id].client !== this.receiver.client) {
+            runs[hs.id] = attachHotspotConversation(this.engine, this.receiver.client, view, hs, { moduleId: this.moduleId, onChange: () => this.render(true) });
+          }
+          const run = runs[hs.id];
+          panel.append(this.renderConversationCard(run, {
+            title: hs.label ?? 'Conversation',
+            nested: true,
+            onGiveUp: () => this.act(() => this.engine.hotspotConversationFallback(hs.id)),
+            after: h('div.actions', cst.answered
+              ? h('button.btn.btn-primary', { onclick: dismiss }, goLabel)
+              : h('button.btn.btn-ghost', { onclick: dismiss, title: 'Close for now; the conversation continues when you come back' }, 'Close')),
+          }));
+        } else {
+          panel.append(h('h3', hs?.label ?? 'Conversation'),
+            h('p.muted', cst?.fallback ? 'The character could not be reached, so this conversation was skipped. Here is what they would have opened with:' : 'Talking to characters needs a connected receiver. Here is what they would open with:'),
+            c.firstMessage ? h('blockquote', String(c.firstMessage)) : null);
+          if (this.receiver && !this.receiver.connected) panel.append(this.connectPrompt('Connect to RonuNest to talk to the character'));
+          panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: dismiss }, goLabel)));
+        }
       }
       card.append(panel);
     }
@@ -587,9 +821,10 @@ export class PlayerUI {
     const card = h('article.card.card-end', h('h2.card-title', status));
     if (view.error) card.append(h('p.note', view.error));
     if (typeof r.score === 'number') {
+      // A variable rule on a number shows that number by name; otherwise the score is the average node score.
       const isVar = (r.rule?.mode ?? 'variable') === 'variable' && r.rule;
-      const name = isVar ? this.engine.findVariable(r.rule.variableId)?.name : null;
-      card.append(h('p.score-big', name ? `${name}: ${r.score}` : `${r.score}%`));
+      const ruleVar = isVar ? view.variables.find((v) => v.id === r.rule.variableId) : null;
+      card.append(h('p.score-big', ruleVar && typeof ruleVar.value === 'number' ? `${ruleVar.name}: ${ruleVar.value}` : `${r.score}%`));
     }
     if (r.rule) card.append(h('p.muted', describeRule(r.rule, this.engine)));
     const vars = view.variables;
@@ -603,12 +838,100 @@ export class PlayerUI {
       card.append(h('table.vars', h('tbody', scores.map(([id, s]) => h('tr', h('td', this.scoreLabel(id)), h('td.num', `${s}%`))))));
     }
     card.append(h('p.muted.small', `Path: ${view.trail.join(' → ')}`));
+    const sendBlock = this.renderSendBlock();
+    if (sendBlock) card.append(sendBlock);
     card.append(h('div.actions.actions-wrap',
-      h('button.btn.btn-primary', { onclick: () => this.onDownload() }, 'Download session record'),
-      h('button.btn', { onclick: () => { this.engine.start(); this.locals = {}; this.pano?.destroy(); this.pano = null; this.render(true); } }, 'Play again'),
+      this.renderSendButton(),
+      h('button.btn', { onclick: () => this.playAgain() }, 'Play again'),
       h('button.btn.btn-ghost', { onclick: () => this.onClose() }, 'Open another file'),
+      h('button.btn.btn-ghost', { onclick: () => this.onDownload() }, 'Download session record'),
     ));
     return card;
+  }
+
+  playAgain() {
+    this.engine.start();
+    this.clearLocals();
+    this.pano?.destroy();
+    this.pano = null;
+    this.sender = null;
+    this.sendError = null;
+    this.sendErrorFinal = false;
+    this.render(true);
+  }
+
+  /** What the end screen says about the receiver: sent, sent before, cannot be sent, or an error. */
+  renderSendBlock() {
+    const ctl = this.receiver;
+    if (!ctl) return null;
+    const sent = this.sender?.sent ?? null;
+    const box = h('div.send-block');
+    if (sent) {
+      const verdict = sent.passed === true ? 'passed' : sent.passed === false ? 'not passed' : 'recorded';
+      box.append(h('p.score', `Sent to ${sent.receiverName ?? ctl.name}: ${verdict}${typeof sent.score === 'number' ? `, score ${sent.score}` : ''}.`));
+      if (sent.certificate) box.append(h('p', h('a', { href: certificateUrl({ receiver: { origin: sent.receiverOrigin } }, sent.certificate.verification_code), target: '_blank', rel: 'noopener' }, 'View your certificate'), h('span.muted.small', ` (${sent.certificate.verification_code})`)));
+      if (sent.slimmed) box.append(h('p.small.muted', 'The record was large, so long answers were left out; the scores went through.'));
+      box.append(h('p.small.muted', 'A session is sent once. Play again to make a new attempt.'));
+      return box;
+    }
+    if (this.priorSent) {
+      box.append(h('p.note', `A play-through of this file was already sent to ${this.priorSent.receiverName ?? ctl.name} on ${fmtWhen(this.priorSent.at)}${typeof this.priorSent.score === 'number' ? ` (score ${this.priorSent.score})` : ''}. `,
+        this.priorSent.certificate ? h('a', { href: certificateUrl({ receiver: { origin: this.priorSent.receiverOrigin } }, this.priorSent.certificate.verification_code), target: '_blank', rel: 'noopener' }, 'View that certificate') : null));
+    }
+    if (!this.moduleId) {
+      box.append(h('p.muted', 'This file cannot be recorded: it has no platform module id in its manifest (a bare module.json or a hand-made zip). A file exported from RonuNest carries one.'));
+      return box;
+    }
+    if (this.sendError) box.append(h('p.error', this.sendError));
+    if (!ctl.connected) {
+      const notice = ctl.takeNotice();
+      if (notice) box.append(h('p.error', notice));
+    }
+    return box.childNodes.length ? box : null;
+  }
+
+  renderSendButton() {
+    const ctl = this.receiver;
+    if (!ctl || !this.moduleId || this.sender?.sent) return null;
+    // Section 3: 403, 404 and a 413 that survived the trim are final; there is nothing to retry.
+    if (this.sendErrorFinal) return null;
+    if (!ctl.connected) return h('button.btn.btn-primary', { onclick: async () => { await ctl.connect(); this.render(true); } }, 'Connect to RonuNest to record this');
+    if (this.sending) return h('button.btn.btn-primary', { disabled: true }, `Sending to ${ctl.name}…`);
+    const label = this.sendError ? 'Try again' : this.priorSent ? `Send this play-through to ${ctl.name} as a new attempt` : `Send to ${ctl.name}`;
+    return h(`button.btn${this.priorSent ? '' : '.btn-primary'}`, { onclick: () => this.sendToReceiver() }, label);
+  }
+
+  /** Section 3: build the body from the engine and send it once. */
+  async sendToReceiver() {
+    const ctl = this.receiver;
+    if (!ctl?.connected || this.sending) return;
+    if (!this.sender || this.sender.client !== ctl.client) this.sender = createRecordSender(ctl.client);
+    if (this.sender.sent) return;
+    let body;
+    try {
+      body = buildRecordBody(this.engine, this.manifest);
+    } catch (e) {
+      this.sendError = e.message;
+      this.render(true);
+      return;
+    }
+    this.sending = true;
+    this.sendError = null;
+    this.sendErrorFinal = false;
+    this.render(true);
+    try {
+      const sent = await this.sender.send(body);
+      this.priorSent = null;
+      await this.onSent(sent);
+    } catch (e) {
+      // 401 was refreshed and retried inside the client; a disconnect surfaces through the controller's notice.
+      this.sendError = e.code === 'disconnected' ? `${e.message} Your record is kept; connect and send it again.` : e.code === 'network' || e.code === 'server' ? `${e.message} Your record is kept.` : e.message;
+      this.sendErrorFinal = ['forbidden', 'not-found', 'too-large'].includes(e.code);
+      if (e.code === 'disconnected') this.sender = null;
+    } finally {
+      this.sending = false;
+      this.render(true);
+    }
   }
 
   /** A node score's label: the node title, or "Scene title: hotspot label" for an answer given inside a scene. */
@@ -623,6 +946,34 @@ export class PlayerUI {
       if (scene) return `${nodeTitle(scene) ?? scene.id}: ${hs?.label ?? id.slice(slash + 1)}`;
     }
     return id;
+  }
+}
+
+/** One line per engine event for the Session record panel. */
+function describeEvent(e, engine) {
+  const title = (id) => {
+    const n = engine.nodesById.get(id);
+    return n?.config?.title ?? n?.title ?? id ?? '';
+  };
+  const hs = (nodeId, hotspotId) => (engine.nodesById.get(nodeId)?.config?.hotspots ?? []).find((x) => x?.id === hotspotId)?.label ?? hotspotId;
+  switch (e.type) {
+    case 'launched': return 'Started';
+    case 'entered': return `Entered "${title(e.nodeId)}"`;
+    case 'exited': return `Left "${title(e.nodeId)}"`;
+    case 'skipped': return `Skipped "${title(e.nodeId)}" (${e.reason})`;
+    case 'answered': return `Answered ${e.hotspotId ? `"${hs(e.nodeId, e.hotspotId)}" in "${title(e.nodeId)}"` : `"${title(e.nodeId)}"`}: ${short(e.texts?.length ? e.texts.join(', ') : e.response)}${typeof e.score === 'number' ? ` (score ${e.score})` : ''}`;
+    case 'variable': return `${e.name}: ${short(e.from, 20)} → ${short(e.to, 20)}${e.source ? ` (${e.source})` : ''}`;
+    case 'branch': return `"${title(e.nodeId)}" routed to "${title(e.targetNodeId)}"`;
+    case 'scene-abort': return `Left "${title(e.nodeId)}" early for "${title(e.targetNodeId)}"`;
+    case 'hotspot': return `Found "${e.label || hs(e.nodeId, e.hotspotId)}" in "${title(e.nodeId)}"`;
+    case 'hotspot-read': return `Read "${hs(e.nodeId, e.hotspotId)}"`;
+    case 'scene-miss': return `Tapped nothing in "${title(e.nodeId)}"`;
+    case 'timer-expiry': return `${e.scope === 'module' ? 'Module' : 'Node'} timer ran out (${e.behavior})`;
+    case 'onTimerElapsed': return `Timer trigger fired${e.nodeId ? ` in "${title(e.nodeId)}"` : ''}`;
+    case 'procedure-step': return `Step ${e.step + 1} done in turn`;
+    case 'procedure-misstep': return `Step ${e.step + 1} out of turn${e.critical ? ' (critical)' : ''}`;
+    case 'completed': return `Completed: ${e.passed === true ? 'passed' : e.passed === false ? 'not passed' : 'no pass rule'}${typeof e.score === 'number' ? `, score ${e.score}` : ''}`;
+    default: return e.type;
   }
 }
 

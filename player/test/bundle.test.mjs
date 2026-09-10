@@ -68,6 +68,20 @@ test('JSON-only interchange form gets a synthesised manifest', () => {
   assert.throws(() => openModuleJson('{"nodes": "no"}'), /nodes/);
 });
 
+// A bare module.json opened by URL keeps the manifest found beside it, so the
+// platform module id survives and the play-through can be sent to a receiver.
+test('JSON-only form with a sibling manifest keeps it (and its module id); a bad one is ignored', () => {
+  const dir = join(SAMPLES_DIR, 'under-the-sink');
+  const text = readFileSync(join(dir, 'module.json'), 'utf8');
+  const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  const bundle = openModuleJson(text, { name: 'module.json', manifest });
+  assert.equal(bundle.manifest.synthesized, undefined);
+  assert.equal(bundle.manifest.module.versionId, '132a2097-db9e-400c-a580-827dfec9c3d5');
+  assert.equal(bundle.manifest.module.title, 'Under the Sink: Trace the Leak & Fix It Right');
+  assert.equal(openModuleJson(text, { name: 'module.json', manifest: { format: 'ronu' } }).manifest.synthesized, true);
+  assert.equal(openModuleJson(text, { name: 'module.json', manifest: 'nope' }).manifest.synthesized, true);
+});
+
 test('mime types come from the manifest first, then the extension', () => {
   assert.equal(mimeFor('assets/x.bin', { assets: [{ path: 'assets/x.bin', mimeType: 'video/mp4' }] }), 'video/mp4');
   assert.equal(mimeFor('assets/x.webp', {}), 'image/webp');
