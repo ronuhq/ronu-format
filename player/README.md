@@ -101,17 +101,19 @@ While connected, a `conversation` node (and a scene hotspot's `conversation` blo
 node player/tools/mock-receiver.mjs --static 8000 --receiver 8787
 ```
 
-It serves the repository on the static port (the player at `/player/`, the samples at `/samples/`, and `/mock/<sample>.ronu` zips any sample folder with its manifest on the fly) and the receiver on the other: `/.well-known/ronu-receiver.json`, a `/player-connect` page that consents at once and posts the connect message to its opener (or shows a connection code), `/functions/v1/record-completion` (validates the headers and the body shape, answers `passed: true, score: 100` and a `MOCK-1234` certificate), `/functions/v1/ai-conversation` (canned replies; a line containing "degrade" gets the degraded reply, one containing "fail" a 500; finalize returns an assessment, with per-criterion scores when a rubric was sent), and the GoTrue refresh and logout paths. Sessions expire after 45 seconds so the refresh path runs. `MOCK_RECORD_STATUS=403|404|413|500` makes the record call fail that way; `MOCK_MAX_BODY` sets the 413 ceiling.
+It serves the repository on the static port (the player at `/player/`, the samples at `/samples/`, and `/mock/<sample>.ronu` zips any sample folder with its manifest on the fly) and the receiver on the other: `/.well-known/ronu-receiver.json` (with the receiver's coordinates, contract section 7), a `/player-connect` page that consents at once and posts the connect message to its opener (or shows a connection code), `/functions/v1/record-completion` (validates the headers and the body shape, answers `passed: true, score: 100` and a `MOCK-1234` certificate), `/functions/v1/ai-conversation` (canned replies; a line containing "degrade" gets the degraded reply, one containing "fail" a 500; finalize returns an assessment, with per-criterion scores when a rubric was sent), `/functions/v1/creator-api` (the `player_session` action a connected package's key buys: the key `mock-key` gets a session for the learner the request names, any other key is 401 `unauthorized`; `MOCK_SESSION_ERROR=tier_required|invalid_learner|module_not_found|module_not_owned` forces that code), and the GoTrue refresh and logout paths. Sessions expire after 45 seconds so the refresh path runs. `MOCK_RECORD_STATUS=403|404|413|500` makes the record call fail that way; `MOCK_MAX_BODY` sets the 413 ceiling. `--static 0` runs the receiver alone (the SCORM harness below does that for you).
 
 Then open `http://localhost:8000/player/`, Connect, "change" the receiver to `http://localhost:8787`, and go. The mock only connects players on `http://localhost` or `http://127.0.0.1`.
 
 ## Packaging for an LMS (SCORM 1.2)
 
-An enterprise LMS (Moodle, Cornerstone, Workday Learning, SCORM Cloud) imports a SCORM package like any other course. This player can be that package: the runtime, a `.ronu` file and a SCORM 1.2 adapter in one zip, running entirely inside the LMS and reporting through the standard runtime API. `docs/lms-integration.md` explains where this sits next to the connected package and xAPI.
+An enterprise LMS (Moodle, Cornerstone, Workday Learning, SCORM Cloud) imports a SCORM package like any other course. This player can be that package: the runtime, a `.ronu` file and a SCORM 1.2 adapter in one zip, running entirely inside the LMS and reporting through the standard runtime API. It comes in two flavours, self-contained and connected (next section); `docs/lms-integration.md` explains where they sit next to xAPI.
 
 ```bash
 node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu
 # wrote hello-scorm.zip; --title "..." --out <zip> --identifier <id> override the defaults
+node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu --receiver https://ronunest.com --key <customer API key>
+# the same zip as a connected package: adds ronu-package.json and the machine launch
 ```
 
 The title and the manifest identifier come from the file's `manifest.json` (`module.title`, and `ronu-<familyId>`); the fallbacks are the file name and a slug of it. The zip holds:
@@ -136,7 +138,39 @@ It serves the package (a zip, or an unzipped directory) and a page with a loggin
 
 To test on a real LMS for nothing: SCORM Cloud's free Trial plan takes three courses. Upload the zip as a course, launch it as a registration, then read the registration's report; it shows the same fields and flags any manifest problem on import. CI builds the hello package on every push and checks its manifest, launcher, player and file.
 
-The limits, plainly: AI conversation characters need a connection to RonuNest (the learner connects from inside the package; on an air-gapped LMS the node shows its fallback card with the character's opening line); 3D worlds and `code` nodes show the fallback card; video is bundled, not streamed, so package size grows with media; updates mean re-importing the zip.
+The limits, plainly: AI conversation characters need a connection to RonuNest (a connected package makes one by itself; in a self-contained one the learner connects from inside the package; on an air-gapped LMS the node shows its fallback card with the character's opening line); 3D worlds and `code` nodes show the fallback card; video is bundled, not streamed, so package size grows with media; updates mean re-importing the zip.
+
+## Connected packages
+
+A self-contained package knows nothing about RonuNest until a learner signs in through the popup. Inside an LMS that is the wrong shape: the LMS already knows who the learner is, they have no RonuNest account, and a course window should not open sign-in windows. A **connected package** fixes that with a credential issued to the customer rather than to the learner (contract section 7, `docs/record-receiver.md`): the zip carries `ronu-package.json`, and at launch the player exchanges the key in it, plus the learner the LMS names, for a session. No popup, no account, nothing to type.
+
+| | Self-contained package | Connected package |
+|---|---|---|
+| Build | `scorm-package.mjs <file.ronu>` | `scorm-package.mjs <file.ronu> --receiver <origin> --key <key>` |
+| In the zip | player, `module.ronu`, `launch.html`, `imsmanifest.xml`, the XSDs | the same, plus `ronu-package.json` (`{version, receiver, key, moduleId, name}`); the launcher adds `&machine=1` |
+| At launch | plays at once | reads the file, fetches the receiver's discovery, posts `player_session` with `cmi.core.student_id` and `cmi.core.student_name`; the top bar says "connected as <name>" |
+| AI characters | fallback card, unless the learner connects through the popup | live, for the LMS's learner |
+| At the end | the LMS report | the LMS report first, then the play-through is sent to RonuNest by itself, once; the end screen shows both, with the certificate link |
+| If RonuNest cannot be reached, or the key is refused | not applicable | one line on the end screen ("Could not connect to RonuNest: <why>. Playing offline."), the fallback cards, and the LMS report as usual; the popup connect is still offered |
+| Stored on the learner's browser | the popup connection, if they made one | nothing: the session lives in memory for that launch and there is no Disconnect |
+| Play again | practice for the LMS | practice for both; a second send is a manual button and makes a new attempt |
+
+**Getting a key.** In RonuNest, open your nest's settings, then Portal API keys, and create a key for the customer. Issue **one key per LMS customer** and build that customer's packages with it: the key can only mint sessions for that customer's learners on modules your account owns, and revoking it in the same place cuts off every package that carries it, and nothing else. A revoked or mistyped key fails with `unauthorized` and the package plays offline, so a bad key never breaks a course. The key is visible to whoever can open the zip; that is the intended boundary, so never put one customer's key in another customer's package. `--connected` on its own, or `--receiver` without `--key` (or the reverse), is an error that says what is missing.
+
+**The learner on RonuNest.** The receiver keeps a tenant learner per (customer, `cmi.core.student_id`); the same student id on a later launch is the same learner, so attempts and certificates accumulate. An LMS that leaves the id blank (or a package opened outside an LMS with `?machine=1`) gets `anonymous-<random>`, a new learner every launch; the player logs that it did so.
+
+**Trying it locally.** The harness can run the mock receiver beside the fake LMS, so the whole path (LMS launch, key exchange, live character, automatic send, score in the LMS) runs on your machine with no real server:
+
+```bash
+node player/tools/zip-sample.mjs samples/under-the-sink /tmp/sink.ronu
+node player/tools/scorm-package.mjs /tmp/sink.ronu --receiver http://localhost:8787 --key mock-key --out /tmp/sink-connected.zip
+node player/tools/scorm-harness.mjs /tmp/sink-connected.zip --port 8791 --receiver-mock 8787
+# then open http://127.0.0.1:8791/
+```
+
+Build the same package with `--key wrong-key` to see the offline path. The mock only accepts `mock-key`; plain `http` receivers are accepted on localhost only.
+
+The code: `machine-session.js` (no DOM; the package file, discovery, the request and the response mapping, the end-of-run order) and the wiring in `app.js`. The session it produces is the same `{receiver, session, user}` the popup delivers, so `receiver.js`, `conversation.js` and the end screen do not know which way they were connected.
 
 ## Architecture
 
@@ -156,6 +190,8 @@ player/
                         the record body and the once-only send, the conversation calls. No DOM; fetch injected.
   conversation.js       the conversation state machine over a receiver client. No DOM.
   receiver-ui.js        the connect dialog (popup, paste-a-code), the stored connection, the top-bar control
+  machine-session.js    the connected package's key exchange (contract section 7): ronu-package.json, discovery
+                        with coordinates, the player_session call, the LMS-first end-of-run order. No DOM; fetch injected.
   store.js              IndexedDB key-value store: the last file, the receiver connection
   scorm.js              the SCORM 1.2 adapter: API discovery, the session, progress and outcome. No DOM.
   sw.js                 service worker: app-shell cache
@@ -189,9 +225,9 @@ Node 20 or newer, no install:
 node --test player/test/*.test.mjs
 ```
 
-The suite walks every sample under `samples/*/module.json` from its start node with scripted answers (first choice, authored order, items on their targets; nested interactions answered in the room; a conversation's `scoreVariableId` set to full marks to stand in for the AI grader) and asserts on the variables and end state; tests each condition operator and every `VariableAction` operator; covers the unknown-node fallback, namespaced extensions and the legacy forms; timers with a fake clock; scene discovery and sequencing; nested interactions and `abortWhen` (`test/interaction.test.mjs`, including a focused walk of `margarets-room`); `procedure` and `dragToTarget`; the session record; opens `samples/hello-ronu/hello.ronu` (a real zip) and a fixture zip through the same unzip and resolve path the UI uses; the receiver bridge against a scripted fetch (`test/receiver.test.mjs`: the section 3 body from a real run, 413 trimming, refresh before a call and on a 401, the connect-message origin rule, connection codes, discovery, the once-only send); and the conversation loop against a fake client (`test/conversation.test.mjs`: turns, moods, degraded, finalize writing the score variable, a hotspot character in a scene). CI runs it in the `player` job of `.github/workflows/ci.yml`.
+The suite walks every sample under `samples/*/module.json` from its start node with scripted answers (first choice, authored order, items on their targets; nested interactions answered in the room; a conversation's `scoreVariableId` set to full marks to stand in for the AI grader) and asserts on the variables and end state; tests each condition operator and every `VariableAction` operator; covers the unknown-node fallback, namespaced extensions and the legacy forms; timers with a fake clock; scene discovery and sequencing; nested interactions and `abortWhen` (`test/interaction.test.mjs`, including a focused walk of `margarets-room`); `procedure` and `dragToTarget`; the session record; opens `samples/hello-ronu/hello.ronu` (a real zip) and a fixture zip through the same unzip and resolve path the UI uses; the receiver bridge against a scripted fetch (`test/receiver.test.mjs`: the section 3 body from a real run, 413 trimming, refresh before a call and on a 401, the connect-message origin rule, connection codes, discovery, the once-only send); the conversation loop against a fake client (`test/conversation.test.mjs`: turns, moods, degraded, finalize writing the score variable, a hotspot character in a scene); the machine launch against a scripted fetch (`test/machine-session.test.mjs`: the package file, discovery with and without coordinates, the request built from SCORM values, every error code, the anonymous fallback, the timeout, and that the automatic send happens once and after the LMS report); and the SCORM packager (`test/scorm-package.test.mjs`: the manifest, both flavours of launcher, a connected build with `ronu-package.json` listed in the manifest). CI runs it in the `player` job of `.github/workflows/ci.yml`.
 
-The DOM side (sanitiser, panorama, rendering, the connect dialog and the live conversation against the mock receiver) is checked in a browser; see the verification notes in the commit history.
+The DOM side (sanitiser, panorama, rendering, the connect dialog, the live conversation against the mock receiver, and a connected package inside the fake LMS) is checked in a browser; see the verification notes in the commit history.
 
 ## Licence
 

@@ -6,8 +6,16 @@
 // smallest thing that behaves like one for a local check.
 //
 //   node player/tools/scorm-harness.mjs <package.zip | dir> [--port 8791]
+//   node player/tools/scorm-harness.mjs <connected.zip> --port 8791 --receiver-mock 8787
+//
+// --receiver-mock [port] also starts the mock receiver (mock-receiver.mjs,
+// receiver only) on that port, so a connected package whose
+// ronu-package.json names http://localhost:<port> with the key `mock-key`
+// runs the whole LMS launch, key exchange, live conversation and automatic
+// send locally, with no real server.
 
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { readFileSync, statSync, existsSync } from 'node:fs';
 import { join, extname, dirname, resolve, normalize } from 'node:path';
 import { createRequire } from 'node:module';
@@ -19,12 +27,14 @@ const fflate = require(join(dirname(fileURLToPath(import.meta.url)), '..', 'vend
 const args = process.argv.slice(2);
 let target = null;
 let port = 8791;
+let receiverMock = 0; // a port: start the mock receiver there too
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--port') port = Number(args[++i]);
+  else if (args[i] === '--receiver-mock') receiverMock = /^\d+$/.test(args[i + 1] ?? '') ? Number(args[++i]) : 8787;
   else if (!target) target = args[i];
 }
 if (!target || !existsSync(target)) {
-  console.error('usage: scorm-harness.mjs <package.zip | unzipped dir> [--port N]');
+  console.error('usage: scorm-harness.mjs <package.zip | unzipped dir> [--port N] [--receiver-mock [port]]');
   process.exit(2);
 }
 
@@ -204,4 +214,24 @@ const server = createServer((req, res) => {
 
 server.listen(port, '127.0.0.1', () => {
   console.log(`Fake LMS on http://127.0.0.1:${port}/  (package: ${target}, launch: ${launch}, ${listing().length} entries)`);
+  const config = readEntry('ronu-package.json');
+  if (config) {
+    let named = '?';
+    try {
+      named = JSON.parse(new TextDecoder().decode(config)).receiver ?? '?';
+    } catch {
+      /* the player will report a broken file */
+    }
+    console.log(`  connected package: ronu-package.json names ${named}${receiverMock ? '' : ' (add --receiver-mock <port> to serve a mock there)'}`);
+  }
 });
+
+if (receiverMock) {
+  const mock = spawn(process.execPath, [join(dirname(fileURLToPath(import.meta.url)), 'mock-receiver.mjs'), '--static', '0', '--receiver', String(receiverMock)], { stdio: 'inherit' });
+  const stop = () => {
+    if (!mock.killed) mock.kill();
+  };
+  process.on('exit', stop);
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { stop(); process.exit(0); });
+  mock.on('exit', (code) => { if (code) console.error(`mock receiver exited with ${code}`); });
+}

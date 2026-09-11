@@ -168,6 +168,7 @@ export function createScormSession(api, { clock = () => Date.now(), commitInterv
     startedAt: null,
     lastCommitAt: -Infinity,
     dirty: false,
+    studentId: null,
     studentName: null,
     status: null,
     suspendData: '',
@@ -268,7 +269,7 @@ export function createScormSession(api, { clock = () => Date.now(), commitInterv
   }
 
   function snapshot() {
-    return { ok: state.initialized, studentName: state.studentName, status: state.status, suspendData: state.suspendData, location: state.location };
+    return { ok: state.initialized, studentId: state.studentId, studentName: state.studentName, status: state.status, suspendData: state.suspendData, location: state.location };
   }
 
   const session = {
@@ -277,6 +278,9 @@ export function createScormSession(api, { clock = () => Date.now(), commitInterv
     },
     get finished() {
       return state.finished;
+    },
+    get studentId() {
+      return state.studentId;
     },
     get studentName() {
       return state.studentName;
@@ -291,7 +295,7 @@ export function createScormSession(api, { clock = () => Date.now(), commitInterv
       return state.calls;
     },
 
-    /** LMSInitialize, then read who and where. A fresh attempt is marked incomplete at once. */
+    /** LMSInitialize, then read who (id and name) and where. A fresh attempt is marked incomplete at once. */
     initialize() {
       if (state.initialized) return snapshot();
       const r = call('LMSInitialize', '');
@@ -301,6 +305,9 @@ export function createScormSession(api, { clock = () => Date.now(), commitInterv
       }
       state.initialized = true;
       state.startedAt = clock();
+      // The id is what a connected package acts for (machine-session.js); a blank one is no id.
+      const id = get('cmi.core.student_id');
+      state.studentId = id.trim() === '' ? null : id.trim();
       const name = get('cmi.core.student_name');
       state.studentName = name.trim() === '' ? null : name.trim();
       state.status = get('cmi.core.lesson_status');

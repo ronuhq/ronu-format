@@ -6,13 +6,21 @@
 //            samples at /samples/; /mock/<sample>.ronu is a sample zipped
 //            on the fly with its manifest, so it carries a module id and
 //            can be "recorded"
-//   receiver /.well-known/ronu-receiver.json, /player-connect (a page that
+//   receiver /.well-known/ronu-receiver.json (with the receiver's
+//            coordinates, contract section 7), /player-connect (a page that
 //            posts the connect message to its opener at once, to its parent
-//            when framed, or else shows a connection code), the two
-//            functions (record-completion,
-//            ai-conversation), and the GoTrue refresh and logout paths
+//            when framed, or else shows a connection code), the three
+//            functions (record-completion, ai-conversation, and creator-api
+//            for the `player_session` action a connected package's key
+//            buys), and the GoTrue refresh and logout paths
 //
 //   node player/tools/mock-receiver.mjs [--static 8000] [--receiver 8787]
+//   node player/tools/mock-receiver.mjs --static 0 --receiver 8787     (the receiver only)
+//
+// The machine launch: a package whose ronu-package.json names this origin
+// and the key `mock-key` gets a session for its LMS learner; any other key
+// is 401 `unauthorized`. MOCK_SESSION_ERROR=tier_required|invalid_learner|
+// module_not_found|module_not_owned forces that errorCode instead.
 //
 // Then open http://localhost:8000/player/, choose "Connect to RonuNest",
 // "change" the receiver to http://localhost:8787, and go. Sessions expire
@@ -42,6 +50,8 @@ const STATIC_PORT = arg('--static', 8000);
 const RECEIVER_PORT = arg('--receiver', 8787);
 const RECEIVER_ORIGIN = `http://localhost:${RECEIVER_PORT}`;
 const ANON_KEY = 'mock-anon-key';
+export const MOCK_CUSTOMER_KEY = 'mock-key';
+const FORCED_SESSION_ERROR = process.env.MOCK_SESSION_ERROR || '';
 const SESSION_SECONDS = 45;
 const MAX_BODY = Number(process.env.MOCK_MAX_BODY) || 200_000;
 const FORCED_RECORD_STATUS = Number(process.env.MOCK_RECORD_STATUS) || 0;
@@ -53,7 +63,7 @@ const MIME = {
   '.mp4': 'video/mp4', '.webm': 'video/webm', '.vtt': 'text/vtt',
 };
 
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, x-application-name', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-api-key, x-client-info, x-application-name', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
 
 function send(res, status, body, headers = {}) {
   const isJson = body !== null && typeof body === 'object' && !Buffer.isBuffer(body);
@@ -119,14 +129,37 @@ let counter = 0;
 let attempts = 0;
 const USER = { id: '00000000-0000-4000-8000-00000000mock', email: 'learner@example.com', name: 'Mock Learner' };
 
-function mintSession() {
+function mintSession(user = USER) {
   counter += 1;
   const access = `mock-access-${counter}`;
   const refresh = `mock-refresh-${counter}`;
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
-  sessions.set(access, { refresh, expiresAt, user: USER });
+  sessions.set(access, { refresh, expiresAt, user });
   refreshTokens.set(refresh, access);
   return { access_token: access, refresh_token: refresh, expires_at: expiresAt, expires_in: SESSION_SECONDS, token_type: 'bearer' };
+}
+
+// Tenant learners a package key created, by externalId (section 7: created once, found after).
+const tenantLearners = new Map();
+
+/** The section 7 exchange: the key, then the learner, then the module; a session for that learner. */
+function playerSession(req, body) {
+  const key = req.headers['x-api-key'];
+  if (key !== MOCK_CUSTOMER_KEY) return { status: 401, body: { success: false, error: 'Invalid API key', errorCode: 'unauthorized' } };
+  if (FORCED_SESSION_ERROR) {
+    const statuses = { tier_required: 403, invalid_learner: 400, module_not_found: 404, module_not_owned: 403 };
+    return { status: statuses[FORCED_SESSION_ERROR] ?? 400, body: { success: false, error: `Forced by MOCK_SESSION_ERROR=${FORCED_SESSION_ERROR}`, errorCode: FORCED_SESSION_ERROR } };
+  }
+  const learner = body?.learner && typeof body.learner === 'object' ? body.learner : null;
+  const externalId = typeof learner?.externalId === 'string' ? learner.externalId.trim() : '';
+  if (!externalId) return { status: 400, body: { success: false, error: 'learner.externalId is required', errorCode: 'invalid_learner' } };
+  const moduleId = typeof body?.moduleId === 'string' ? body.moduleId.trim() : '';
+  if (!moduleId) return { status: 404, body: { success: false, error: 'Module not found', errorCode: 'module_not_found' } };
+  const created = !tenantLearners.has(externalId);
+  if (created) tenantLearners.set(externalId, { id: `00000000-0000-4000-8000-${String(tenantLearners.size + 1).padStart(12, '0')}`, email: typeof learner.email === 'string' ? learner.email : '', name: typeof learner.name === 'string' && learner.name.trim() ? learner.name.trim() : externalId });
+  const user = tenantLearners.get(externalId);
+  const s = mintSession(user);
+  return { status: 200, body: { success: true, version: 0, session: { access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at, token_type: 'bearer' }, user, learner: { created } } };
 }
 
 function connectMessage() {
@@ -224,7 +257,26 @@ const receiverServer = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, null);
 
   if (path === '/.well-known/ronu-receiver.json') {
-    return send(res, 200, { ronuReceiver: 0, name: 'Mock RonuNest', connect: '/player-connect' });
+    // Section 1 plus the section 7 coordinates: a player given only this origin needs nothing else.
+    return send(res, 200, {
+      ronuReceiver: 0, name: 'Mock RonuNest', connect: '/player-connect',
+      supabaseUrl: RECEIVER_ORIGIN, anonKey: ANON_KEY,
+      records: `${RECEIVER_ORIGIN}/functions/v1/record-completion`,
+      conversation: `${RECEIVER_ORIGIN}/functions/v1/ai-conversation`,
+      session: `${RECEIVER_ORIGIN}/functions/v1/creator-api`,
+    });
+  }
+  if (path === '/functions/v1/creator-api' && req.method === 'POST') {
+    let body;
+    try {
+      body = JSON.parse(await readBody(req));
+    } catch {
+      return send(res, 400, { success: false, error: 'Body is not JSON', errorCode: 'bad_request' });
+    }
+    if (body?.action !== 'player_session') return send(res, 400, { success: false, error: `Unknown action "${body?.action}"`, errorCode: 'bad_request' });
+    const out = playerSession(req, body);
+    log(`creator-api player_session for ${body?.learner?.externalId ?? '(no learner)'} from ${body?.player?.origin ?? '?'} -> ${out.status}${out.body.errorCode ? ` ${out.body.errorCode}` : ` ${out.body.user.name}${out.body.learner.created ? ' (created)' : ''}`}`);
+    return send(res, out.status, out.body);
   }
   if (path === '/player-connect') {
     log('connect page opened for', url.searchParams.get('origin'));
@@ -327,12 +379,17 @@ const receiverServer = createServer(async (req, res) => {
   send(res, 404, { error: `No route for ${req.method} ${path}` });
 });
 
-staticServer.listen(STATIC_PORT, () => {
+function listenReceiver() {
   receiverServer.listen(RECEIVER_PORT, () => {
     console.log(`mock receiver
-  player:    http://localhost:${STATIC_PORT}/player/
+${STATIC_PORT ? `  player:    http://localhost:${STATIC_PORT}/player/
   samples:   http://localhost:${STATIC_PORT}/mock/under-the-sink.ronu (zipped with its manifest, so it can be recorded)
-  receiver:  ${RECEIVER_ORIGIN}  (enter this under "change" in the player's connect dialog)
-  sessions expire after ${SESSION_SECONDS}s so the refresh path runs; Ctrl+C stops both servers`);
+` : ''}  receiver:  ${RECEIVER_ORIGIN}  (enter this under "change" in the player's connect dialog, or as --receiver when packaging)
+  package key: ${MOCK_CUSTOMER_KEY}  (scorm-package.mjs --receiver ${RECEIVER_ORIGIN} --key ${MOCK_CUSTOMER_KEY} builds a connected package for this mock)
+  sessions expire after ${SESSION_SECONDS}s so the refresh path runs; Ctrl+C stops${STATIC_PORT ? ' both servers' : ''}`);
   });
-});
+}
+
+// --static 0: the receiver alone (the SCORM harness serves the package itself).
+if (STATIC_PORT) staticServer.listen(STATIC_PORT, listenReceiver);
+else listenReceiver();

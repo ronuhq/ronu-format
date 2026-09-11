@@ -20,18 +20,22 @@ So: xAPI is complementary to `.ronu` (events versus the experience), and SCORM i
 
 ## The two SCORM deliverables
 
-| | Connected package ("dispatch") | Self-contained package |
+| | Connected package | Self-contained package |
 |---|---|---|
-| What is in the zip | A launcher page plus a SCORM manifest | The reference player, the `.ronu` file, the SCORM API adapter |
-| Where the simulation runs | Loaded from the hosting platform inside the LMS window | Entirely inside the LMS, no calls out required |
-| Needs internet from the learner's browser | Yes | No, unless optional services are used |
-| AI conversation characters | Yes, through the platform's service | Only if the learner's browser can reach the platform and the package carries a credential (see below). Air-gapped: no |
-| Content updates | Instant | Re-import the zip |
+| What is in the zip | The reference player, the `.ronu` file, the SCORM API adapter, and `ronu-package.json` holding the customer's key | The reference player, the `.ronu` file, the SCORM API adapter |
+| Where the simulation runs | Inside the LMS; the player talks to the platform for the learner | Entirely inside the LMS, no calls out required |
+| Needs internet from the learner's browser | Yes, to reach the platform (the module itself still plays if it cannot) | No, unless optional services are used |
+| AI conversation characters | Yes, live, for the LMS's learner, with no popup and no RonuNest account | Only if the learner connects through the popup handshake. Air-gapped: no |
+| Content updates | Re-import the zip | Re-import the zip |
 | What the LMS receives | Completion, score, time, session state: everything SCORM 1.2 can carry | The same |
-| What the platform receives | Full node-level evidence, certificates, analytics | Nothing, unless the package also sends its record to the platform or an xAPI feed to the customer's LRS |
-| Answers "we host it ourselves" | No | Yes |
-| Answers "we are air-gapped" | No | Yes, with the AI fallback |
-| Where it is built | Not yet | `node player/tools/scorm-package.mjs <file.ronu>` in this repository; see "Packaging for an LMS (SCORM 1.2)" in `player/README.md` for the zip, the fake-LMS harness and the limits |
+| What the platform receives | The full play-through, recorded automatically at the end: node-level evidence, certificates, analytics, under a tenant learner keyed to the LMS's student id | Nothing, unless the learner connects and sends, or an xAPI feed goes to the customer's LRS |
+| Answers "we host it ourselves" | Yes (the platform is called, not loaded from) | Yes |
+| Answers "we are air-gapped" | No (it degrades to self-contained) | Yes, with the AI fallback |
+| State | Built: `node player/tools/scorm-package.mjs <file.ronu> --receiver https://ronunest.com --key <customer API key>`; the platform side is `player_session` on `creator-api` (section 7 of `docs/record-receiver.md`) | Built: `node player/tools/scorm-package.mjs <file.ronu>`; see "Packaging for an LMS (SCORM 1.2)" in `player/README.md` for the zip, the fake-LMS harness and the limits |
+
+The "dispatch" launcher (a package that is only a launcher page loading the hosted module) is a third shape, not built: with a connected package there is no need for it in the first deals, because updates are the one thing it adds, and a re-import covers that.
+
+Both flavours are the same zip; the connected one adds one file and one launch flag. Both play offline when the platform cannot be reached, so a connected package is never worse than a self-contained one.
 
 Both report to the LMS through the standard SCORM runtime API (`LMSInitialize`, `LMSSetValue cmi.core.lesson_status` and `cmi.core.score.raw`, `LMSCommit`, `LMSFinish` in 1.2 terms). Open-source adapters for that API have existed for years (the pipwerks SCORM API wrapper, MIT, since 2008; scorm-again, MIT, covers 1.2, 2004 and AICC). Writing the package side is not the hard part. The hard part is conformance across hundreds of LMS implementations, which is what a test harness such as SCORM Cloud is for.
 
@@ -45,13 +49,13 @@ Target SCORM 1.2, not 2004: 1.2 is the universal denominator and the ceiling of 
 
 ## What the self-contained package cannot do, honestly
 
-- **AI characters need a model on a server.** "Self-contained" means hosted in the LMS, not necessarily offline. If the learner's browser can reach the platform, the package can run conversations through it, provided it carries a credential for the learner: either the connect handshake in `record-receiver.md`, or a scoped per-customer player token (the follow-up named in that contract). On a truly air-gapped LMS there is no model, so the node falls back to the spec's placeholder; authors who need that case write the dialogue as an ordinary branching `choice` tree instead.
-- **Certificates, analytics and evidence** stay in the LMS's own terms (a status and a score) unless the package also sends its record to the platform or to the customer's LRS as xAPI.
-- **Updates** need a re-import; the connected package updates instantly.
+- **AI characters need a model on a server.** "Self-contained" means hosted in the LMS, not necessarily offline. If the learner's browser can reach the platform, the package can run conversations through it, provided it carries a credential for the learner: the connect handshake in `record-receiver.md` (the learner signs in), or the customer key of a connected package (section 7 of that contract, no sign-in). On a truly air-gapped LMS there is no model, so the node falls back to the spec's placeholder; authors who need that case write the dialogue as an ordinary branching `choice` tree instead.
+- **Certificates, analytics and evidence** stay in the LMS's own terms (a status and a score) unless the package is a connected one, or the learner sends the record, or an xAPI feed goes to the customer's LRS.
+- **Updates** need a re-import, for both flavours.
 - **Learner-scoped variables** shared across modules, group features, leaderboards, community: platform features, absent.
 - **3D worlds and code nodes** show the fallback card; the player does not ship those runtimes.
 - **Video** is bundled, not streamed, so package size grows with media.
 
 ## The one-sentence answer for a sales call
 
-"Yes. Every module comes as a standard SCORM 1.2 package your LMS imports like any other course. Choose the connected package for live AI characters and instant updates, or the self-contained package if you host everything yourselves. Completions and scores land in your LMS either way, and if you run an LRS we can send full xAPI detail too."
+"Yes. Every module comes as a standard SCORM 1.2 package your LMS imports like any other course. Choose the connected package for live AI characters and a full record on our side, with no accounts for your learners, or the self-contained package if nothing may leave your network. Completions and scores land in your LMS either way, and if you run an LRS we can send full xAPI detail too."

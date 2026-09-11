@@ -18,7 +18,7 @@ function win(props = {}) {
 /** A logging SCORM 1.2 API with a small data model. `opts.fail` lists elements whose set is refused. */
 function fakeApi(opts = {}) {
   const cmi = {
-    'cmi.core.student_name': 'Okafor, Dami', 'cmi.core.lesson_status': 'not attempted', 'cmi.suspend_data': '', 'cmi.core.lesson_location': '',
+    'cmi.core.student_id': 'learner-001', 'cmi.core.student_name': 'Okafor, Dami', 'cmi.core.lesson_status': 'not attempted', 'cmi.suspend_data': '', 'cmi.core.lesson_location': '',
     'cmi.core.score.raw': '', 'cmi.core.score.min': '', 'cmi.core.score.max': '', 'cmi.core.session_time': '', 'cmi.core.exit': '', ...(opts.cmi ?? {}),
   };
   const log = [];
@@ -141,7 +141,9 @@ test('initialize: LMSInitialize, reads the learner and state, marks a fresh atte
   const s = createScormSession(api, { clock: fakeClock() });
   const opened = s.initialize();
   assert.equal(opened.ok, true);
+  assert.equal(opened.studentId, 'learner-001', 'the id a connected package acts for');
   assert.equal(opened.studentName, 'Okafor, Dami');
+  assert.equal(s.studentId, 'learner-001');
   assert.equal(opened.status, 'incomplete');
   assert.equal(api.cmi['cmi.core.lesson_status'], 'incomplete');
   assert.deepEqual(api.log[0], ['LMSInitialize', '']);
@@ -154,13 +156,14 @@ test('initialize: LMSInitialize, reads the learner and state, marks a fresh atte
 });
 
 test('initialize: a resumed attempt keeps its status and hands back the suspend data', () => {
-  const api = fakeApi({ cmi: { 'cmi.core.lesson_status': 'incomplete', 'cmi.suspend_data': '{"n":"q1"}', 'cmi.core.lesson_location': 'q1', 'cmi.core.student_name': '  ' } });
+  const api = fakeApi({ cmi: { 'cmi.core.lesson_status': 'incomplete', 'cmi.suspend_data': '{"n":"q1"}', 'cmi.core.lesson_location': 'q1', 'cmi.core.student_name': '  ', 'cmi.core.student_id': '' } });
   const s = createScormSession(api, { clock: fakeClock() });
   const opened = s.initialize();
   assert.equal(opened.status, 'incomplete');
   assert.equal(opened.suspendData, '{"n":"q1"}');
   assert.equal(opened.location, 'q1');
   assert.equal(opened.studentName, null, 'a blank name is no name');
+  assert.equal(opened.studentId, null, 'a blank id is no id (machine-session falls back to anonymous-<random>)');
   assert.equal(api.log.filter((l) => l[0] === 'LMSSetValue').length, 0, 'nothing written');
   assert.equal(api.log.filter((l) => l[0] === 'LMSCommit').length, 0);
 });
