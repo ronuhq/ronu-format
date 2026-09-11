@@ -78,12 +78,24 @@ blocked, or the learner opened the page in a tab), it shows the same JSON as a
 "connection code" (base64url of the JSON) with a copy button. A player offers a
 "paste a connection code" input that accepts it.
 
+A tab the player opens with `window.open` still has an opener, so the message
+route works from a tab as well as a popup. A player SHOULD therefore offer to
+open the connect page in a tab before falling back to the pasted code: a blank
+tab opened inside the click and navigated once the connect URL is known, which
+popup blockers allow. The popup itself SHOULD be opened the same way, because
+the connect URL is only known after the discovery fetch and a late
+`window.open` is blocked.
+
 **Session refresh.** Access tokens expire (about an hour). Before a call, if
 `expires_at` is within 60 seconds, the player refreshes:
 `POST <supabaseUrl>/auth/v1/token?grant_type=refresh_token` with header
 `apikey: <anonKey>` and body `{"refresh_token": "<token>"}`; the response is a
-new session in the same shape. If the refresh fails, the player is
-disconnected and must reconnect.
+new session in the same shape. GoTrue's response carries `expires_in` and
+`expires_at`, and a new single-use `refresh_token`: the player takes
+`expires_at`, else now plus `expires_in`, else no expiry (which leaves the 401
+row of section 3 to catch it), and keeps the old refresh token only when none
+comes back. If the refresh fails for any reason, the player is disconnected
+and must reconnect.
 
 **Disconnect.** `POST <supabaseUrl>/auth/v1/logout` with `Authorization:
 Bearer <access_token>` and `apikey`, then forget everything stored.
@@ -104,16 +116,25 @@ Content-Type: application/json
 
 ```json
 {
-  "moduleId": "<manifest.module.id>",
+  "moduleId": "<manifest.module.versionId>",
   "responses": { "<nodeId>": { "answer": <what the learner answered>, "score": 0-100 } },
   "path": [ { "nodeId": "<nodeId>", "enteredAt": "<ISO time>" } ],
   "variableState": { "<variableId>": <value> }
 }
 ```
 
-- `moduleId` is `manifest.module.id`: the id the file was exported from. The
-  receiver must know that module; a file from another platform, or a module
-  deleted since, cannot be recorded (404).
+- `moduleId` is the receiver's id for the exact version the file was exported
+  from. The platform's exporter writes it as `manifest.module.versionId` (spec
+  section 3; there is no `module.id`, and every sample manifest shows this),
+  and the receiver keys records by that version row, never by `familyId`. A
+  player MUST read `manifest.module.id` when present (a future exporter may
+  write it), else `manifest.module.versionId`, and MUST NOT fall back to
+  `familyId`. A synthesised envelope (a bare `module.json`, or a zip with no
+  manifest, spec section 9.9) has neither, so the file cannot be recorded and
+  the player says so; a bare `module.json` fetched by URL MAY take the
+  `manifest.json` found beside it, which keeps the sample folders recordable.
+  The receiver must know that module; a file from another platform, or a
+  module deleted since, cannot be recorded (404).
 - `responses` carries only nodes that were answered; `score` only where the
   player computed a 0 to 100 grade (matching, procedure, dragToTarget, an
   assessed conversation). The receiver recomputes pass or fail from the
@@ -126,15 +147,25 @@ Responses:
 
 | Status | Meaning | Player behaviour |
 |---|---|---|
-| 200 | recorded; body includes `passed`, `score`, and `certificate` `{verification_code, issued_at, expires_at}` when one was issued | mark the session as sent, show the result, link the certificate at `<origin>/certificates/<verification_code>` |
-| 401 | session invalid or expired | refresh, then reconnect |
+| 200 | recorded; body includes `passed`, `score`, and `certificate` `{verification_code, issued_at, expires_at}` when one was issued | mark the session as sent, show the result, link the certificate at `<receiver.origin>/certificates/<verification_code>` |
+| 401 | session invalid or expired | refresh the session (section 2) and retry the call once; a second 401 disconnects (the stored session is forgotten) and asks the learner to connect again |
 | 403 | the learner has no access to this module on the receiver | say so; nothing to retry |
 | 404 | the receiver does not have this module | say so |
-| 413 | record too large | drop bulky answer payloads and retry once |
+| 413 | record too large | drop every answer whose JSON is over 512 bytes (keeping its `score`) and retry once; a 413 on the trimmed body is final |
 
-A record is sent at most once per session; the player keeps a "sent" flag with
-the receiver's response. Sending the same session twice creates two attempts
-on the receiver.
+The certificate link uses `receiver.origin` from the connect message (or from
+discovery, section 7), which is where the receiver says its pages live. It is
+not required to equal the origin the player opened, which is only used to
+validate the message (section 2 step 4); for RonuNest the two are the same.
+
+A record is sent at most once per session. A *session* is one run of the
+player from the start node to the end screen; "play again" starts a new
+session, which may be sent as a new attempt. The player keeps a "sent" flag
+with the receiver's response, stored against the last-opened file (matched by
+name and size), and on reopening the file says when it was sent and relabels
+the action "send as a new attempt", so a reload does not send the same
+play-through twice by accident but does not stop a deliberate retry. Sending
+the same session twice creates two attempts on the receiver.
 
 The xAPI-shaped statements a player builds locally (see the reference player's
 `session.js`) are a superset of this body and remain the right thing to give
@@ -152,7 +183,7 @@ as online.
 POST <conversation>     (same headers as section 3)
 {
   "version": 0,
-  "moduleId": "<manifest.module.id>",
+  "moduleId": "<manifest.module.versionId>",
   "persona": "<config.persona>",
   "objective": "<config.objective>",
   "moodStates": [ { "label": "...", "cue": "..." } ],
@@ -164,15 +195,39 @@ POST <conversation>     (same headers as section 3)
 - With `finalize: false`, the last message must be the learner's; the response
   is `{ "reply": "...", "mood": "...", "degraded": false, "usage": { "used", "limit" } }`.
   `degraded: true` means the creator's allowance is spent and the reply is
-  scripted; the player should end the conversation and finalize.
+  scripted; the player shows that reply, closes the input, and offers one
+  action ("End and assess") that finalizes. It does not finalize behind the
+  learner's back.
+- `config.maxTurns` is the number of learner turns the conversation allows;
+  it defaults to 6 when absent or not a positive number. Reaching it
+  finalizes at once, without waiting for a tap. "End conversation" is offered
+  only once something has been said, as online.
 - With `finalize: true` and the full transcript, the response is the
-  assessment: `{ "score": 0-100, "summary": "...", "criteria"?: [...] }` when
-  the node has `criteria` (a rubric), plus `model` and `promptVersion`.
+  assessment `{ "score": 0-100, "summary": "...", "criteria"?: [...] }`, with
+  `criteria` when the node has a rubric, plus `model` and `promptVersion`.
+  RonuNest wraps it: `{ "assessment": { "score", "summary", "criteria",
+  "model", "promptVersion", "gradedAt" }, "usage", "degraded" }`. A player
+  MUST accept both the wrapped form (`body.assessment`) and the bare form
+  (`body`); `score` is required, and is rounded and clamped to 0 to 100.
   The player writes `score` to the node's `scoreVariableId` with a `set`
   action and records the node's answer with that score, so the record sent in
   section 3 carries it.
+- The player sends the rubric on the finalize body as `criteria:
+  [{ "id", "label", "weight" }]`, built from the node's `rubric` (a hotspot
+  character calls the same thing `criteria`, spec section 7), with `weight`
+  defaulting to 1 when missing or not positive. A receiver MAY ignore it and
+  read its own copy of the module.
 - Errors come back as `{ "error": "..." }` with 4xx or 5xx; the player shows
   the message and offers the fallback card.
+
+A scene hotspot's `conversation` block (spec section 7) has the same shape as
+a conversation node and runs through the same endpoint with the same body.
+Its answer and score are recorded against `<sceneId>/<hotspotId>` (spec
+section 9.6), `scoreVariableId` is written the same way, and the scene's
+`abortWhen` is re-evaluated afterwards. Closing the card before the
+conversation is ended leaves it waiting in the room, and the hotspot's later
+beats run once it is ended. The platform sends a `hotspotId` field in its own
+calls; a player need not.
 
 Not connected, or the call fails: the player shows the spec's fallback card
 for the node and continues, as a minimal player does.
@@ -204,7 +259,10 @@ for the node and continues, as a minimal player does.
 - Stored sessions are as sensitive as being signed in. Disconnect clears them.
   A player on a shared device should offer disconnect prominently.
 - All calls are HTTPS. A receiver on plain HTTP is only acceptable on
-  localhost during development.
+  localhost during development: a player MUST refuse an `http://` receiver
+  address unless its host is `localhost`, `127.0.0.1` or `[::1]`. The
+  `receiver.*` URLs inside a connect message need not be re-checked, since
+  they come from a page the learner has just signed in to.
 
 ## 7. Customer keys: machine launch
 
@@ -245,7 +303,7 @@ A package may carry `ronu-package.json` at its root, beside the launcher:
   "version": 0,
   "receiver": "https://ronunest.com",
   "key": "<creator API key>",
-  "moduleId": "<manifest.module.id>",
+  "moduleId": "<manifest.module.versionId>",
   "name": "ronu player"
 }
 ```
@@ -277,7 +335,7 @@ Content-Type: application/json
     "name": "<cmi.core.student_name>",
     "email": "<optional>"
   },
-  "moduleId": "<manifest.module.id>",
+  "moduleId": "<manifest.module.versionId>",
   "player": { "name": "ronu player", "origin": "<location.origin>" }
 }
 ```
