@@ -1,6 +1,12 @@
 // Bootstrap: open a file (drop, picker, sample, ?ronu= URL, last-opened from
 // IndexedDB), build the engine + UI, keep the receiver connection, register
 // the service worker.
+//
+// SCORM mode (`?scorm=1`, set by a package's launch.html): when the LMS's
+// API object is found through the frame chain, the player becomes the SCO.
+// No service worker, no IndexedDB "last file", no opener screen: the bundled
+// file loads at once, node entries and the outcome go to the LMS through
+// scorm.js. Without an API the player runs as usual and says so at the end.
 
 import { openBundle, openModuleJson, createResolver, checkManifest, bundleTitle } from './bundle.js';
 import { Engine } from './engine.js';
@@ -8,6 +14,7 @@ import { PlayerUI, h } from './ui.js';
 import { sessionRecord } from './session.js';
 import { dbGet, dbPut } from './store.js';
 import { ReceiverController, receiverControl } from './receiver-ui.js';
+import { findApi, createScormSession, compactSuspendData, outcomeFor } from './scorm.js';
 
 const SAMPLE_URL = '../samples/hello-ronu/hello.ronu';
 const SHOWCASE_URL = '../samples/showcase/showcase.ronu';
@@ -16,6 +23,45 @@ const SAMPLE_JSON_URL = '../samples/under-the-sink/module.json';
 const app = document.getElementById('app');
 let current = null; // { ui, engine, resolver, bundle }
 let openerShowing = false;
+
+// ---- SCORM mode ------------------------------------------------------------
+
+const params = new URLSearchParams(location.search);
+const scormRequested = params.get('scorm') === '1';
+const scormApi = scormRequested ? findApi(window) : null;
+// What the UI reads: `active` when an LMS is there, `noApi` when one was asked for and not found.
+const scorm = {
+  requested: scormRequested,
+  active: Boolean(scormApi),
+  noApi: scormRequested && !scormApi,
+  session: scormApi ? createScormSession(scormApi, { warn: (m) => console.warn(m) }) : null,
+  studentName: null,
+  recorded: null, // { status, score } once the outcome has gone to the LMS
+  replayed: false, // Play again after the outcome was reported: practice only
+};
+
+function scormNodeEntered(engine, view) {
+  if (!scorm.session?.initialized || scorm.session.finished) return;
+  scorm.session.progress({ nodeId: view.node.id, suspendData: compactSuspendData({ nodeId: view.node.id, trail: engine.trail, values: engine.values }) });
+}
+
+function scormEnded(view) {
+  if (!scorm.session?.initialized) return;
+  if (scorm.session.finished) {
+    scorm.replayed = true;
+    return;
+  }
+  const recorded = scorm.session.finish(outcomeFor(view));
+  if (recorded) scorm.recorded = recorded;
+}
+
+if (scorm.session) {
+  const leave = () => {
+    if (scorm.session.initialized && !scorm.session.finished) scorm.session.abandon();
+  };
+  window.addEventListener('pagehide', leave);
+  window.addEventListener('beforeunload', leave);
+}
 
 // The one receiver connection (docs/record-receiver.md). Loaded before the
 // first screen so the opener and the top bar can show it.
@@ -50,6 +96,10 @@ async function openBytes(bytes, name, { remember = true, manifest = null } = {})
   }
   const problems = checkManifest(bundle.manifest);
   if (problems.length) console.warn('manifest.json problems (continuing):', problems);
+  if (scorm.active) {
+    play(bundle); // the LMS holds the attempt; nothing is remembered here
+    return;
+  }
   const buffer = bytes instanceof Uint8Array ? bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) : bytes;
   let last = await dbGet('last');
   if (remember) {
@@ -83,6 +133,9 @@ function play(bundle, { priorSent = null } = {}) {
     receiver,
     receiverControl,
     priorSent,
+    scorm: scorm.active || scorm.noApi ? scorm : null,
+    onNodeEnter: (view) => scormNodeEntered(engine, view),
+    onEnd: (view) => scormEnded(view),
     onSent: async (sent) => {
       const last = await dbGet('last');
       if (last && last.name === bundle.name) await dbPut('last', { ...last, sent });
@@ -154,6 +207,16 @@ async function openFile(file) {
 async function showOpener(error = null, status = null) {
   closeCurrent();
   openerShowing = true;
+  if (scorm.active) {
+    // Inside an LMS there is nothing to choose: the bundled file, or a plain error card.
+    app.replaceChildren(h('section.opener',
+      h('h1', 'ronu player'),
+      error ? h('p.error', error) : null,
+      error ? h('p.muted', 'The package could not start. Ask whoever imported this course to check the package, or try launching it again.') : null,
+      status ? h('p.muted', status) : null,
+    ));
+    return;
+  }
   const last = await dbGet('last');
   const input = h('input', { type: 'file', accept: '.ronu,.zip,.json,application/zip,application/json', hidden: true, onchange: (e) => e.target.files[0] && openFile(e.target.files[0]) });
   const urlInput = h('input.input', { type: 'text', inputmode: 'url', autocapitalize: 'off', spellcheck: false, placeholder: 'https://example.com/module.ronu', 'aria-label': 'URL of a .ronu file' });
@@ -209,17 +272,22 @@ document.addEventListener('drop', (e) => {
 
 // ---- boot ------------------------------------------------------------------
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+// A package lives inside the LMS: no app-shell cache there.
+if (!scorm.active && 'serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('Service worker not registered', e));
 }
 
 (async () => {
+  if (scorm.session) {
+    const opened = scorm.session.initialize();
+    scorm.studentName = opened.studentName;
+  }
   await receiver.load();
-  const params = new URLSearchParams(location.search);
   const remote = params.get('ronu');
-  if (remote) openUrl(remote);
+  if (remote) openUrl(remote, { remember: !scorm.active });
+  else if (scorm.active) showOpener('This package names no .ronu file to play.');
   else showOpener();
 })();
 
 // Expose a little for debugging and browser-level checks.
-window.ronuPlayer = { get current() { return current; }, openUrl, openBytes, receiver };
+window.ronuPlayer = { get current() { return current; }, openUrl, openBytes, receiver, scorm };

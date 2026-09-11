@@ -84,6 +84,18 @@ jobs:
       - name: node --test
         run: node --test player/test/*.test.mjs
 
+      # The SCORM 1.2 packager must turn the real .ronu into a package an LMS
+      # can import: a manifest at the root, the launcher, the file, the player.
+      - name: SCORM 1.2 package builds from hello.ronu
+        run: |
+          set -e
+          node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu --out /tmp/hello-scorm.zip
+          unzip -l /tmp/hello-scorm.zip
+          unzip -p /tmp/hello-scorm.zip imsmanifest.xml | grep -q 'adlcp:scormtype="sco" href="launch.html"'
+          unzip -p /tmp/hello-scorm.zip launch.html | grep -q 'scorm=1'
+          unzip -p /tmp/hello-scorm.zip player/scorm.js > /dev/null
+          unzip -p /tmp/hello-scorm.zip module.ronu | cmp - samples/hello-ronu/hello.ronu
+
   tiny-player:
     name: Tutorial player plays every sample
     runs-on: ubuntu-latest
