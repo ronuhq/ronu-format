@@ -26,6 +26,12 @@ export class ReceiverController {
     this.origin = DEFAULT_RECEIVER_ORIGIN;
     this.notice = null;
     this.listeners = new Set();
+    // A machine launch (docs/record-receiver.md section 7): the session came
+    // from a package key for the LMS's learner. It is never written to
+    // IndexedDB (the next launch may be another learner on the same browser)
+    // and there is no Disconnect; closing the course drops it.
+    this.machine = null; // { name } while a machine session is in use
+    this.ephemeral = false;
   }
 
   get connected() {
@@ -58,6 +64,7 @@ export class ReceiverController {
   }
 
   persist() {
+    if (this.ephemeral) return Promise.resolve();
     return dbPut(STORE_KEY, { origin: this.origin, connection: this.connection });
   }
 
@@ -77,11 +84,23 @@ export class ReceiverController {
     this.emit();
   }
 
+  /**
+   * Section 7: take the session a package key minted for the LMS's learner.
+   * Nothing is persisted, so a stored popup connection on this browser is
+   * left as it was, and a later `forget` (a failed refresh) writes nothing.
+   */
+  adoptMachine(connection, { name = null } = {}) {
+    this.ephemeral = true;
+    this.machine = { name: name ?? connection?.user?.name ?? connection?.user?.email ?? 'a learner' };
+    this.adopt(connection, { persist: false });
+  }
+
   /** Drop the stored session (after a failed refresh, or a disconnect). */
   async forget(message = null) {
     this.connection = null;
     this.client = null;
     this.notice = message;
+    this.machine = null;
     await this.persist();
     this.emit();
   }
@@ -281,6 +300,13 @@ function openConnectDialog(ctl) {
  */
 export function receiverControl(ctl, { compact = false, bare = false, onChange } = {}) {
   const changed = () => onChange?.();
+  if (ctl.connected && ctl.machine) {
+    // A machine session: the package connected the LMS's learner; there is nothing to sign out of.
+    const who = ctl.machine.name;
+    return h('span.receiver-control.is-connected.is-machine',
+      h('span.receiver-user', { title: `${ctl.name}: connected through this package as ${who}` }, compact ? `connected as ${who}` : `${ctl.name}: connected as ${who}`),
+    );
+  }
   if (ctl.connected) {
     const email = ctl.connection.user.email || ctl.connection.user.name || 'connected';
     return h('span.receiver-control.is-connected',

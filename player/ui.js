@@ -92,6 +92,8 @@ export class PlayerUI {
    *   receiver (ReceiverController, optional), receiverControl (fn(ctl, opts) -> element),
    *   priorSent (a stored "sent" flag for this file, optional), onSent(sent),
    *   scorm (optional, read at render time: { active, noApi, studentName, recorded: {status, score} | null, replayed }),
+   *   machine (optional, read at render time: { status: 'none' | 'connecting' | 'connected' | 'failed', name, error, anonymous },
+   *     the section 7 machine launch; 'failed' puts an offline line on the end screen and the conversation fallbacks),
    *   onNodeEnter(view) (each time a node is entered), onEnd(view) (once per run, when the end screen first renders) }
    */
   constructor(o) {
@@ -106,6 +108,7 @@ export class PlayerUI {
     this.priorSent = o.priorSent ?? null;
     this.onSent = o.onSent ?? (() => {});
     this.scorm = o.scorm ?? null;
+    this.machine = o.machine ?? null;
     this.onNodeEnter = o.onNodeEnter ?? (() => {});
     this.onEnd = o.onEnd ?? (() => {});
     this.endNotified = false;
@@ -320,9 +323,17 @@ export class PlayerUI {
       h('h2.card-title', view.title || view.node.id),
       conversation ? h('p.muted', 'This step is a conversation with an AI character, which needs a connected receiver to run.') : h('p.muted', `This step needs a newer player (node type "${view.rawType}").`),
       conversation && view.config.firstMessage ? h('blockquote', String(view.config.firstMessage)) : null,
+      conversation ? this.machineOfflineLine() : null,
       conversation && this.receiver && !this.receiver.connected ? this.connectPrompt('Connect to RonuNest to talk to the character') : null,
       view.type === 'code' ? h('p.muted', 'Code steps run in a sandbox this player does not ship. The code was not executed.') : null,
     );
+  }
+
+  /** Section 7: the one line a failed machine launch leaves, wherever a connection would have mattered. */
+  machineOfflineLine() {
+    const m = this.machine;
+    if (!m || m.status !== 'failed' || this.receiver?.connected) return null;
+    return h('p.error.small.machine-offline', m.error ?? `Could not connect to ${this.receiver?.name ?? 'RonuNest'}. Playing offline.`);
   }
 
   /** A button that runs the connect flow and redraws whatever screen is showing. */
@@ -773,7 +784,8 @@ export class PlayerUI {
         } else {
           panel.append(h('h3', hs?.label ?? 'Conversation'),
             h('p.muted', cst?.fallback ? 'The character could not be reached, so this conversation was skipped. Here is what they would have opened with:' : 'Talking to characters needs a connected receiver. Here is what they would open with:'),
-            c.firstMessage ? h('blockquote', String(c.firstMessage)) : null);
+            c.firstMessage ? h('blockquote', String(c.firstMessage)) : null,
+            this.machineOfflineLine());
           if (this.receiver && !this.receiver.connected) panel.append(this.connectPrompt('Connect to RonuNest to talk to the character'));
           panel.append(h('div.actions', h('button.btn.btn-primary', { onclick: dismiss }, goLabel)));
         }
@@ -926,6 +938,12 @@ export class PlayerUI {
       return box;
     }
     if (this.sendError) box.append(h('p.error', this.sendError));
+    const m = this.machine;
+    if (m?.status === 'connected' && ctl.connected && !this.sendError) {
+      box.append(h('p.small.muted', this.sending ? `Connected as ${m.name}; sending this play-through to ${ctl.name}.` : `Connected as ${m.name} through this package.`));
+    }
+    const offline = this.machineOfflineLine();
+    if (offline) box.append(offline);
     if (!ctl.connected) {
       const notice = ctl.takeNotice();
       if (notice) box.append(h('p.error', notice));
@@ -942,6 +960,17 @@ export class PlayerUI {
     if (this.sending) return h('button.btn.btn-primary', { disabled: true }, `Sending to ${ctl.name}…`);
     const label = this.sendError ? 'Try again' : this.priorSent ? `Send this play-through to ${ctl.name} as a new attempt` : `Send to ${ctl.name}`;
     return h(`button.btn${this.priorSent ? '' : '.btn-primary'}`, { onclick: () => this.sendToReceiver() }, label);
+  }
+
+  /**
+   * Section 7: the automatic send of a connected launch. Resolves with what
+   * was sent, or null when nothing could be (not connected, already sent, no
+   * module id, or the receiver refused). Never throws.
+   */
+  async autoSend() {
+    if (!this.receiver?.connected || this.sender?.sent || !this.moduleId) return null;
+    await this.sendToReceiver();
+    return this.sender?.sent ?? null;
   }
 
   /** Section 3: build the body from the engine and send it once. */

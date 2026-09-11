@@ -5,7 +5,8 @@ the format. It also means that, by default, nothing a learner does in a player
 goes anywhere. This document is the contract that lets a player send the
 outcome of a session to a platform that keeps learning records (a "receiver"),
 and, while connected, use services the platform offers such as an AI
-conversation character.
+conversation character. Section 7 adds the second way to connect: a package
+that carries a customer key and acts for an LMS's learner by itself.
 
 RonuNest is the first receiver. The contract is written so that any platform
 can be one, and any player can talk to one.
@@ -28,7 +29,9 @@ CORS open to any origin:
 
 A player that is given a receiver origin (for RonuNest, the default) fetches
 this document to find the connect page. If the document is missing, the player
-may assume `<origin>/player-connect`.
+may assume `<origin>/player-connect`. The document also carries the receiver's
+coordinates (section 7), so a player that connects by key needs nothing but
+the origin.
 
 ## 2. Connecting
 
@@ -202,3 +205,170 @@ for the node and continues, as a minimal player does.
   A player on a shared device should offer disconnect prominently.
 - All calls are HTTPS. A receiver on plain HTTP is only acceptable on
   localhost during development.
+
+## 7. Customer keys: machine launch
+
+Sections 2 to 4 assume a learner who can sign in to the receiver in a popup.
+Inside an LMS there is often no such learner: the LMS knows who they are, the
+receiver does not, and a popup is the wrong shape for a course window. This
+section lets a package act for the LMS's learner by itself, with a credential
+issued to the customer rather than to the learner.
+
+### 7.1 Discovery carries the coordinates
+
+`/.well-known/ronu-receiver.json` (section 1) also names the endpoints a
+connected player calls, so a player given only an origin needs nothing else:
+
+```json
+{
+  "ronuReceiver": 0,
+  "name": "RonuNest",
+  "connect": "/player-connect",
+  "supabaseUrl": "https://<project>.supabase.co",
+  "anonKey": "<public anon key>",
+  "records": "https://<project>.supabase.co/functions/v1/record-completion",
+  "conversation": "https://<project>.supabase.co/functions/v1/ai-conversation",
+  "session": "https://<project>.supabase.co/functions/v1/creator-api"
+}
+```
+
+`connect` and the endpoint URLs may be relative to the origin. A receiver
+that publishes only `connect` supports the popup handshake alone; a player
+asked for a machine launch against it reports that and plays offline.
+
+### 7.2 The package file
+
+A package may carry `ronu-package.json` at its root, beside the launcher:
+
+```json
+{
+  "version": 0,
+  "receiver": "https://ronunest.com",
+  "key": "<creator API key>",
+  "moduleId": "<manifest.module.id>",
+  "name": "ronu player"
+}
+```
+
+A package with a key is a **connected package**; one without the file, or
+with the file but no key, is **self-contained** and behaves as sections 1 to
+6 describe (the learner may still connect through the popup). `receiver` is
+an origin; `moduleId` is the id the file was exported from, the same value
+the record in section 3 carries; `name` is what the receiver will show as the
+player.
+
+### 7.3 The exchange
+
+At launch, when the file is present and a key is set, the player fetches
+discovery from `receiver`, then posts to `session`:
+
+```
+POST <session>
+x-api-key: <key>
+Content-Type: application/json
+```
+
+```json
+{
+  "action": "player_session",
+  "version": 0,
+  "learner": {
+    "externalId": "<cmi.core.student_id>",
+    "name": "<cmi.core.student_name>",
+    "email": "<optional>"
+  },
+  "moduleId": "<manifest.module.id>",
+  "player": { "name": "ronu player", "origin": "<location.origin>" }
+}
+```
+
+`learner.externalId` is the LMS's own identifier for the learner
+(`cmi.core.student_id` in SCORM 1.2); `name` and `email` are sent when the
+LMS gives them. A launch with no learner id at all (an LMS that leaves the
+field blank, or a package opened outside an LMS) sends
+`anonymous-<random>`, and the player says so; such a learner is new on every
+launch. `player.origin` is where the package is being served from, so a
+receiver can see which LMS a key is used at.
+
+The receiver finds or creates a tenant learner for (customer, `externalId`),
+grants that learner the module, and mints a session for them:
+
+```json
+{
+  "success": true,
+  "version": 0,
+  "session": {
+    "access_token": "<jwt>",
+    "refresh_token": "<token>",
+    "expires_at": 1757500000,
+    "token_type": "bearer"
+  },
+  "user": { "id": "<uuid>", "email": "", "name": "<learner name>" },
+  "learner": { "created": true }
+}
+```
+
+The `session` block is exactly what the popup handshake delivers in section
+2, so it drops into the same store: refresh through GoTrue works the same
+(section 2), records go to `records` (section 3) and conversations to
+`conversation` (section 4), with the receiver block assembled from
+discovery. `learner.created` says whether this launch made the tenant
+learner or found one from an earlier launch.
+
+Errors come back as:
+
+```json
+{ "success": false, "error": "<words for the learner>", "errorCode": "unauthorized" }
+```
+
+with status 401, 403 or 404, or as a 200 whose `success` is false; a player
+treats both the same and branches on `errorCode`:
+
+| `errorCode` | Meaning |
+|---|---|
+| `unauthorized` | the key is unknown or revoked |
+| `tier_required` | the account that issued the key needs a plan that includes connected packages |
+| `invalid_learner` | the request named no usable learner |
+| `module_not_found` | the receiver does not have this module |
+| `module_not_owned` | the module does not belong to the account that issued the key |
+
+On any failure the player shows one line ("Could not connect to RonuNest:
+<error>. Playing offline.") and continues as a self-contained package:
+conversations show their fallback card, and the end screen offers the popup
+connect as before. The LMS report never waits on the receiver.
+
+### 7.4 What the player does while connected by key
+
+- It shows the learner as connected ("connected as <name>") with no popup
+  and no account step. There is no Disconnect: the session belongs to the
+  launch, is kept in memory only, and goes when the course window closes.
+  The player must not write a machine session to durable storage (the next
+  launch on the same browser may be another learner) and must not call
+  `logout` on unload; a receiver expires the session on its own.
+- When the end screen renders, the player sends the record once (section 3)
+  without being asked, after the LMS report has gone out, and shows the
+  result with the certificate link. The LMS report and the receiver record
+  are independent: one failing never blocks the other.
+- Play again after that is a practice run for both: the LMS keeps the first
+  outcome of the launch, and a second send is a manual action that creates a
+  second attempt.
+
+### 7.5 Security notes for keys
+
+- A key in a package can mint sessions for that customer's tenant learners
+  only, for modules the customer's account owns; it cannot reach any other
+  account's learners, modules or records. It is a customer credential, not a
+  learner one, and not a platform one.
+- Keys are per customer, issued in RonuNest's settings (nest settings, Portal
+  API keys), revocable there at any time. Issue one key per LMS customer and
+  put that key in the packages built for them: revoking it cuts off every
+  package that carries it and nothing else. A revoked key fails with
+  `unauthorized` and the package keeps working offline.
+- A package is a zip the customer's LMS administrators can open, so the key
+  is visible to them. That is the intended trust boundary: the key belongs
+  to that customer. Do not reuse one customer's key in another customer's
+  package.
+- The receiver should record the provenance of records and conversations
+  minted through a key (the key, the player origin) as it does for the popup
+  path (section 5), so a customer's usage can be attributed and a leaked key
+  spotted.

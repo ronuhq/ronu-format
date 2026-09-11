@@ -7,6 +7,14 @@
 // No service worker, no IndexedDB "last file", no opener screen: the bundled
 // file loads at once, node entries and the outcome go to the LMS through
 // scorm.js. Without an API the player runs as usual and says so at the end.
+//
+// Machine launch (`?machine=1`, set by a connected package's launch.html,
+// and tried in SCORM mode regardless): when the package root holds
+// ronu-package.json with a key, the player exchanges it for a session for
+// the LMS's learner (machine-session.js, contract section 7). No popup: the
+// learner is "connected as" themselves, conversations run live, and the end
+// screen sends the record by itself, after the LMS report. A failed exchange
+// is one line on the end screen; the module plays offline.
 
 import { openBundle, openModuleJson, createResolver, checkManifest, bundleTitle } from './bundle.js';
 import { Engine } from './engine.js';
@@ -15,6 +23,8 @@ import { sessionRecord } from './session.js';
 import { dbGet, dbPut } from './store.js';
 import { ReceiverController, receiverControl } from './receiver-ui.js';
 import { findApi, createScormSession, compactSuspendData, outcomeFor } from './scorm.js';
+import { machineConnect, learnerFromScorm, connectedAs, offlineNotice, createEndSequence } from './machine-session.js';
+import { recordModuleId } from './receiver.js';
 
 const SAMPLE_URL = '../samples/hello-ronu/hello.ronu';
 const SHOWCASE_URL = '../samples/showcase/showcase.ronu';
@@ -63,6 +73,51 @@ if (scorm.session) {
   window.addEventListener('beforeunload', leave);
 }
 
+// ---- machine launch (contract section 7) -------------------------------------
+
+const remoteParam = params.get('ronu');
+// The package root is where the launcher put the file: the directory of the ?ronu= URL.
+const packageRoot = remoteParam ? new URL('.', new URL(remoteParam, location.href)).href : null;
+const machine = {
+  requested: Boolean(packageRoot) && (params.get('machine') === '1' || scormRequested),
+  status: 'none', // none (self-contained) | connecting | connected | failed
+  name: null, // "connected as" this
+  error: null, // the one-line offline notice
+  anonymous: false, // the LMS gave no student id, so the learner is anonymous-<random>
+  learner: null,
+};
+
+/** Read ronu-package.json and exchange its key for a session. Sets `machine`; never throws. */
+async function machineLaunch(bundle) {
+  if (!machine.requested || machine.status !== 'none') return;
+  machine.status = 'connecting';
+  const learner = learnerFromScorm(scorm.session ? { studentId: scorm.session.studentId, studentName: scorm.session.studentName } : null);
+  machine.learner = learner;
+  machine.anonymous = learner.anonymous;
+  try {
+    const out = await machineConnect({ packageRoot, learner, playerOrigin: location.origin, moduleId: recordModuleId(bundle.manifest) });
+    if (!out) {
+      machine.status = 'none'; // no package file, or one without a key: self-contained
+      return;
+    }
+    machine.name = connectedAs(out.connection, learner);
+    receiver.adoptMachine(out.connection, { name: machine.name });
+    machine.status = 'connected';
+    if (learner.anonymous) console.info(`The LMS gave no student id; connected to ${receiver.name} as ${learner.externalId} (a new learner on each launch).`);
+  } catch (e) {
+    machine.status = 'failed';
+    machine.error = offlineNotice(e, 'RonuNest');
+    console.warn(machine.error, e);
+  }
+}
+
+// The LMS report first, always; then, in a connected launch, one automatic send.
+const endSequence = createEndSequence({
+  report: (view) => scormEnded(view),
+  canSend: () => machine.status === 'connected' && receiver.connected,
+  send: () => (current ? current.ui.autoSend() : null),
+});
+
 // The one receiver connection (docs/record-receiver.md). Loaded before the
 // first screen so the opener and the top bar can show it.
 const receiver = new ReceiverController();
@@ -96,6 +151,7 @@ async function openBytes(bytes, name, { remember = true, manifest = null } = {})
   }
   const problems = checkManifest(bundle.manifest);
   if (problems.length) console.warn('manifest.json problems (continuing):', problems);
+  await machineLaunch(bundle);
   if (scorm.active) {
     play(bundle); // the LMS holds the attempt; nothing is remembered here
     return;
@@ -134,8 +190,9 @@ function play(bundle, { priorSent = null } = {}) {
     receiverControl,
     priorSent,
     scorm: scorm.active || scorm.noApi ? scorm : null,
+    machine: machine.requested ? machine : null,
     onNodeEnter: (view) => scormNodeEntered(engine, view),
-    onEnd: (view) => scormEnded(view),
+    onEnd: (view) => endSequence.onEnd(view),
     onSent: async (sent) => {
       const last = await dbGet('last');
       if (last && last.name === bundle.name) await dbPut('last', { ...last, sent });
@@ -244,6 +301,7 @@ async function showOpener(error = null, status = null) {
       receiverControl(receiver, { bare: true, onChange: () => showOpener() }),
       receiver.connected ? null : h('span.small.muted', ` Receiver: ${receiver.origin}`),
       notice ? h('p.error.small', notice) : null,
+      machine.status === 'failed' && !receiver.connected ? h('p.error.small', machine.error) : null,
     ),
     h('p.small.muted', 'Files are untrusted content: rich text is sanitised and code steps are never executed. Nothing leaves your device unless you connect to a receiver and send a play-through.'),
     h('p.small.muted', h('a', { href: 'README.md' }, 'About this player'), ' · ', h('a', { href: '../spec/ronu-spec.md' }, 'The format'), ' · ', h('a', { href: '../docs/record-receiver.md' }, 'Receivers')),
@@ -283,11 +341,11 @@ if (!scorm.active && 'serviceWorker' in navigator && location.protocol !== 'file
     scorm.studentName = opened.studentName;
   }
   await receiver.load();
-  const remote = params.get('ronu');
+  const remote = remoteParam;
   if (remote) openUrl(remote, { remember: !scorm.active });
   else if (scorm.active) showOpener('This package names no .ronu file to play.');
   else showOpener();
 })();
 
 // Expose a little for debugging and browser-level checks.
-window.ronuPlayer = { get current() { return current; }, openUrl, openBytes, receiver, scorm };
+window.ronuPlayer = { get current() { return current; }, openUrl, openBytes, receiver, scorm, machine };

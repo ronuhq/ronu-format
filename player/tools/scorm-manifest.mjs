@@ -3,11 +3,16 @@
 // assembly of a package's entries from a `.ronu` and a file reader. No DOM,
 // no zip: `scorm-package.mjs` adds the reading and the zipping, and the tests
 // call these directly.
+//
+// Two flavours (docs/lms-integration.md): a self-contained package, and a
+// connected package that also carries `ronu-package.json` with a customer
+// key (docs/record-receiver.md section 7) and whose launcher asks the player
+// for a machine launch.
 
 /** The player runtime a package carries: the page, the modules, the styles, the vendored unzip and the icons. Never tests, tools, the service worker or the PWA manifest. */
 export const PLAYER_FILES = [
   'index.html', 'app.css', 'app.js', 'ui.js', 'engine.js', 'conditions.js', 'formula.js', 'bundle.js', 'session.js',
-  'receiver.js', 'receiver-ui.js', 'conversation.js', 'store.js', 'scorm.js', 'pano.js', 'sanitize.js',
+  'receiver.js', 'receiver-ui.js', 'conversation.js', 'machine-session.js', 'store.js', 'scorm.js', 'pano.js', 'sanitize.js',
   'vendor/fflate.js', 'vendor/LICENSE-fflate', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 
@@ -16,6 +21,8 @@ export const XSD_FILES = ['ims_xml.xsd', 'imscp_rootv1p1p2.xsd', 'imsmd_rootv1p2
 
 export const LAUNCH_FILE = 'launch.html';
 export const MODULE_FILE = 'module.ronu';
+export const PACKAGE_CONFIG_FILE = 'ronu-package.json';
+export const PACKAGE_PLAYER_NAME = 'ronu player';
 
 export function escapeXml(s) {
   return String(s ?? '').replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
@@ -81,9 +88,9 @@ ${fileLines}
  * exit handling and reloads on that href), while the player, one same-origin
  * frame down, still reaches the LMS API by walking `parent`.
  */
-export function buildLaunchHtml({ title, playerPath = 'player/index.html', modulePath = MODULE_FILE }) {
-  // From player/, the module sits one directory up.
-  const src = `${playerPath}?ronu=../${modulePath}&scorm=1`;
+export function buildLaunchHtml({ title, playerPath = 'player/index.html', modulePath = MODULE_FILE, machine = false }) {
+  // From player/, the module sits one directory up. A connected package asks for the machine launch as well.
+  const src = `${playerPath}?ronu=../${modulePath}&scorm=1${machine ? '&machine=1' : ''}`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -115,7 +122,39 @@ export function describeRonu(manifestJson, { fileName = 'module.ronu', title = n
   const base = fileName.replace(/\.(ronu|zip)$/i, '');
   const outTitle = title || (typeof mod.title === 'string' && mod.title.trim() ? mod.title.trim() : base);
   const outId = slugIdentifier(identifier || (typeof mod.familyId === 'string' && mod.familyId ? `ronu-${mod.familyId}` : base));
-  return { title: outTitle, identifier: outId, familyId: typeof mod.familyId === 'string' ? mod.familyId : null };
+  // The id a receiver keys records by: `module.id`, or the exporter's `module.versionId` (see receiver.js recordModuleId).
+  let moduleId = null;
+  for (const key of ['id', 'versionId']) {
+    const v = typeof mod[key] === 'string' ? mod[key].trim() : '';
+    if (v && !v.startsWith('local:')) {
+      moduleId = v;
+      break;
+    }
+  }
+  return { title: outTitle, identifier: outId, familyId: typeof mod.familyId === 'string' ? mod.familyId : null, moduleId };
+}
+
+/**
+ * `ronu-package.json` for a connected package (contract section 7):
+ * `{version, receiver, key, moduleId, name}`. The receiver is an origin
+ * (https, or http on localhost for the mock); the key is a customer API key
+ * from RonuNest; the module id is the one the file was exported from.
+ */
+export function buildPackageConfig({ receiver, key, moduleId, name = PACKAGE_PLAYER_NAME }) {
+  const k = typeof key === 'string' ? key.trim() : '';
+  if (!k) throw new Error('a connected package needs a key (--key)');
+  let origin;
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(String(receiver ?? '').trim()) ? String(receiver).trim() : `https://${String(receiver ?? '').trim()}`);
+    const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]';
+    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) throw new Error('scheme');
+    origin = url.origin;
+  } catch {
+    throw new Error(`the receiver must be an https origin such as https://ronunest.com (http only on localhost); got "${receiver ?? ''}"`);
+  }
+  const id = typeof moduleId === 'string' ? moduleId.trim() : '';
+  if (!id) throw new Error('a connected package needs the module id from the file\'s manifest.json (module.id or module.versionId); this file has none, so a receiver could not tell which module to grant');
+  return `${JSON.stringify({ version: 0, receiver: origin, key: k, moduleId: id, name: typeof name === 'string' && name.trim() ? name.trim() : PACKAGE_PLAYER_NAME }, null, 2)}\n`;
 }
 
 /**
@@ -125,16 +164,18 @@ export function describeRonu(manifestJson, { fileName = 'module.ronu', title = n
  * @param {string} o.manifestJson          the .ronu's manifest.json text (or null)
  * @param {(relPath: string) => Uint8Array} o.readPlayerFile   reads a file under player/
  * @param {(name: string) => Uint8Array} [o.readXsd]           reads a schema file; omit to skip the XSDs
+ * @param {{receiver: string, key: string, name?: string}|null} [o.connected]  make a connected package: ronu-package.json plus the machine launch
  */
-export function buildPackageEntries({ ronuBytes, manifestJson, fileName = 'module.ronu', title = null, identifier = null, readPlayerFile, readXsd = null }) {
+export function buildPackageEntries({ ronuBytes, manifestJson, fileName = 'module.ronu', title = null, identifier = null, readPlayerFile, readXsd = null, connected = null }) {
   const info = describeRonu(manifestJson, { fileName, title, identifier });
   const entries = {};
   const enc = (s) => new TextEncoder().encode(s);
   for (const rel of PLAYER_FILES) entries[`player/${rel}`] = readPlayerFile(rel);
   entries[MODULE_FILE] = ronuBytes;
-  entries[LAUNCH_FILE] = enc(buildLaunchHtml({ title: info.title }));
+  entries[LAUNCH_FILE] = enc(buildLaunchHtml({ title: info.title, machine: Boolean(connected) }));
+  if (connected) entries[PACKAGE_CONFIG_FILE] = enc(buildPackageConfig({ receiver: connected.receiver, key: connected.key, moduleId: info.moduleId, name: connected.name }));
   if (readXsd) for (const x of XSD_FILES) entries[x] = readXsd(x);
   const files = Object.keys(entries);
   entries['imsmanifest.xml'] = enc(buildImsManifest({ identifier: info.identifier, title: info.title, files }));
-  return { entries, ...info };
+  return { entries, ...info, connected: Boolean(connected) };
 }
