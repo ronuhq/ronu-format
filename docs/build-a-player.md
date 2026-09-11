@@ -100,10 +100,11 @@ hotspot discovery, media resolution from the bundle, an HTML allowlist, a
 session record, and offline operation as a PWA. It is plain JavaScript with
 the engine ([`player/engine.js`](../player/engine.js)) kept free of the DOM
 so it can be tested in Node, and its tests walk every sample in this
-repository. Read `engine.js` when your own player reaches a question the
-spec does not answer, and then read [`player/SPEC-GAPS.md`](../player/SPEC-GAPS.md),
-which is the list of exactly those questions with the choices the reference
-player made.
+repository. When your own player reaches a question the catalogue does not
+answer, read spec section 9 ("Player semantics"), which is the normative
+answer; `engine.js` is its executable form, and
+[`player/SPEC-GAPS.md`](../player/SPEC-GAPS.md) is the ledger of how each
+rule was decided.
 
 ## Checking your player
 
