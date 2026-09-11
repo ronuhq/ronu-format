@@ -1,154 +1,156 @@
-# Spec gaps found while building the reference player
+# Spec gaps: the resolution ledger
 
-This player was written from `spec/ronu-spec.md` (the platform's current copy), the JSON Schema, the samples and the Rust reference validator. Every time the spec did not say enough to implement something, the gap is listed here with what this player does about it. The list is a deliverable: it is what the spec still has to say before an independent implementer can get identical behaviour without asking.
+This file began as the list of everything `spec/ronu-spec.md` failed to say when the reference player was written from it, with the choice the player made each time. On 12 September 2026 every gap was written into the spec as normative text (section 9, "Player semantics") or into the record-receiver contract (`docs/record-receiver.md`). The file is now the audit trail: the numbering and one-line titles are kept, each entry names the section that resolves it, and where the written rule differs from what the player originally decided the difference is one sentence. New gaps are pull requests against the spec, not entries here. The engine's `G<n>` comments still point at these numbers.
 
-Two kinds of resolution appear below.
+Section numbers are the spec's after the renumbering of 12 September 2026 (the old sections 9 to 11 are now 10 to 12).
 
-- **Looked up.** The platform's own viewer code (`src/pages/ModuleViewer/`) was read, narrowly, to find out what real files expect. Those are the ones the spec most needs to absorb, because a second implementer will not have that code.
-- **Decided.** No source of truth existed, so the player made a reasonable choice and documents it. These are proposals.
+## Conditions
 
-The section numbers refer to the spec.
+**G1. The condition operator vocabulary is not listed.** Resolved in spec section 9.3. The canonical spelling is the underscore form (`is_true`, `not_exists`, `length_>`), matching the completion and abort rules; the space-separated form is the accepted legacy spelling, and the symbolic aliases the player accepts are SHOULD.
 
-## Conditions (section 7 `condition`, section 8)
+**G2. What a `field` is compared against.** Resolved in spec section 9.3.
 
-**G1. The condition operator vocabulary is not listed.** The spec gives the shape (`conditions[]{field, operator, value}`) and nothing else. *Looked up.* The operators real files use are: `exists`, `not exists`, `is true`, `is false`, `equals`, `contains`, `not contains`, `starts with`, `ends with`, `>`, `<`, `>=`, `<=`, `length >`, `length <`, `before`, `after`, `within range`. Two spellings exist in the wild, with spaces and with underscores (`is_true`, `not_exists`); readers must accept both. This player accepts both, plus `not equals`, `==`, `!=` and a few aliases. The spec should list the vocabulary and pick one canonical spelling (section 8 style: readers accept both, writers emit one).
+**G3. How several conditions in one criteria set combine.** Resolved in spec section 9.3, as the connector-token grammar the player implements; no `combine` field was added.
 
-**G2. What a `field` is compared against.** The schema says a field is "a node id or a variable id, or the literal `operator`", but not what a node id means. *Looked up:* a node id resolves to the learner's recorded answer to that node; a variable id resolves to the variable's current value (computed variables are evaluated). When the answer is a list of choice ids, `equals` and `contains` compare against the choice *labels*, so authors can write the visible text. This player does that, and also accepts a variable *name* as a tolerance (the platform does not).
+**G4. Condition `value` is a string in real files.** Resolved in spec section 9.3.
 
-**G3. How several conditions in one criteria set combine.** Not stated. *Looked up:* connector tokens are conditions whose `field` is the literal `"operator"` and whose `value` is `AND`, `OR`, `NOT`, `(` or `)`; a condition may instead carry `join: "AND"|"OR"` as a property. Precedence NOT, AND, OR. Two adjacent conditions with no connector are malformed on the platform; this player treats them as AND. The spec should define the expression grammar or, better, replace tokens-in-the-list with an explicit `combine: "all"|"any"` field.
+**G5. No criteria set matches and there is no `defaultTargetNodeId`.** Resolved in spec section 9.3.
 
-**G4. Condition `value` is a string in real files** (`"value": "1"` in `under-the-sink`), even for numeric comparisons. *Decided:* numeric operators coerce with `Number()`. The spec should say values are compared after coercion to the field's type.
+## Completion and scoring
 
-**G5. What happens when no criteria set matches and there is no `defaultTargetNodeId`.** *Decided:* follow the node's own `connection`; if none, the experience ends. The reference validator warns on this case, which suggests the spec should say "the experience ends" outright.
+**G6. The completion rule's operator set and modes are only sketched.** Resolved in spec section 9.4.
 
-## Completion and scoring (section 4 `settings.completion`)
+**G7. What a node's 0 to 100 score is, per type.** Resolved in spec section 9.4.
 
-**G6. The completion rule's operator set and modes are only sketched.** From the validator: `variable` mode uses `<`, `>`, `<=`, `>=`, `is_true`, `is_false`, `contains`; `reachedNode` uses `passNodeId`; `nodeScore` uses `scoreNodeId`, `scoreAggregate`, `operator`, `value`. The legal values of `scoreAggregate` are not given anywhere. *Decided:* `average` (default), `min`, `max`, `sum` over all node scores when `scoreNodeId` is absent. When no rule exists, the end screen says "Completed" with no pass or fail.
+## Triggers and timers
 
-**G7. What a node's 0 to 100 score is, per type.** The xAPI note says `answered` carries "the node's 0 to 100 grade", but no node's grade is defined. *Decided:* `matching` (when `matchingGraded` is not `false`) is the percentage of left items with a `correctRightId` matched correctly; `procedure` is the percentage of steps performed in turn; `dragToTarget` is the percentage of items placed right, a distractor counting as right only when left unused. `multipleChoice`, `ranking`, `textInput` and `rating` have no notion of a correct answer in the spec, so they carry no score.
+**G8. `NodeTrigger.config` keys are not documented.** Resolved in spec section 9.5. The spec also names `config.seconds` as an accepted alias of `duration`, which the player already read but this file did not say.
 
-## Triggers and timers (section 7 shared sub-schemas)
+**G9. `TimerConfig.recordVariableId` semantics.** Resolved in spec section 9.5, including that a node timer's `end` behaviour ends the experience in place without writing it.
 
-**G8. `NodeTrigger.config` keys are not documented.** *Looked up:* `onTimerElapsed` reads `config.duration` in seconds (default 30 when absent); `onVideoTimestamp` reads `config.timestamp` in seconds. `onNodeEnter`, `onNodeExit` and `onVideoComplete` take no config.
+## Scenes
 
-**G9. `TimerConfig.recordVariableId` semantics.** *Looked up:* the elapsed whole seconds are written with a `set` action when the node is left (node timer) or the module ends (module timer). Also undocumented and decided here: `visible` defaults to true; `warnAtSeconds` defaults to 10; a count-up timer never expires (its `onExpire` is ignored, matching the validator's warning); a module timer's `advance` behaviour has no meaning (the validator warns) and this player treats it as `end`; `sound` is ignored.
+**G10. Hotspot `position` units are not given.** Resolved in spec section 9.6. Yaw is periodic and readers must reduce it modulo 2π; the `showcase` sample carries a yaw of 3.40.
 
-## Scenes (section 7 `scene`)
+**G11. Hidden hotspots and discovery.** Resolved in spec section 9.6. The legacy `hotspotVisibility` field stays outside the format (see Still open).
 
-**G10. Hotspot `position` units are not given.** The schema says only "shape varies by environment". *Looked up:* `photo360` uses `{yaw, pitch}` in radians; `photo2d` uses `{x, y}` as fractions (0 to 1) of the image's width and height. Yaw 0 is the centre column of the equirectangular image, positive to the right, wrapping at plus or minus pi; pitch 0 is the horizon, positive up. `discoveryRadius` is in the same units: great-circle radians for 360 (default 0.35), image fraction for 2d (default 0.08). This player's 360 view is a flat pan of the equirectangular image, not a perspective projection (see `pano.js`), so a hotspot lands at `u = (yaw / 2pi + 0.5) * width`, `v = (0.5 - pitch / pi) * height`. Two players with different projections will show the same hotspot at slightly different screen places; the spec only needs to pin the angular convention, which it should.
+**G12. What happens when a hotspot is activated, and in what order.** Resolved in spec section 9.6, including the `reveal` shape.
 
-**G11. Hidden hotspots and discovery.** `hidden` and `missActions` are listed but the mechanic is not described. *Looked up:* a hidden hotspot shows no marker; the learner taps the scene and the nearest unfound hidden hotspot within `discoveryRadius` counts as found, otherwise `missActions` fire. A found hotspot then behaves like a visible one. The platform also has a legacy scene-wide `hotspotVisibility: "hidden"` field that this player does not read.
+**G13. `hotspotSequence: "ordered"` and `completion: "allRequired"`.** Resolved in spec section 9.6.
 
-**G12. What happens when a hotspot is activated, and in what order.** `reveal`, `conversation`, `targetNodeId`, `variableActions` and `interaction` are listed with no sequencing. *Looked up:* variable actions fire on first activation only; then the beats run in order conversation, interaction, reveal, and the route (`targetNodeId`) fires last. This player shows a fallback card for `conversation` (no AI backend), opens `interaction`, shows `reveal`, then routes. `reveal` is `{kind: "text"|"image"|"video", body?, src?, title?}` in the samples; the spec does not give the shape.
+**G14. A scene with an empty `environment.source`.** Resolved in spec section 9.6; a missing `kind` is also played as `photo360`.
 
-*Revised 9 September 2026.* An earlier copy of the spec mentioned `interaction` by name only, and this player ignored it. Section 7.2 ("Answering inside a scene") now defines it: `{type, config}` where `type` is one of the eight nestable catalogue types (`message`, `multipleChoice`, `textInput`, `matching`, `ranking`, `rating`, `procedure`, `dragToTarget`) and `config` is that type's ordinary profile; the learner answers it in the room and stays there; it never routes (`choice` and `condition` are deliberately not nestable) but its `actions[]` fire as usual; and a `required` hotspot with an interaction is only satisfied once answered, so clicking and dismissing is not enough. This player now implements all of that, treating the interaction as a sub-node that reuses the top-level type's logic and renderer. What 7.2 still leaves unsaid is split out below as G41 to G47: the sequencing sentence above is still this player's reading, not the spec's (7.2 does not say where the interaction sits relative to `conversation` and `reveal`); what an unanswered required interaction looks like; whether reading a `message` counts as answering; how `abortWhen` is evaluated; what a nested config may carry; what a nested answer is called; and what an `ordered` scene does with an interaction.
+### Answering inside a scene
 
-**G13. `hotspotSequence: "ordered"` and `completion: "allRequired"`.** Named but not described. *Decided:* ordered means a hotspot is locked until every earlier hotspot in the array has been visited; allRequired means Continue is disabled until every `required` hotspot has been visited. With `completion: "free"`, `required` has no effect on leaving the scene.
+**G41. What an unanswered required interaction looks like, and whether it can be closed.** Resolved in spec section 9.6 ("Dismissal"): it may be closed, and the reveal and route wait for the answer.
 
-**G14. A scene with an empty `environment.source`** (the `under-the-sink` sample) is valid but has nothing to draw. *Decided:* a neutral backdrop, hotspots still work.
+**G42. Does reading a `message` interaction answer it?** Resolved in spec section 9.6: yes, following the validator.
 
-### Answering inside a scene (section 7.2, added 9 September 2026)
+**G43. When `abortWhen` is evaluated.** Resolved in spec section 9.6 ("Early exit"); entry does not count.
 
-**G41. What an unanswered required interaction looks like, and whether it can be closed.** Section 7.2 says a required hotspot with an interaction is only satisfied once answered, and that "clicking and dismissing is not enough", which implies dismissing is possible, but it does not say what dismissing does. *Decided:* the interaction card has a Close control while unanswered; Close puts the learner back in the room, the hotspot counts as visited but not done (its marker is not marked found, the status line says "n of m required done"), and the beats after the interaction (the `reveal` and the route) are dropped for that click. Opening the hotspot again shows the interaction again; once answered, OK runs the reveal and then the route. An answered interaction cannot be answered again; reopening it shows the recorded answer, then the later beats. The spec should say whether a required interaction may be closed unanswered at all, and whether the reveal and route wait for the answer (this player) or run regardless.
+**G44. What a nested `config` may carry.** Resolved in spec section 9.6: only the answer fields and the per-choice, per-match and per-step `actions[]`.
 
-**G42. Does reading a `message` interaction answer it?** Section 7.2 says a required interaction "with nothing to answer (no choices, steps, items)" is a gate the learner can never open, which read literally covers `message`. The reference validator disagrees: its unanswerable check exempts `textInput`, `rating` and `message` ("need no options"), so a required hotspot with a message interaction is not flagged. *Decided, following the validator:* a `message` interaction is answered by reading it (OK counts). A `multipleChoice`, `ranking`, `matching`, `procedure` or `dragToTarget` with an empty list is the strand the spec describes, and this player does not try to rescue the learner: it records whatever is submitted, so an empty submission still counts as answered for `multipleChoice`, `ranking`, `matching` and `dragToTarget` (Check with nothing placed scores 100), while a `procedure` with no steps can never be completed and a required hotspot carrying one is the gate that never opens. The spec and the validator should agree on the `message` case.
+**G45. What a nested answer is called.** Resolved in spec sections 9.6 and 9.4 (`<sceneId>/<hotspotId>`).
 
-**G43. When `abortWhen` is evaluated.** Section 7.2 says the learner leaves "when the variable satisfies the comparison" and that an in-scene question sets the variable through its actions; it does not list the evaluation points. *Decided:* the rule is checked after every event inside the scene that can fire actions: a hotspot's first activation (`variableActions`), a miss (`missActions`), a nested interaction's answer (choice and match actions, a rating's `set`), each procedure step (`earlyActions`, so a critical misstep ejects the learner mid-procedure with the procedure unanswered), and a node timer's actions. It is checked whether or not the event actually carried actions, so a value that was already over the line when the scene was entered is noticed at the first tap, not on entry, which keeps a debrief that loops back into the room from bouncing the learner straight out again. A rule with no `targetNodeId`, or a `variableId` that does not exist, never fires (the validator warns on both). The `value` is compared exactly as a completion rule's is (G6). A firing rule records `scene-abort` and leaves through the normal exit (`onNodeExit` triggers, the node timer's `recordVariableId`), and the scene's `connection` is not followed. The spec should list the evaluation points and say whether entry counts.
+**G46. `hotspotSequence: "ordered"` with interactions.** Resolved in spec section 9.6: ordered locks on visited, not answered.
 
-**G44. What a nested `config` may carry.** Section 7.2 says `config` is "that type's ordinary profile", and an ordinary profile carries flow fields: `connection`, `advanceOnAnswer`, `showContinueButton`, `triggers`, `timer`, `required`, `allowPrevious`, `isStart`. *Decided:* all of them are ignored inside a hotspot. A nested interaction never routes, so `connection` and `advanceOnAnswer` have nothing to do; there is no Continue button to hide; nested `triggers` (`onNodeEnter`, `onNodeExit`, `onTimerElapsed`) do not fire because the sub-node is never entered or exited as a node; a nested `timer` does not run; and `required` is meaningless because the hotspot's own `required` governs. The spec should say which fields are honoured (probably only the answer fields and the per-choice, per-step and per-item `actions[]`), or the validator should warn on the rest.
-
-**G45. What a nested answer is called.** The session record needs an identity for an answer given inside a scene, and a condition node (G2) might want to compare against it; 7.2 gives neither. *Decided:* the sub-node id is `<sceneId>/<hotspotId>`; the response and any node score are keyed by it, a condition `field` may name it, and the xAPI statement's object is the hotspot sub-activity `{iri}/nodes/{sceneId}/hotspots/{hotspotId}` (the `xapi-activity-ids.md` shape) with the interaction type as its activity type. The end screen labels the score "Scene title: hotspot label".
-
-**G46. `hotspotSequence: "ordered"` with interactions.** G13 decided that ordered locks a hotspot until every earlier one has been *visited*. With 7.2's "visited is not enough", the natural reading is that an earlier required interaction must be *answered* before the next hotspot unlocks. *Decided, for now:* still visited, so the two rules stay independent. The spec should pick one.
-
-**G47. A conversation's `scoreVariableId` in a minimal player.** Not a 7.2 gap but exposed by its sample: a minimal player shows a fallback for `conversation` (rule 5.2), so the score variable keeps its initial value. `margarets-room` gates the pass path on `consent_score >= 60` and loops the retry debrief back into the room, so in this player the file can only end through the `abortWhen` exit; the pass path is unreachable without an AI grader. Rule 5.2 already advises keeping critical routing out of unsupported nodes; the spec could say the same of conversation scores, or define what a minimal player writes to `scoreVariableId` (nothing, this player). The test suite stands in for the grader with full marks to walk the sample to its end.
+**G47. A conversation's `scoreVariableId` in a minimal player.** Resolved in spec section 9.6: nothing is written.
 
 ## Other node types
 
-**G15. `matching`: when `matchingLeftItems[].actions` fire.** *Looked up:* on submit, once per correctly matched left item. `matchingGraded` defaults to true. The spec should also say whether a right item may be matched by more than one left item (the sample does this; this player allows it).
+**G15. `matching`: when `matchingLeftItems[].actions` fire.** Resolved in spec section 9.7.
 
-**G16. `message`: `showContinueButton: false` and `advanceOnAnswer`.** How the learner leaves a message node without a Continue button is not said. *Decided:* the button is hidden only when the node has another exit (a countdown timer whose `onExpire.behavior` is `advance`, `route` or `end`, or `advanceOnAnswer`); otherwise it is shown regardless, so a file can never strand the learner. `advanceOnAnswer` on `multipleChoice` means a single-select pick advances by itself; with `allowMultiple` a Submit is still needed.
+**G16. `message`: `showContinueButton: false` and `advanceOnAnswer`.** Resolved in spec section 9.7. One refinement: `advanceOnAnswer` counts as another way out only on a node that can be answered, so a message with `showContinueButton: false` and `advanceOnAnswer: true` still shows the button (the player's footer currently hides it).
 
-**G17. `config.connection` versus the node's `connection`.** The schema declares both. *Decided:* the node-level field wins; `config.connection` is read only as a fallback.
+**G17. `config.connection` versus the node's `connection`.** Resolved in spec section 9.1.
 
-**G18. `choice.choices[].condition`.** Listed in the catalogue table, defined nowhere, and the platform viewer does not read it. Ignored here.
+**G18. `choice.choices[].condition`.** Resolved in spec section 9.7: ignored (see Still open).
 
-**G19. What a `choice` node records as its answer.** Needed for G2. *Decided:* the choice `id`, with the label kept alongside so conditions can match either.
+**G19. What a `choice` node records as its answer.** Resolved in spec section 9.7.
 
-**G20. `rating`.** The spec lists `ratingVariableId`, min, max, style and labels. Undocumented: the value is written with `set` (decided), `ratingEmoji` (in the sample, used for the `emoji` style), and whether a rating advances by itself (decided: no, unless `advanceOnAnswer`).
+**G20. `rating`.** Resolved in spec section 9.7.
 
-**G21. `ranking`.** `rankingItems[]` are plain strings in the samples; the spec does not say whether objects are allowed (this player accepts `{text}` or `{label}` too). There is no correct order and therefore no grade; the answer is the ordered list.
+**G21. `ranking`.** Resolved in spec section 9.7.
 
-**G22. `required` and `allowPrevious`** appear on nearly every node in the samples and in no part of the spec. *Decided:* `required` blocks Continue on an answer node until it is answered; `allowPrevious` is ignored (this player has no Back).
+**G22. `required` and `allowPrevious`.** Resolved in spec section 9.1 ("Continue").
 
-**G23. `video`: page URLs versus media files.** Section 8 says absolute URLs are "playable only online" but not what to do when the URL is a YouTube or Vimeo page rather than a media file (the `fantasy-series-quiz` sample). *Decided:* those two hosts are embedded (`youtube-nocookie.com`, `player.vimeo.com`); everything else goes into a native `<video>`. `subtitlesUrl` becomes a `<track>`; `videoControls` flags other than `autoplay` and `showSubtitles` are ignored because the native controls do not expose them individually.
+**G23. `video`: page URLs versus media files.** Resolved in spec section 9.7 (embedding is SHOULD).
 
-**G24. `procedure` (provisional).** The prose is good but leaves out: what `ifEarly` is (decided: the message shown when the step is done out of turn), when `earlyActions` fire (decided: at that moment), whether the displayed order is shuffled (decided: yes, deterministically per node id, or the answer is given away), and the score (see G7).
+**G24. `procedure` (provisional).** Resolved in spec section 9.7; the shuffle is SHOULD, the misstep and score rules are MUST.
 
-**G25. `dragToTarget` (provisional).** The score is not defined (see G7). `image` on items and targets is presumably a media reference; treated as one.
+**G25. `dragToTarget` (provisional).** Resolved in spec sections 9.4 and 9.7.
 
-**G26. `note`.** Clear. Recorded here only to confirm a note with a `connection` is followed through silently (decided), so a note wired into a path does not break it.
+**G26. `note`.** Resolved in spec section 9.1.
 
-## Variables (section 4)
+## Variables
 
-**G27. Defaults and coercion.** Not stated: what a variable is worth when `initialValue` is absent (decided: 0, false, ""), whether `initialValue` is coerced to `type` (decided: yes), what `set` does with a mismatched value type (decided: coerce; a non-numeric string becomes 0), what `increment` does with no `value` (decided: 1), and what `divide` by zero does (decided: leaves the value unchanged; the formula evaluator, by contrast, yields 0).
+**G27. Defaults and coercion.** Resolved in spec section 9.2.
 
-**G28. `visible: false`.** Presumably "do not show to the learner". This player still lists hidden variables on the end screen, greyed, because the end screen is the debugging surface for a file. A conformance statement would help.
+**G28. `visible: false`.** Resolved in spec section 9.2.
 
-**G29. `scope: "learner"`.** Section 4 already says an offline player treats it as module-scoped. Done. Nothing carries over between files.
+**G29. `scope: "learner"`.** Resolved in spec section 9.2.
 
-**G30. Placeholder grammar.** `{variableName}` with names matching `[A-Za-z0-9_]+` (taken from the validator's scan). Unknown names are left as written. Placeholders are substituted in titles, questions, instructions, content, choice labels, hotspot labels, reveal bodies and step text; the spec should say which fields are subject to substitution (this player: any string it renders).
+**G30. Placeholder grammar.** Resolved in spec section 9.2, with the list of fields subject to substitution.
 
-**G31. Formula grammar** is not in the spec; it is in `rust/src/formula.rs`. The spec should reference or restate it: numbers, identifiers, `+ - * /`, unary minus, parentheses, unknown identifiers and division by zero evaluate to 0.
+**G31. Formula grammar.** Resolved in spec section 9.2, stated in full. The result is rounded to six decimals, as the validator and the platform do; the player's `formula.js` does not round yet (see Still open).
 
-## Skeleton and container (sections 2 to 6)
+## Skeleton and container
 
-**G32. Where the experience ends.** Never said in one sentence. Decided: a displayable node with no forward edge (no `connection`, no chosen edge, no route) ends the experience; a dangling edge (target id missing) ends it with an error rather than crashing.
+**G32. Where the experience ends.** Resolved in spec section 9.1.
 
-**G33. Zero or several `isStart` nodes.** Section 4 says exactly one. Decided: none means the first node in the array (the validator does the same for reachability); several means the first flagged one.
+**G33. Zero or several `isStart` nodes.** Resolved in spec section 9.1.
 
-**G34. A `.ronu` whose members sit under a folder** (a zip made by right-clicking a folder), and `__MACOSX` junk. Decided: tolerated; the first `module.json` found by suffix sets the prefix.
+**G34. A `.ronu` whose members sit under a folder, and `__MACOSX` junk.** Resolved in spec section 9.9.
 
-**G35. A zip with `module.json` but no `manifest.json`**, and the JSON-only interchange form. Section 2 says the manifest is required. Decided: the player synthesises a minimal manifest (`activityIri` becomes a local `urn:`) rather than refusing, so bare `module.json` files and sloppy zips still play. The spec could allow this explicitly for readers while keeping it forbidden for writers.
+**G35. A zip with `module.json` but no `manifest.json`, and the JSON-only form.** Resolved in spec section 9.9: allowed for readers, still forbidden for writers.
 
-**G36. Which `formatVersion` majors a reader accepts.** Section 6 says "any file whose major version they support". This player accepts majors 0 and 1 and only warns otherwise.
+**G36. Which `formatVersion` majors a reader accepts.** Resolved in spec section 9.9.
 
-**G37. Media reference forms.** Section 8 lists bundle paths, platform storage refs and absolute URLs. Not stated: whether `./assets/x` or `/assets/x` are legal (tolerated here), whether paths are URL-encoded (both tried), `data:` URLs in `img src` inside `message.content` (dropped by this player's sanitiser, kept for `files[].data` per section 8), and what to render when a reference cannot be resolved (this player shows the `alt` text, or "not bundled").
+**G37. Media reference forms.** Resolved in spec section 9.8.
 
-**G38. HTML in `message.content`.** The spec says "rich text/HTML" and nothing about which HTML. A player must sanitise (files are untrusted by design), and two players with different allowlists will render the same file differently. The spec should publish the allowed element and attribute set. This player's set is in `sanitize.js`: `p br strong em u ul ol li h1 h2 h3 h4 a[href http(s)] img[src bundle or http(s), alt] blockquote code pre`; `b`, `i` map to `strong`, `em`; everything else is unwrapped, active content dropped.
+**G38. HTML in `message.content`.** Resolved in spec section 9.8 as a table; the minimum kept and dropped sets are MUST, the exact set is SHOULD.
 
-**G39. `files[]` on `message`.** `{id, name, path, mimeType}` in the sample, `data` for the legacy form. Not stated whether files are shown as a list, inline, or both. Decided: an attachments list with download links; images referenced from the content render inline as well.
+**G39. `files[]` on `message`.** Resolved in spec section 9.8.
 
-## Session records (section 3, `xapi-activity-ids.md`)
+## Session records
 
-**G40. Statement shapes for a local player.** The companion note fixes IRIs and verbs but assumes a platform actor and registration. For an offline player with no identity, this player uses `{"account": {"name": "local"}}` and no registration, and adds `answer-labels`, `variable-changed`, `scene-miss` and `procedure-step` extension keys beside the note's `branch-taken`, `scene-hotspot` and `timer-expiry`. The spec (or the note) should say what a player with no actor should emit, and whether the extra keys are welcome.
+**G40. Statement shapes for a local player.** Resolved in spec section 9.4 ("Records built locally"): the placeholder actor and no registration are SHOULD, the extension keys MAY.
 
-## Record receivers (`docs/record-receiver.md`, added 11 September 2026)
+## Record receivers
 
-The contract is short and the player follows it as written. These are the places where it stops short and the player had to choose. They are all *decided*.
+**G48. Which manifest field is `moduleId`.** Resolved in contract section 3: `manifest.module.versionId`, with `module.id` read first if a future exporter writes it, and never `familyId`.
 
-**G48. Which manifest field is `moduleId`.** Section 3 says `manifest.module.id`. The platform's exporter does not write `module.id`; it writes `module.familyId` and `module.versionId` (the sample manifests show this), and the receiver keys records by the version row. *Decided:* the player reads `module.id`, then `module.versionId`, and never `familyId`. A synthesised manifest (a bare `module.json`, G35) has neither, so the file cannot be recorded and the end screen says so; a bare `module.json` fetched by URL is given the `manifest.json` found beside it, if any, so the sample folders stay recordable. The contract should name `versionId` or the exporter should write `id`.
+**G49. `maxTurns` and what ends a conversation.** Resolved in contract section 4.
 
-**G49. `maxTurns` and what ends a conversation.** Neither the spec's `conversation` profile nor section 4 says how many learner turns a conversation allows or what happens at the limit. *Decided:* `config.maxTurns`, default 6 (the platform's default); reaching it finalises at once, without waiting for a tap. Something must have been said before "End conversation" is offered, as online.
+**G50. Degraded replies.** Resolved in contract section 4: the finalize waits for one tap.
 
-**G50. Degraded replies.** Section 4 says a `degraded: true` reply means the player "should end the conversation and finalize". *Decided:* the player shows the scripted wrap-up line, closes the input, and waits for one tap ("End and assess") rather than finalising behind the learner's back. The contract could say whether the finalize is automatic.
+**G51. Sending the rubric.** Resolved in contract section 4: the player sends `criteria` on finalize; the receiver may ignore it.
 
-**G51. Sending the rubric.** Section 4 says the assessment carries `criteria` "when the node has `criteria` (a rubric)" but not whether the player sends the rubric or the receiver reads it from its copy of the module. *Decided:* the player sends `criteria` (`[{id, label, weight}]`, from the node's `rubric` or a hotspot character's `criteria`) on the finalize body as an extra field the receiver may ignore. The two names for the same thing (`rubric` on a node, `criteria` on a hotspot character) are a spec inconsistency worth fixing.
+**G52. The assessment envelope.** Resolved in contract section 4: both the wrapped and the bare form.
 
-**G52. The assessment envelope.** Section 4 gives the finalize response as the bare assessment "plus `model` and `promptVersion`". The platform's function wraps it: `{assessment: {score, summary, criteria, model, promptVersion, gradedAt}, usage, degraded}`. *Decided:* the player accepts both shapes (`body.assessment` if present, else `body`). The contract should show the wrapper.
+**G53. What "a session" is for the once-only rule.** Resolved in contract section 3.
 
-**G53. What "a session" is for the once-only rule.** Section 3 says a record is sent at most once per session and the player keeps a "sent" flag. *Decided:* a session is one run of the engine from its start node to the end screen. "Play again" starts a new session and may be sent as a new attempt. The flag is stored with the last-opened file (matched by name and size) and shown on reopening as "already sent on ...", with the button relabelled "send as a new attempt", so a learner who reloads does not send the same play-through twice by accident but is not stopped from trying again.
+**G54. Characters inside a scene.** Resolved in contract section 4.
 
-**G54. Characters inside a scene.** Section 4 covers `conversation` nodes; a scene hotspot's `conversation` block (spec section 7) has the same shape and the contract does not mention it. *Decided:* it runs through the same endpoint with the same body, the answer and score are recorded against `<sceneId>/<hotspotId>` (G45) and `scoreVariableId` is written the same way, the scene's `abortWhen` is re-checked afterwards, and, as for a nested interaction (G41), closing the card leaves the conversation waiting in the room and the hotspot's later beats run once it is ended. The platform sends `hotspotId` in its own calls; this player does not.
+**G55. The 401 row.** Resolved in contract section 3.
 
-**G55. The 401 row.** Section 3 says "refresh, then reconnect". *Decided:* the player refreshes and retries the call once; a second 401 disconnects (forgets the session) and asks the learner to connect again. A refresh that fails for any reason also disconnects, as section 2 says.
+**G56. The no-popup route.** Resolved in contract section 2.
 
-**G56. The no-popup route.** Section 2 says the connect page shows a code when it has no `window.opener`. A tab opened with `window.open` from the player still has an opener, so the message route works from a tab as well; *decided:* the dialog offers "open the connect page in a tab" (a blank tab opened inside the click, then navigated, which popup blockers allow) before falling back to the pasted code. The popup is opened the same way, because the connect URL is only known after the discovery fetch and a late `window.open` is blocked.
+**G57. The refresh response.** Resolved in contract section 2.
 
-**G57. The refresh response.** Section 2 says the refresh returns "a new session in the same shape". GoTrue returns `expires_in` and `expires_at` (and a new `refresh_token`, single use). *Decided:* the player takes `expires_at`, else now plus `expires_in`, else no expiry (which leaves the 401 path to catch it), and keeps the old refresh token only if none comes back.
+**G58. The 413 trim.** Resolved in contract section 3 (512 bytes per answer).
 
-**G58. The 413 trim.** Section 3 says "drop bulky answer payloads and retry once" without a size. *Decided:* any answer whose JSON is over 512 bytes is dropped (its `score` kept) and the record is sent again once; a 413 on the trimmed body is final.
+**G59. Plain `http`.** Resolved in contract section 6.
 
-**G59. Plain `http`.** Section 6 allows plain http on localhost during development. *Decided:* the receiver address field refuses `http://` anywhere but `localhost`, `127.0.0.1` and `[::1]`; the message's `receiver.*` URLs are not re-checked because they come from a page the learner just signed in to.
+**G60. Which origin the certificate link uses.** Resolved in contract section 3: `receiver.origin` from the message.
 
-**G60. Which origin the certificate link uses.** The connect page's origin (what the player opened) and the message's `receiver.origin` are the same for RonuNest but need not be. *Decided:* `receiver.origin` from the message, since that is what the receiver says its pages live on. The message is accepted from the opened origin only (section 2 step 4); `receiver.origin` is not required to match it.
+## Still open
+
+Things the text could not make normative, and why.
+
+- **`hotspotVisibility: "hidden"` (G11).** A legacy scene-wide field on the platform that the spec never listed. Adopting it as a section 8 legacy form needs the platform to confirm its exact meaning (does it hide every hotspot, or only those without `hidden: false`?); until then the spec says the reference player ignores it, and a file that relies on it plays differently here than on the platform.
+- **`choices[].condition` on `choice` nodes (G18).** Listed in the catalogue with no definition, and unread by the platform viewer. The spec says players ignore it. It should either be defined by the platform or dropped from the catalogue table; dropping is additive-safe because nothing reads it, but is the platform's call.
+- **`rubric` versus `criteria` (G51).** A conversation node calls its rubric `rubric`; a hotspot character calls the same thing `criteria`. Unifying the name would be a rename, which the skeleton promise forbids; readers accept both and the contract sends `criteria`. It stays a documented inconsistency.
+- **Video triggers on embedded page players (G23, section 9.5).** `onVideoComplete` and `onVideoTimestamp` need playback events that a YouTube or Vimeo embed only exposes through host APIs. The spec can say they do not fire on the reference player's embed; it cannot require a second player to wire the host API, so a file whose variables depend on a page-hosted video will differ between players.
+- **Formula rounding in the reference player (G31).** The spec makes six-decimal rounding a MUST because the validator (`rust/src/formula.rs`) and the platform do it; `player/formula.js` does not round yet. That is a player follow-up, not a spec gap.
+- **A conformance suite.** Section 9 is now normative, but nothing outside the reference player's own tests exercises it. The spec's "Road to v1.0" names the suite as the next gate.

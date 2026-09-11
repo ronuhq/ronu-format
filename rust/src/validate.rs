@@ -45,6 +45,20 @@ struct VarInfo {
     computed: bool,
 }
 
+/// Spec rule 5.3: `x-<namespace>:<type>` is a legal extension node type
+/// that a player treats as known but opaque (rule 5.2 fallback). The
+/// validator accepts it rather than rejecting the module. Mirrors the
+/// platform's EXTENSION_TYPE_PATTERN exactly.
+fn is_extension_type(t: &str) -> bool {
+    let Some(rest) = t.strip_prefix("x-") else { return false };
+    let Some((ns, name)) = rest.split_once(':') else { return false };
+    let ns_ok = !ns.is_empty()
+        && ns.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+    let name_ok = !name.is_empty()
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.' || c == '-');
+    ns_ok && name_ok
+}
+
 fn normalize_type(t: &str) -> &str {
     match t {
         "router" => "choice",
@@ -443,7 +457,7 @@ pub fn validate_module(content: &Value) -> ValidationResult {
         }
         v.node_ids.insert(id.clone());
         let raw_type = node.node_type.as_deref().unwrap_or("");
-        if !NODE_TYPES.contains(&normalize_type(raw_type)) {
+        if !NODE_TYPES.contains(&normalize_type(raw_type)) && !is_extension_type(raw_type) {
             v.error("node/unknown-type", format!("Node \"{id}\" has unknown type \"{raw_type}\""), Some(&id));
         }
         if node.config.as_ref().and_then(|c| c.is_start).unwrap_or(false) {

@@ -488,3 +488,28 @@ fn module_pass_rule_is_judged_against_set_actions_and_ratings() {
     ));
     assert_eq!(codes(&rating.errors), ["threshold/unreachable"]);
 }
+
+// Spec rule 5.3: a namespaced extension type is legal; a bare unknown type
+// and a malformed prefix are not. Mirrors the platform's regression test.
+fn module_with_type(t: &str) -> serde_json::Value {
+    serde_json::json!({
+        "nodes": [
+            {"id":"start","type":"message","title":"Start","position":{"x":0,"y":0},"color":"#fff",
+             "connection":"ext","config":{"title":"Start","isStart":true}},
+            {"id":"ext","type":t,"title":"Lab","position":{"x":0,"y":0},"color":"#fff",
+             "connection":"end","config":{"anything":true}},
+            {"id":"end","type":"message","title":"End","position":{"x":0,"y":0},"color":"#fff","config":{"title":"End"}}
+        ]
+    })
+}
+
+#[test]
+fn extension_types_are_accepted_and_bare_unknowns_are_not() {
+    let ok = ronu::validate_module(&module_with_type("x-mubs:chemistry-lab"));
+    assert!(ok.valid, "extension type must validate: {:?}", ok.errors);
+    assert!(!sorted_codes(&ok.errors).iter().any(|c| c == "node/unknown-type"));
+    for bad in ["hologram", "x-:lab", "x-mubs"] {
+        let r = ronu::validate_module(&module_with_type(bad));
+        assert!(sorted_codes(&r.errors).iter().any(|c| c == "node/unknown-type"), "{bad} must be unknown");
+    }
+}

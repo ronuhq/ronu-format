@@ -4,6 +4,13 @@ All notable changes to the `.ronu` format and this repository are recorded here.
 
 ## Unreleased
 
+### 2026-09-12: the player semantics are written down (spec §9)
+
+- **Spec §9 "Player semantics"** (new, normative): the walk (start, edges, where the experience ends, dangling edges, legacy type names), variables (defaults, coercion, every action operator with its edge cases, the placeholder grammar and where substitution applies, the formula grammar in full with its six-decimal rounding), conditions (the operator table with canonical and legacy spellings, field resolution including the answer-of-a-node rule, the connector grammar and `join`, the no-match rule), completion and scoring (modes, `scoreAggregate`, the per-type grade table, what "score" means at the end), triggers and timers (every `config` key, defaults, each `onExpire` behaviour, `recordVariableId`), scenes (the angular convention, discovery, hidden hotspots, the beat order, `hotspotSequence` and `completion`, nested interactions, the `abortWhen` evaluation points), per-type notes, media and the HTML allowlist for `message.content`, and container tolerance. The old §9 to §11 are now §10 to §12; §1, §6, §7 and §8 gained cross references. Every entry G1 to G47 of the reference player's gap list now maps to a sentence in the spec.
+- **Record-receiver contract** ([`docs/record-receiver.md`](docs/record-receiver.md)): `moduleId` is `manifest.module.versionId` (the exporter never wrote `module.id`), plus `maxTurns`, degraded replies, the rubric on finalize, the assessment envelope, hotspot conversations, what one session is for the once-only rule, the 401 and 413 rows, the refresh response, plain http, the certificate origin, and the no-popup tab route (G48 to G60).
+- **[`player/SPEC-GAPS.md`](player/SPEC-GAPS.md)** is now a resolution ledger: each gap names the section that resolves it, with a short "Still open" list.
+- **Road to v1.0**: the semantics are written; a conformance suite that exercises §9 outside the reference player is the next gate.
+
 ### 2026-09-09: catalogue sync with the platform build of 9 Sep 2026 (commit `5aa3ce4`)
 
 - **Two new node types**, both `provisional`: `procedure` (perform steps in order; a step taken out of turn has its consequence straight away) and `dragToTarget` (put the right thing in the right place; an item with no `targetId` is a distractor). Spec §7.
