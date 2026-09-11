@@ -1,0 +1,35 @@
+{
+  "id": "walk-start-is-start-flag",
+  "title": "Play starts at the node flagged isStart, not the first in the array",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G33"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "second",
+      "third"
+    ],
+    "end": {
+      "passed": null,
+      "reason": "end"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "scenes-hidden-default-radius-360",
+  "title": "photo360 discovery radius defaults to 0.35 radians",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G10"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "tapScene": {
+        "yaw": 0.4,
+        "pitch": 0
+      }
+    },
+    {
+      "tapScene": {
+        "yaw": 0.3,
+        "pitch": 0
+      }
+    }
+  ],
+  "expect": {
+    "variables": {
+      "miss": 1,
+      "found": 1
+    }
+  }
+}

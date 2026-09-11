@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "b",
+      "config": {
+        "content": "<p>a</p>",
+        "connection": "wrong",
+        "isStart": true
+      }
+    },
+    {
+      "id": "b",
+      "type": "message",
+      "title": "b",
+      "config": {
+        "content": "<p>b</p>",
+        "connection": "c"
+      }
+    },
+    {
+      "id": "c",
+      "type": "message",
+      "title": "c",
+      "connection": null,
+      "config": {
+        "content": "<p>c</p>"
+      }
+    },
+    {
+      "id": "wrong",
+      "type": "message",
+      "title": "wrong",
+      "connection": null,
+      "config": {
+        "content": "<p>wrong</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

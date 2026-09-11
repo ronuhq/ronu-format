@@ -1,0 +1,26 @@
+{
+  "id": "variables-set-non-numeric-becomes-zero",
+  "title": "set with a non-numeric string on a number variable stores 0",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "coercion"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 0
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "grades-matching-ungraded-no-score",
+  "title": "matchingGraded: false records the answer, fires actions, but carries no score",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G7",
+    "G15"
+  ],
+  "level": 1,
+  "requires": [
+    "matching"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1"
+      }
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {},
+    "variables": {
+      "hits": 1
+    },
+    "answers": {
+      "m": {
+        "l1": "r1"
+      }
+    },
+    "end": {
+      "score": null
+    }
+  }
+}

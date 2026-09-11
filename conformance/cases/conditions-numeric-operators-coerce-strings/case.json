@@ -1,0 +1,40 @@
+{
+  "id": "conditions-numeric-operators-coerce-strings",
+  "title": "Numeric operators compare after Number() coercion of a string value",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1",
+    "G4"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "gt",
+      "ge",
+      "lt",
+      "le",
+      "yes"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

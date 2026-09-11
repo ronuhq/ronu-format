@@ -1,0 +1,32 @@
+{
+  "id": "evolution-namespaced-extension-type",
+  "title": "A namespaced extension type gets the same fallback and follows its connection",
+  "spec": [
+    "5.3"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "node/unknown-type"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "x",
+      "end"
+    ],
+    "current": "end"
+  }
+}

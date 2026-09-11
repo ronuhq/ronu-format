@@ -1,0 +1,40 @@
+{
+  "id": "conditions-text-operators-both-spellings",
+  "title": "Text operators with spaces and with underscores both work",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "c6",
+      "c7",
+      "c8",
+      "yes"
+    ]
+  }
+}

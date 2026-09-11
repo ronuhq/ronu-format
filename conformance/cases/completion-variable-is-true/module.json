@@ -1,0 +1,40 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "done",
+                "operator": "set_true"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "done",
+      "name": "done",
+      "type": "boolean",
+      "initialValue": false
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "done",
+      "operator": "is_true"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "variables-defaults-per-type",
+  "title": "A variable with no initialValue is 0, false or the empty string by type",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "variable/initial-mismatch",
+      "variable/initial-mismatch"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 0,
+      "b": false,
+      "t": ""
+    }
+  }
+}

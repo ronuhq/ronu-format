@@ -1,0 +1,32 @@
+{
+  "id": "variables-computed-fraction-not-rounded",
+  "title": "A computed division keeps its fraction; a completion rule reads it exactly",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G31",
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "computed"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "variables": {
+      "half": 2.5
+    },
+    "end": {
+      "passed": true
+    }
+  }
+}

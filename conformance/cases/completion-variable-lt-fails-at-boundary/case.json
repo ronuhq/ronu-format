@@ -1,0 +1,28 @@
+{
+  "id": "completion-variable-lt-fails-at-boundary",
+  "title": "variable mode, <: fails when equal to the threshold",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": false
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "walk-choice-records-id-and-routes",
+  "title": "A choice records the choice id (label kept for conditions), fires its actions, then follows its own connection",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G19"
+  ],
+  "level": 1,
+  "requires": [
+    "choice"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c2"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "right"
+    ],
+    "answers": {
+      "q": "c2"
+    },
+    "variables": {
+      "n": 0
+    },
+    "events": [
+      {
+        "type": "answered",
+        "nodeId": "q",
+        "response": "c2",
+        "texts": [
+          "Right"
+        ]
+      }
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

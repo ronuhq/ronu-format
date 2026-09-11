@@ -1,0 +1,87 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "gt",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "gt",
+      "type": "condition",
+      "title": "gt",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": ">",
+                  "value": "10"
+                }
+              ],
+              "targetNodeId": "bad"
+            }
+          ],
+          "defaultTargetNodeId": "lt"
+        }
+      }
+    },
+    {
+      "id": "lt",
+      "type": "condition",
+      "title": "lt",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": "<",
+                  "value": 10
+                }
+              ],
+              "targetNodeId": "bad"
+            }
+          ],
+          "defaultTargetNodeId": "yes"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "bad",
+      "type": "message",
+      "title": "bad",
+      "connection": null,
+      "config": {
+        "content": "<p>bad</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 10
+    }
+  ],
+  "settings": {}
+}

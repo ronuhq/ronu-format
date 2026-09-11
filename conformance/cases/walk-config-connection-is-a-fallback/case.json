@@ -1,0 +1,38 @@
+{
+  "id": "walk-config-connection-is-a-fallback",
+  "title": "The node-level connection wins; config.connection is read only when the node has none",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G17"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "b",
+      "c"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

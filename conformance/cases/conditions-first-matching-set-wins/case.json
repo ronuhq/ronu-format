@@ -1,0 +1,40 @@
+{
+  "id": "conditions-first-matching-set-wins",
+  "title": "Criteria sets are tried in order; the first that holds routes",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G5"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "high"
+    ],
+    "events": [
+      {
+        "type": "branch",
+        "nodeId": "c1",
+        "targetNodeId": "high"
+      }
+    ]
+  }
+}

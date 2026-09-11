@@ -1,0 +1,206 @@
+{
+  "nodes": [
+    {
+      "id": "s",
+      "type": "scene",
+      "title": "s",
+      "connection": "after",
+      "config": {
+        "environment": {
+          "kind": "photo360",
+          "source": "assets/room.jpg"
+        },
+        "hotspots": [
+          {
+            "id": "text",
+            "label": "text",
+            "position": {
+              "yaw": 0,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "textInput",
+              "config": {
+                "question": "Name?"
+              }
+            }
+          },
+          {
+            "id": "rank",
+            "label": "rank",
+            "position": {
+              "yaw": 0.5,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "ranking",
+              "config": {
+                "question": "Order",
+                "rankingItems": [
+                  "a",
+                  "b"
+                ]
+              }
+            }
+          },
+          {
+            "id": "match",
+            "label": "match",
+            "position": {
+              "yaw": 1,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "matching",
+              "config": {
+                "question": "Match",
+                "matchingLeftItems": [
+                  {
+                    "id": "l1",
+                    "text": "L",
+                    "correctRightId": "r1",
+                    "actions": [
+                      {
+                        "variableId": "count",
+                        "operator": "increment",
+                        "value": 1
+                      }
+                    ]
+                  }
+                ],
+                "matchingRightItems": [
+                  {
+                    "id": "r1",
+                    "text": "R"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "rate",
+            "label": "rate",
+            "position": {
+              "yaw": 1.5,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "rating",
+              "config": {
+                "question": "Rate",
+                "ratingMin": 1,
+                "ratingMax": 5,
+                "ratingVariableId": "count"
+              }
+            }
+          },
+          {
+            "id": "proc",
+            "label": "proc",
+            "position": {
+              "yaw": 2,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "procedure",
+              "config": {
+                "question": "Do",
+                "procedureSteps": [
+                  {
+                    "text": "one"
+                  },
+                  {
+                    "text": "two"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "drag",
+            "label": "drag",
+            "position": {
+              "yaw": 2.5,
+              "pitch": 0
+            },
+            "interaction": {
+              "type": "dragToTarget",
+              "config": {
+                "question": "Place",
+                "dragTargets": [
+                  {
+                    "id": "t",
+                    "label": "T"
+                  }
+                ],
+                "dragItems": [
+                  {
+                    "id": "i",
+                    "label": "I",
+                    "targetId": "t"
+                  },
+                  {
+                    "id": "x",
+                    "label": "X"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    },
+    {
+      "id": "stop",
+      "type": "message",
+      "title": "stop",
+      "connection": null,
+      "config": {
+        "content": "<p>stop</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "found",
+      "name": "found",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "miss",
+      "name": "miss",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "fail",
+      "name": "fail",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "count",
+      "name": "count",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "label",
+      "name": "label",
+      "type": "text",
+      "initialValue": "the tube"
+    }
+  ],
+  "settings": {}
+}

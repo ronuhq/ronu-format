@@ -1,0 +1,108 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "c1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": ">",
+                  "value": "1"
+                },
+                {
+                  "field": "t",
+                  "operator": "equals",
+                  "value": "y"
+                }
+              ],
+              "targetNodeId": "no"
+            }
+          ],
+          "defaultTargetNodeId": "c2"
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "type": "condition",
+      "title": "c2",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": ">",
+                  "value": "1"
+                },
+                {
+                  "field": "b",
+                  "operator": "is_true"
+                }
+              ],
+              "targetNodeId": "yes"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 5
+    },
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": "x"
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": true
+    }
+  ],
+  "settings": {}
+}

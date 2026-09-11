@@ -1,0 +1,32 @@
+{
+  "id": "scenes-empty-environment-still-plays",
+  "title": "A scene with an empty environment source still plays its hotspots",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G14"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "variables": {
+      "found": 1
+    }
+  }
+}

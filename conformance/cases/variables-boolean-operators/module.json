@@ -1,0 +1,72 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "a",
+                "operator": "set_true"
+              },
+              {
+                "variableId": "b",
+                "operator": "set_true"
+              },
+              {
+                "variableId": "b",
+                "operator": "set_false"
+              },
+              {
+                "variableId": "c",
+                "operator": "toggle"
+              },
+              {
+                "variableId": "d",
+                "operator": "toggle"
+              },
+              {
+                "variableId": "d",
+                "operator": "toggle"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "a",
+      "name": "a",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "d",
+      "name": "d",
+      "type": "boolean",
+      "initialValue": false
+    }
+  ],
+  "settings": {}
+}

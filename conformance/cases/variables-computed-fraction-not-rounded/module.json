@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "half",
+      "name": "half",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "n / 4"
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "half",
+      "operator": ">=",
+      "value": 2.5
+    }
+  }
+}

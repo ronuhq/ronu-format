@@ -1,0 +1,31 @@
+{
+  "id": "timers-node-countdown-route",
+  "title": "node countdown, onExpire route: targetNodeId is entered",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 3
+    }
+  ],
+  "expect": {
+    "current": "routed",
+    "trail": [
+      "a",
+      "routed"
+    ]
+  }
+}

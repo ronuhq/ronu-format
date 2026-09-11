@@ -1,0 +1,48 @@
+{
+  "id": "conditions-multiple-choice-answer-list",
+  "title": "A multipleChoice answer list matches contains by label, any-of on a comma list, and length",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G2"
+  ],
+  "level": 1,
+  "requires": [
+    "multipleChoice",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMultiple": [
+        "m1",
+        "m3"
+      ]
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "yes"
+    ],
+    "answers": {
+      "q": [
+        "m1",
+        "m3"
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "completion-variable-is-false-fails-when-true",
+  "title": "variable mode, is_false fails on a true boolean",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": false
+    }
+  }
+}

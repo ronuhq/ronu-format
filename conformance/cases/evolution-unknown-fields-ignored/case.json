@@ -1,0 +1,32 @@
+{
+  "id": "evolution-unknown-fields-ignored",
+  "title": "Unknown fields at every level are ignored and play continues",
+  "spec": [
+    "5.1"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "b"
+    ],
+    "end": {
+      "passed": true
+    }
+  }
+}

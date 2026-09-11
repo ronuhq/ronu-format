@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "m1",
+      "type": "matching",
+      "title": "m1",
+      "connection": "m2",
+      "config": {
+        "question": "Match",
+        "matchingLeftItems": [
+          {
+            "id": "l1",
+            "text": "A",
+            "correctRightId": "r1"
+          },
+          {
+            "id": "l2",
+            "text": "B",
+            "correctRightId": "r2"
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r1",
+            "text": "1"
+          },
+          {
+            "id": "r2",
+            "text": "2"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "m2",
+      "type": "matching",
+      "title": "m2",
+      "connection": null,
+      "config": {
+        "question": "Match again",
+        "matchingLeftItems": [
+          {
+            "id": "l3",
+            "text": "C",
+            "correctRightId": "r3"
+          },
+          {
+            "id": "l4",
+            "text": "D",
+            "correctRightId": "r4"
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r3",
+            "text": "3"
+          },
+          {
+            "id": "r4",
+            "text": "4"
+          }
+        ]
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {
+    "completion": {
+      "mode": "nodeScore",
+      "scoreAggregate": "sum",
+      "operator": ">=",
+      "value": 150
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "scenes-abort-when-default-operator-is-true",
+  "title": "abortWhen with no operator means is_true; it fires on a nested choice action, leaves for targetNodeId, and the answer is still recorded",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G43"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "answerMultiple": [
+        "wrong"
+      ]
+    }
+  ],
+  "expect": {
+    "current": "stop",
+    "trail": [
+      "s",
+      "stop"
+    ],
+    "variables": {
+      "fail": true
+    },
+    "answers": {
+      "s/h": [
+        "wrong"
+      ]
+    },
+    "events": [
+      {
+        "type": "scene-abort",
+        "nodeId": "s",
+        "variableId": "fail",
+        "targetNodeId": "stop"
+      },
+      {
+        "type": "exited",
+        "nodeId": "s",
+        "targetNodeId": "stop"
+      }
+    ]
+  }
+}

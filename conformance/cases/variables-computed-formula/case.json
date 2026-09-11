@@ -1,0 +1,29 @@
+{
+  "id": "variables-computed-formula",
+  "title": "A computed variable follows its formula over variable names, with precedence and parentheses",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G31"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "computed"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 4,
+      "m": 3,
+      "c": 9,
+      "d": -14
+    }
+  }
+}

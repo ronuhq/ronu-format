@@ -1,0 +1,38 @@
+{
+  "id": "walk-video-is-a-pass-through",
+  "title": "A video node continues along its connection and records no answer",
+  "spec": [
+    "7"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message",
+    "video"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "v",
+      "b"
+    ],
+    "answers": {},
+    "end": {
+      "reason": "end"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "conditions-value-coercion-equals",
+  "title": "equals coerces: a number against a string value, a boolean against \"true\"",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G4"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "c2",
+      "c3",
+      "yes"
+    ]
+  }
+}

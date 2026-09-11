@@ -1,0 +1,84 @@
+{
+  "nodes": [
+    {
+      "id": "m",
+      "type": "matching",
+      "title": "m",
+      "connection": "after",
+      "config": {
+        "question": "Match",
+        "matchingLeftItems": [
+          {
+            "id": "l1",
+            "text": "A",
+            "correctRightId": "r1",
+            "actions": [
+              {
+                "variableId": "hits",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "l2",
+            "text": "B",
+            "correctRightId": "r2",
+            "actions": [
+              {
+                "variableId": "hits",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "l3",
+            "text": "C",
+            "correctRightId": "r3",
+            "actions": [
+              {
+                "variableId": "hits",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r1",
+            "text": "1"
+          },
+          {
+            "id": "r2",
+            "text": "2"
+          },
+          {
+            "id": "r3",
+            "text": "3"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "hits",
+      "name": "hits",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

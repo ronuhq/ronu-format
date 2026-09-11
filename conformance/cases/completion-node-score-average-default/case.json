@@ -1,0 +1,48 @@
+{
+  "id": "completion-node-score-average-default",
+  "title": "nodeScore mode with no scoreNodeId averages every node score (100 and 50 give 75)",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6",
+    "G7"
+  ],
+  "level": 1,
+  "requires": [
+    "matching"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1",
+        "l2": "r2"
+      }
+    },
+    {
+      "continue": true
+    },
+    {
+      "answerMatching": {
+        "l3": "r3",
+        "l4": "r3"
+      }
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "m1": 100,
+      "m2": 50
+    },
+    "end": {
+      "passed": true,
+      "score": 75
+    }
+  }
+}

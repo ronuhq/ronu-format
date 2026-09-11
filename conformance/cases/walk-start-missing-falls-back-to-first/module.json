@@ -1,0 +1,24 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "b",
+      "config": {
+        "content": "<p>a</p>"
+      }
+    },
+    {
+      "id": "b",
+      "type": "message",
+      "title": "b",
+      "connection": null,
+      "config": {
+        "content": "<p>b</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,33 @@
+{
+  "id": "conditions-no-match-nothing-to-follow-ends",
+  "title": "No set holds, no default and no connection: the experience ends",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G5"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1"
+    ],
+    "end": {
+      "reason": "end",
+      "error": false
+    }
+  }
+}

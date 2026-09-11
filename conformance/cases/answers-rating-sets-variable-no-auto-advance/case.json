@@ -1,0 +1,40 @@
+{
+  "id": "answers-rating-sets-variable-no-auto-advance",
+  "title": "rating writes ratingVariableId with set and does not advance by itself",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G20"
+  ],
+  "level": 1,
+  "requires": [
+    "rating",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerRating": 4
+    }
+  ],
+  "expect": {
+    "current": "q",
+    "answers": {
+      "q": 4
+    },
+    "variables": {
+      "stars": 4
+    },
+    "events": [
+      {
+        "type": "variable",
+        "variableId": "stars",
+        "from": 0,
+        "to": 4
+      }
+    ]
+  }
+}

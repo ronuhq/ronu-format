@@ -1,0 +1,29 @@
+{
+  "id": "triggers-enter-and-exit-fire-once",
+  "title": "onNodeEnter fires on entry and onNodeExit on leaving, once each",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G8"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 11
+    },
+    "current": "b"
+  }
+}

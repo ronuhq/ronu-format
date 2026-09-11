@@ -1,0 +1,32 @@
+{
+  "id": "walk-passthrough-cycle-ends-with-error",
+  "title": "A cycle of pass-through nodes ends the experience with an error rather than hanging",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G26",
+    "G32"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "note"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a"
+    ],
+    "end": {
+      "error": true
+    }
+  }
+}

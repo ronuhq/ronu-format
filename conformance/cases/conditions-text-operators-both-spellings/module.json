@@ -1,0 +1,225 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "c1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "equals",
+                  "value": "hello world"
+                }
+              ],
+              "targetNodeId": "c2"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "type": "condition",
+      "title": "c2",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "not_equals",
+                  "value": "mars"
+                }
+              ],
+              "targetNodeId": "c3"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "type": "condition",
+      "title": "c3",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "contains",
+                  "value": "world"
+                }
+              ],
+              "targetNodeId": "c4"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c4",
+      "type": "condition",
+      "title": "c4",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "not contains",
+                  "value": "mars"
+                }
+              ],
+              "targetNodeId": "c5"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c5",
+      "type": "condition",
+      "title": "c5",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "starts_with",
+                  "value": "hello"
+                }
+              ],
+              "targetNodeId": "c6"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c6",
+      "type": "condition",
+      "title": "c6",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "ends with",
+                  "value": "world"
+                }
+              ],
+              "targetNodeId": "c7"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c7",
+      "type": "condition",
+      "title": "c7",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "length >",
+                  "value": "5"
+                }
+              ],
+              "targetNodeId": "c8"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c8",
+      "type": "condition",
+      "title": "c8",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "length_<",
+                  "value": "5"
+                }
+              ],
+              "targetNodeId": "no"
+            }
+          ],
+          "defaultTargetNodeId": "yes"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": "hello world"
+    }
+  ],
+  "settings": {}
+}

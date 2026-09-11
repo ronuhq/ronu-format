@@ -1,0 +1,27 @@
+{
+  "id": "timers-node-countdown-not-before-limit",
+  "title": "node countdown does not expire before its limit",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 2.9
+    }
+  ],
+  "expect": {
+    "current": "a"
+  }
+}

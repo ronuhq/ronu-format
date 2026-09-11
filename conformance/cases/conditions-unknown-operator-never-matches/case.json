@@ -1,0 +1,33 @@
+{
+  "id": "conditions-unknown-operator-never-matches",
+  "title": "An operator the player does not know never matches, so the default is taken",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "no"
+    ]
+  }
+}

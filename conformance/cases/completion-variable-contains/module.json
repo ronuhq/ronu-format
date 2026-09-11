@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "badge",
+                "operator": "set",
+                "value": "gold star"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "badge",
+      "name": "badge",
+      "type": "text",
+      "initialValue": ""
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "badge",
+      "operator": "contains",
+      "value": "gold"
+    }
+  }
+}

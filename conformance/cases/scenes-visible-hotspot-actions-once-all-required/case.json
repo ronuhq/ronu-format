@@ -1,0 +1,60 @@
+{
+  "id": "scenes-visible-hotspot-actions-once-all-required",
+  "title": "A visible hotspot fires variableActions on first activation only; allRequired blocks Continue until every required hotspot is visited",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G12",
+    "G13"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "activateHotspot": "h1"
+    },
+    {
+      "activateHotspot": "h1"
+    },
+    {
+      "continue": true
+    },
+    {
+      "activateHotspot": "h2"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "variables": {
+      "found": 2
+    },
+    "trail": [
+      "s",
+      "after"
+    ],
+    "events": [
+      {
+        "type": "hotspot",
+        "nodeId": "s",
+        "hotspotId": "h1"
+      },
+      {
+        "type": "hotspot",
+        "nodeId": "s",
+        "hotspotId": "h2"
+      }
+    ]
+  }
+}

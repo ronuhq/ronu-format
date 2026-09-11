@@ -1,0 +1,27 @@
+{
+  "id": "variables-set-coerces-to-type",
+  "title": "set coerces its value to the variable type",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 42,
+      "b": true,
+      "t": "7"
+    }
+  }
+}

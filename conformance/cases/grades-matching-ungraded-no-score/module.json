@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "m",
+      "type": "matching",
+      "title": "m",
+      "connection": null,
+      "config": {
+        "question": "Match",
+        "matchingGraded": false,
+        "matchingLeftItems": [
+          {
+            "id": "l1",
+            "text": "A",
+            "correctRightId": "r1",
+            "actions": [
+              {
+                "variableId": "hits",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r1",
+            "text": "1"
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "hits",
+      "name": "hits",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

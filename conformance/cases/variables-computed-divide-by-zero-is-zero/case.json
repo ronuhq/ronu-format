@@ -1,0 +1,26 @@
+{
+  "id": "variables-computed-divide-by-zero-is-zero",
+  "title": "Division by zero inside a formula evaluates to 0 (unlike the divide action)",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G27",
+    "G31"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "computed"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "c": 0
+    }
+  }
+}

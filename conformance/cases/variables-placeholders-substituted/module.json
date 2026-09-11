@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "Hello {name}",
+      "connection": null,
+      "config": {
+        "content": "<p>n={n} c={c} b={b} missing={zzz}</p>",
+        "title": "Hello {name}",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "set",
+                "value": 21
+              },
+              {
+                "variableId": "name",
+                "operator": "set",
+                "value": "Ade"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "name",
+      "name": "name",
+      "type": "text",
+      "initialValue": ""
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "n * 2"
+    }
+  ],
+  "settings": {}
+}

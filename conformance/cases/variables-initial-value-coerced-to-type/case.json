@@ -1,0 +1,33 @@
+{
+  "id": "variables-initial-value-coerced-to-type",
+  "title": "initialValue is coerced to the declared type",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "coercion"
+  ],
+  "validator": {
+    "errors": [
+      "variable/initial-mismatch",
+      "variable/initial-mismatch"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 5,
+      "b": true,
+      "t": "7"
+    }
+  }
+}

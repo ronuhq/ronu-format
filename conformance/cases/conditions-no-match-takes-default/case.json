@@ -1,0 +1,33 @@
+{
+  "id": "conditions-no-match-takes-default",
+  "title": "When no set holds, defaultTargetNodeId is taken",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G5"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "low"
+    ]
+  }
+}

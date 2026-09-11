@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {
+    "completion": {
+      "mode": "nodeScore",
+      "operator": ">=",
+      "value": 50
+    }
+  }
+}

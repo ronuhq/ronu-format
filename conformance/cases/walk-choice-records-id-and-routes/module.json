@@ -1,0 +1,60 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "choice",
+      "title": "q",
+      "connection": "left",
+      "config": {
+        "question": "q?",
+        "choices": [
+          {
+            "id": "c1",
+            "text": "Left",
+            "connection": "left",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 5
+              }
+            ]
+          },
+          {
+            "id": "c2",
+            "text": "Right",
+            "connection": "right"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "left",
+      "type": "message",
+      "title": "left",
+      "connection": null,
+      "config": {
+        "content": "<p>left</p>"
+      }
+    },
+    {
+      "id": "right",
+      "type": "message",
+      "title": "right",
+      "connection": null,
+      "config": {
+        "content": "<p>right</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

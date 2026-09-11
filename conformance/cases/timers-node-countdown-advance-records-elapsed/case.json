@@ -1,0 +1,39 @@
+{
+  "id": "timers-node-countdown-advance-records-elapsed",
+  "title": "node countdown, onExpire advance: expiry actions fire, the node connection is followed, elapsed seconds recorded",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 3.1
+    }
+  ],
+  "expect": {
+    "current": "next",
+    "variables": {
+      "n": 1,
+      "secs": 3
+    },
+    "events": [
+      {
+        "type": "timer-expiry",
+        "scope": "node",
+        "nodeId": "a",
+        "behavior": "advance"
+      }
+    ]
+  }
+}

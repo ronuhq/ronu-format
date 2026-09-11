@@ -1,0 +1,71 @@
+{
+  "id": "scenes-beat-order-conversation-interaction-reveal-route",
+  "title": "Beats run conversation, interaction, reveal, then the route; the nested answer is keyed scene/hotspot",
+  "spec": [
+    "7",
+    "7.2"
+  ],
+  "gaps": [
+    "G12",
+    "G45"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "answerMultiple": [
+        "right"
+      ]
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "dismissBeat": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "variables": {
+      "count": 1
+    },
+    "answers": {
+      "s/h": [
+        "right"
+      ]
+    },
+    "events": [
+      {
+        "type": "hotspot",
+        "hotspotId": "h"
+      },
+      {
+        "type": "answered",
+        "nodeId": "s",
+        "hotspotId": "h",
+        "subNodeId": "s/h"
+      },
+      {
+        "type": "exited",
+        "nodeId": "s",
+        "targetNodeId": "after"
+      }
+    ]
+  }
+}

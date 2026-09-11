@@ -1,0 +1,59 @@
+{
+  "id": "grades-procedure-in-order",
+  "title": "procedure: every step in turn scores 100; the answer is the order performed with no missteps",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G7",
+    "G24"
+  ],
+  "level": 2,
+  "requires": [
+    "procedure",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "performStep": 0
+    },
+    {
+      "performStep": 1
+    },
+    {
+      "performStep": 2
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "p": 100
+    },
+    "answers": {
+      "p": {
+        "order": [
+          0,
+          1,
+          2
+        ],
+        "missteps": [],
+        "halted": false
+      }
+    },
+    "variables": {
+      "early": 0
+    },
+    "trail": [
+      "p",
+      "after"
+    ]
+  }
+}

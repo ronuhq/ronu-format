@@ -1,0 +1,44 @@
+{
+  "id": "scenes-ordered-sequence-locks-later-hotspots",
+  "title": "hotspotSequence ordered: a hotspot is locked until every earlier one is visited",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G13"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "second"
+    },
+    {
+      "activateHotspot": "first"
+    },
+    {
+      "activateHotspot": "second"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "found": 2
+    },
+    "events": [
+      {
+        "type": "hotspot",
+        "hotspotId": "first"
+      },
+      {
+        "type": "hotspot",
+        "hotspotId": "second"
+      }
+    ]
+  }
+}

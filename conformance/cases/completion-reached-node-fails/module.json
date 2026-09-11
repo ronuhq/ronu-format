@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "choice",
+      "title": "q",
+      "connection": null,
+      "config": {
+        "question": "q?",
+        "choices": [
+          {
+            "id": "c1",
+            "text": "Win",
+            "connection": "win"
+          },
+          {
+            "id": "c2",
+            "text": "Lose",
+            "connection": "lose"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "win",
+      "type": "message",
+      "title": "win",
+      "connection": null,
+      "config": {
+        "content": "<p>win</p>"
+      }
+    },
+    {
+      "id": "lose",
+      "type": "message",
+      "title": "lose",
+      "connection": null,
+      "config": {
+        "content": "<p>lose</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {
+    "completion": {
+      "mode": "reachedNode",
+      "passNodeId": "win"
+    }
+  }
+}

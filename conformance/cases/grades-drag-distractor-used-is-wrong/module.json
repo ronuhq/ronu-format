@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "d",
+      "type": "dragToTarget",
+      "title": "d",
+      "connection": "after",
+      "config": {
+        "question": "Sort",
+        "dragTargets": [
+          {
+            "id": "bin",
+            "label": "Sharps bin"
+          },
+          {
+            "id": "sink",
+            "label": "Sink"
+          }
+        ],
+        "dragItems": [
+          {
+            "id": "needle",
+            "label": "Needle",
+            "targetId": "bin"
+          },
+          {
+            "id": "soap",
+            "label": "Soap",
+            "targetId": "sink"
+          },
+          {
+            "id": "toy",
+            "label": "Toy"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

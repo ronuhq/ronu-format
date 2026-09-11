@@ -1,0 +1,115 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "choice",
+      "title": "q",
+      "connection": null,
+      "config": {
+        "question": "q?",
+        "choices": [
+          {
+            "id": "c1",
+            "text": "The labelled tube",
+            "connection": "c_label"
+          },
+          {
+            "id": "c2",
+            "text": "Either tube",
+            "connection": "c_label"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "c_label",
+      "type": "condition",
+      "title": "c_label",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "equals",
+                  "value": "The labelled tube"
+                }
+              ],
+              "targetNodeId": "c_id"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c_id",
+      "type": "condition",
+      "title": "c_id",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "equals",
+                  "value": "c1"
+                }
+              ],
+              "targetNodeId": "c_contains"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c_contains",
+      "type": "condition",
+      "title": "c_contains",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "contains",
+                  "value": "labelled"
+                }
+              ],
+              "targetNodeId": "yes"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

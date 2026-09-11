@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "choice",
+      "title": "q",
+      "connection": "fallthrough",
+      "config": {
+        "question": "q?",
+        "choices": [
+          {
+            "id": "c1",
+            "text": "Left",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 5
+              }
+            ]
+          },
+          {
+            "id": "c2",
+            "text": "Right",
+            "connection": "right"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "fallthrough",
+      "type": "message",
+      "title": "fallthrough",
+      "connection": null,
+      "config": {
+        "content": "<p>fallthrough</p>"
+      }
+    },
+    {
+      "id": "right",
+      "type": "message",
+      "title": "right",
+      "connection": null,
+      "config": {
+        "content": "<p>right</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

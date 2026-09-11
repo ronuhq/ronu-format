@@ -1,0 +1,30 @@
+{
+  "id": "answers-not-required-continue-unanswered",
+  "title": "An answer node that is not required can be left unanswered",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G22"
+  ],
+  "level": 1,
+  "requires": [
+    "textInput",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "after"
+    ],
+    "answers": {}
+  }
+}

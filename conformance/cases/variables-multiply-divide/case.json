@@ -1,0 +1,26 @@
+{
+  "id": "variables-multiply-divide",
+  "title": "multiply and divide; a division result is not rounded",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "a": 30,
+      "b": 2.5
+    }
+  }
+}

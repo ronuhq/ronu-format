@@ -1,0 +1,26 @@
+{
+  "id": "variables-divide-by-zero-unchanged",
+  "title": "divide by zero leaves the variable unchanged",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "a": 10,
+      "b": 7
+    }
+  }
+}

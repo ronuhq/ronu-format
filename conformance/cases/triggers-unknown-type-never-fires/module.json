@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "b",
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onSomethingNew",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "b",
+      "type": "message",
+      "title": "b",
+      "connection": null,
+      "config": {
+        "content": "<p>b</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "secs",
+      "name": "secs",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

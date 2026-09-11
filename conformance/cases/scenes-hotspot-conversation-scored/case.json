@@ -1,0 +1,40 @@
+{
+  "id": "scenes-hotspot-conversation-scored",
+  "title": "A hotspot conversation assessed through a receiver writes scoreVariableId, is keyed scene/hotspot, and re-checks abortWhen",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G54",
+    "G45"
+  ],
+  "level": 2,
+  "requires": [
+    "scene",
+    "conversation",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "m"
+    },
+    {
+      "answerConversation": {
+        "hotspot": "m",
+        "score": 40
+      }
+    }
+  ],
+  "expect": {
+    "current": "stop",
+    "variables": {
+      "count": 40
+    },
+    "nodeScores": {
+      "s/m": 40
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "conditions-choice-answer-matches-label-or-id",
+  "title": "A field naming a choice node compares the recorded answer by label or by id",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G2",
+    "G19"
+  ],
+  "level": 1,
+  "requires": [
+    "choice",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c1"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "c_label",
+      "c_id",
+      "c_contains",
+      "yes"
+    ],
+    "answers": {
+      "q": "c1"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "set",
+                "value": 4
+              },
+              {
+                "variableId": "m",
+                "operator": "set",
+                "value": 3
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "m",
+      "name": "m",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "n * 2 + 1"
+    },
+    {
+      "id": "d",
+      "name": "d",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "(n + m) * -2"
+    }
+  ],
+  "settings": {}
+}

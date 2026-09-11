@@ -1,0 +1,64 @@
+{
+  "id": "scenes-required-interaction-must-be-answered",
+  "title": "A required hotspot with an interaction is satisfied only once answered; closing unanswered drops the later beats until it is reopened",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G41"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "q"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    },
+    {
+      "activateHotspot": "q"
+    },
+    {
+      "answerMultiple": [
+        "right"
+      ]
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "answers": {
+      "s/q": [
+        "right"
+      ]
+    },
+    "variables": {
+      "count": 1
+    }
+  }
+}

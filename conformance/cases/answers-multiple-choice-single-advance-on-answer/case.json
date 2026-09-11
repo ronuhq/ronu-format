@@ -1,0 +1,37 @@
+{
+  "id": "answers-multiple-choice-single-advance-on-answer",
+  "title": "multipleChoice without allowMultiple keeps one pick, fires its actions, and advanceOnAnswer advances",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G16"
+  ],
+  "level": 1,
+  "requires": [
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMultiple": [
+        "a",
+        "b"
+      ]
+    }
+  ],
+  "expect": {
+    "current": "after",
+    "answers": {
+      "q": [
+        "a"
+      ]
+    },
+    "variables": {
+      "n": 1
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "conditions-date-operators",
+  "title": "before, after and within range compare dates held in a text variable",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "yes"
+    ]
+  }
+}

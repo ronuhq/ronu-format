@@ -1,0 +1,35 @@
+{
+  "id": "triggers-timer-elapsed-duration",
+  "title": "onTimerElapsed fires once, config.duration seconds after entering the node",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G8"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 4
+    },
+    {
+      "elapse": 1.5
+    },
+    {
+      "elapse": 10
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 7
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "weird",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "weird",
+      "type": "hologram",
+      "title": "A hologram",
+      "connection": "c",
+      "config": {
+        "beams": 4
+      }
+    },
+    {
+      "id": "c",
+      "type": "message",
+      "title": "c",
+      "connection": null,
+      "config": {
+        "content": "<p>c</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

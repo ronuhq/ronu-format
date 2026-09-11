@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "n1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "n1",
+      "type": "note",
+      "title": "canvas note",
+      "connection": "b",
+      "config": {
+        "text": "todo"
+      }
+    },
+    {
+      "id": "b",
+      "type": "message",
+      "title": "b",
+      "connection": null,
+      "config": {
+        "content": "<p>b</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

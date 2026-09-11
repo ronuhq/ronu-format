@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "a",
+                "operator": "increment"
+              },
+              {
+                "variableId": "b",
+                "operator": "decrement"
+              },
+              {
+                "variableId": "c",
+                "operator": "increment",
+                "value": "3"
+              },
+              {
+                "variableId": "d",
+                "operator": "decrement",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "a",
+      "name": "a",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "d",
+      "name": "d",
+      "type": "number",
+      "initialValue": 10
+    }
+  ],
+  "settings": {}
+}

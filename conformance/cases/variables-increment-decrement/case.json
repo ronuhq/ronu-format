@@ -1,0 +1,28 @@
+{
+  "id": "variables-increment-decrement",
+  "title": "increment and decrement default to 1 and coerce a string amount",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "a": 11,
+      "b": 9,
+      "c": 13,
+      "d": 8
+    }
+  }
+}

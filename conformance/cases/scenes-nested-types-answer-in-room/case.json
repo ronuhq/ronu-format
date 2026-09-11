@@ -1,0 +1,113 @@
+{
+  "id": "scenes-nested-types-answer-in-room",
+  "title": "Every nestable type answers through its ordinary call, keyed scene/hotspot, with its score and actions",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G45"
+  ],
+  "level": 2,
+  "requires": [
+    "scene",
+    "textInput",
+    "ranking",
+    "matching",
+    "rating",
+    "procedure",
+    "dragToTarget",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "text"
+    },
+    {
+      "answerText": "Ade"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "activateHotspot": "rank"
+    },
+    {
+      "answerRanking": [
+        "b",
+        "a"
+      ]
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "activateHotspot": "match"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1"
+      }
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "activateHotspot": "rate"
+    },
+    {
+      "answerRating": 4
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "activateHotspot": "proc"
+    },
+    {
+      "performStep": 1
+    },
+    {
+      "performStep": 0
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "activateHotspot": "drag"
+    },
+    {
+      "placeItem": [
+        "i",
+        "t"
+      ]
+    },
+    {
+      "submitPlacements": true
+    },
+    {
+      "dismissBeat": true
+    }
+  ],
+  "expect": {
+    "current": "s",
+    "answers": {
+      "s/text": "Ade",
+      "s/rank": [
+        "b",
+        "a"
+      ],
+      "s/rate": 4
+    },
+    "nodeScores": {
+      "s/match": 100,
+      "s/proc": 50,
+      "s/drag": 100
+    },
+    "variables": {
+      "count": 4
+    }
+  }
+}

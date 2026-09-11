@@ -1,0 +1,35 @@
+{
+  "id": "walk-end-no-forward-edge",
+  "title": "A displayable node with no connection ends the experience; no rule means no pass or fail",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G32",
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "only"
+    ],
+    "current": null,
+    "end": {
+      "passed": null,
+      "score": null,
+      "reason": "end",
+      "error": false
+    }
+  }
+}

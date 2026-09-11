@@ -1,0 +1,74 @@
+{
+  "id": "grades-drag-distractor-used-is-wrong",
+  "title": "dragToTarget: using the distractor is the mistake; a placement can be moved or removed before checking",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G25"
+  ],
+  "level": 2,
+  "requires": [
+    "dragToTarget",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "placeItem": [
+        "needle",
+        "sink"
+      ]
+    },
+    {
+      "placeItem": [
+        "needle",
+        "bin"
+      ]
+    },
+    {
+      "placeItem": [
+        "toy",
+        "sink"
+      ]
+    },
+    {
+      "placeItem": [
+        "soap",
+        "sink"
+      ]
+    },
+    {
+      "placeItem": [
+        "soap",
+        null
+      ]
+    },
+    {
+      "submitPlacements": true
+    },
+    {
+      "placeItem": [
+        "soap",
+        "sink"
+      ]
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "d": 33
+    },
+    "answers": {
+      "d": {
+        "needle": "bin",
+        "toy": "sink"
+      }
+    },
+    "current": "after"
+  }
+}

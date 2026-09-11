@@ -1,0 +1,28 @@
+{
+  "id": "completion-node-score-nothing-graded-fails",
+  "title": "nodeScore mode with no graded node in the play fails, score null",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": false,
+      "score": null
+    }
+  }
+}
