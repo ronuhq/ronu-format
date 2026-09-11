@@ -1,0 +1,34 @@
+{
+  "id": "completion-reached-node-passes",
+  "title": "reachedNode mode passes when passNodeId was visited",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "choice"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c1"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "win"
+    ],
+    "end": {
+      "passed": true
+    }
+  }
+}

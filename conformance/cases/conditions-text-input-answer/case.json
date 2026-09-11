@@ -1,0 +1,39 @@
+{
+  "id": "conditions-text-input-answer",
+  "title": "A field naming a textInput node compares the free text the learner typed",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G2"
+  ],
+  "level": 1,
+  "requires": [
+    "textInput",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerText": "a new olive and PTFE"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "c1",
+      "yes"
+    ],
+    "answers": {
+      "q": "a new olive and PTFE"
+    }
+  }
+}

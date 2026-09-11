@@ -1,0 +1,33 @@
+{
+  "id": "conditions-connector-or",
+  "title": "An OR connector token joins two conditions",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G3"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "yes"
+    ]
+  }
+}

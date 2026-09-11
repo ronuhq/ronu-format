@@ -1,0 +1,50 @@
+{
+  "id": "timers-module-countdown-route",
+  "title": "module countdown, route: the learner is moved at the limit; elapsed seconds recorded when the module ends",
+  "spec": [
+    "4",
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 9
+    },
+    {
+      "elapse": 1
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "timeout"
+    ],
+    "variables": {
+      "secs": 10
+    },
+    "end": {
+      "reason": "end"
+    },
+    "events": [
+      {
+        "type": "timer-expiry",
+        "scope": "module",
+        "behavior": "route"
+      }
+    ]
+  }
+}

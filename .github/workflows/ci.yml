@@ -96,6 +96,33 @@ jobs:
           unzip -p /tmp/hello-scorm.zip player/scorm.js > /dev/null
           unzip -p /tmp/hello-scorm.zip module.ronu | cmp - samples/hello-ronu/hello.ronu
 
+  conformance:
+    name: Conformance suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+
+      # conformance/cases pins every SPEC-GAPS decision as a scripted play.
+      # The reference player must pass every case; the tutorial player must
+      # agree on the cases it can play; the comparison rules are unit tested.
+      - name: comparison rules
+        run: node --test conformance/lib/*.test.mjs
+      - name: reference player passes every case
+        run: node conformance/run-reference.mjs
+      - name: tutorial player agrees on the cases it can play
+        run: node conformance/run-tiny.mjs
+
+      # Every case module validates (warnings allowed); the few that are
+      # deliberately invalid must produce exactly the error codes they declare.
+      - name: reference validator verdicts match the cases
+        run: |
+          cargo build --quiet --manifest-path rust/Cargo.toml --bin ronu
+          RONU_BIN=rust/target/debug/ronu node conformance/validate-cases.mjs
+
   tiny-player:
     name: Tutorial player plays every sample
     runs-on: ubuntu-latest

@@ -1,0 +1,32 @@
+{
+  "id": "scenes-free-completion-ignores-required",
+  "title": "With completion free, required has no effect on leaving the scene",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G13"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "variables": {
+      "found": 0
+    }
+  }
+}

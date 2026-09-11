@@ -1,0 +1,30 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "n1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "n1",
+      "type": "note",
+      "title": "n1",
+      "connection": "n2",
+      "config": {}
+    },
+    {
+      "id": "n2",
+      "type": "note",
+      "title": "n2",
+      "connection": "n1",
+      "config": {}
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,36 @@
+{
+  "id": "scenes-non-nestable-interaction-ignored",
+  "title": "A choice interaction (not nestable) is ignored: the hotspot behaves as if it had none",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G12"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "answers": {}
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "scenes-abort-when-without-target-never-fires",
+  "title": "An abortWhen rule with no targetNodeId never fires",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G43"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "answerMultiple": [
+        "wrong"
+      ]
+    }
+  ],
+  "expect": {
+    "current": "s",
+    "variables": {
+      "fail": true
+    }
+  }
+}

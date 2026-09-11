@@ -1,0 +1,26 @@
+{
+  "id": "variables-boolean-operators",
+  "title": "set_true, set_false and toggle",
+  "spec": [
+    "7"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+    }
+  }
+}

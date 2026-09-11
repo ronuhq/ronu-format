@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "multipleChoice",
+      "title": "q",
+      "connection": "after",
+      "config": {
+        "question": "Pick",
+        "allowMultiple": true,
+        "choices": [
+          {
+            "id": "a",
+            "text": "A",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "b",
+            "text": "B",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 10
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

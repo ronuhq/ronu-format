@@ -1,0 +1,59 @@
+{
+  "id": "scenes-hidden-discovery-nearest-and-misses",
+  "title": "A tap finds the nearest unfound hidden hotspot within discoveryRadius (great-circle radians); a miss fires missActions",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G10",
+    "G11"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "tapScene": {
+        "yaw": 2,
+        "pitch": 0
+      }
+    },
+    {
+      "tapScene": {
+        "yaw": 0.25,
+        "pitch": 0
+      }
+    },
+    {
+      "tapScene": {
+        "yaw": 0.05,
+        "pitch": 0.1
+      }
+    }
+  ],
+  "expect": {
+    "variables": {
+      "miss": 1,
+      "found": 2
+    },
+    "events": [
+      {
+        "type": "scene-miss",
+        "nodeId": "s"
+      },
+      {
+        "type": "hotspot",
+        "hotspotId": "b"
+      },
+      {
+        "type": "hotspot",
+        "hotspotId": "a"
+      }
+    ]
+  }
+}

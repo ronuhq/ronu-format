@@ -1,0 +1,46 @@
+{
+  "id": "scenes-interaction-never-routes",
+  "title": "A nested interaction records, scores and fires actions but never routes; the learner stays in the room",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G45"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "answerMultiple": [
+        "right"
+      ]
+    },
+    {
+      "dismissBeat": true
+    }
+  ],
+  "expect": {
+    "current": "s",
+    "trail": [
+      "s"
+    ],
+    "variables": {
+      "count": 1
+    },
+    "answers": {
+      "s/h": [
+        "right"
+      ]
+    }
+  }
+}

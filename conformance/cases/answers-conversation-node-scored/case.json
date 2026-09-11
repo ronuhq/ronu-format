@@ -1,0 +1,42 @@
+{
+  "id": "answers-conversation-node-scored",
+  "title": "A conversation node assessed through a receiver carries its score and writes scoreVariableId",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G47"
+  ],
+  "level": 2,
+  "requires": [
+    "conversation",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerConversation": {
+        "score": 80
+      }
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "c": 80
+    },
+    "variables": {
+      "score": 80
+    },
+    "end": {
+      "passed": true
+    }
+  }
+}

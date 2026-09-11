@@ -1,0 +1,43 @@
+{
+  "id": "completion-node-score-named-node",
+  "title": "nodeScore mode with scoreNodeId grades that node alone",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "matching"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1",
+        "l2": "r2"
+      }
+    },
+    {
+      "continue": true
+    },
+    {
+      "answerMatching": {
+        "l3": "r3",
+        "l4": "r3"
+      }
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": false,
+      "score": 50
+    }
+  }
+}

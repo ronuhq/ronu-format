@@ -1,0 +1,33 @@
+{
+  "id": "timers-module-advance-means-end",
+  "title": "module countdown, advance: has no meaning at module level and is treated as end",
+  "spec": [
+    "4",
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 2
+    }
+  ],
+  "expect": {
+    "end": {
+      "reason": "timer"
+    },
+    "variables": {
+      "n": 1
+    }
+  }
+}

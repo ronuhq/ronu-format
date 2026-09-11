@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onTimerElapsed",
+            "config": {
+              "duration": 5
+            },
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 7
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "secs",
+      "name": "secs",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

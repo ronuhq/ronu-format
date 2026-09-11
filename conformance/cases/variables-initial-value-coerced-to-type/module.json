@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": "5"
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": "true"
+    },
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": 7
+    }
+  ],
+  "settings": {}
+}

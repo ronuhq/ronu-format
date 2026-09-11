@@ -1,0 +1,45 @@
+{
+  "id": "scenes-message-interaction-answered-by-reading",
+  "title": "A message interaction counts as answered once read (dismissed)",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G42"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "activateHotspot": "note"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ],
+    "events": [
+      {
+        "type": "hotspot-read",
+        "nodeId": "s",
+        "hotspotId": "note"
+      }
+    ]
+  }
+}

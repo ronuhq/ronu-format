@@ -1,0 +1,49 @@
+{
+  "nodes": [
+    {
+      "id": "conv",
+      "type": "conversation",
+      "title": "conv",
+      "connection": "code",
+      "config": {
+        "persona": "p",
+        "firstMessage": "hi",
+        "objective": "o",
+        "isStart": true
+      }
+    },
+    {
+      "id": "code",
+      "type": "code",
+      "title": "code",
+      "connection": "splat",
+      "config": {
+        "source": "while(true){}"
+      }
+    },
+    {
+      "id": "splat",
+      "type": "scene",
+      "title": "splat",
+      "connection": "done",
+      "config": {
+        "environment": {
+          "kind": "splat",
+          "source": "x"
+        },
+        "hotspots": []
+      }
+    },
+    {
+      "id": "done",
+      "type": "message",
+      "title": "done",
+      "connection": null,
+      "config": {
+        "content": "<p>done</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

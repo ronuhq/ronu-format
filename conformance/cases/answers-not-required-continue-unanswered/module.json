@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "textInput",
+      "title": "q",
+      "connection": "after",
+      "config": {
+        "question": "Word?",
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,52 @@
+{
+  "nodes": [
+    {
+      "id": "p",
+      "type": "procedure",
+      "title": "p",
+      "connection": "after",
+      "config": {
+        "question": "Apply the cream",
+        "procedureSteps": [
+          {
+            "text": "Gain consent"
+          },
+          {
+            "text": "Wash hands",
+            "critical": true,
+            "ifEarly": "Consent first.",
+            "earlyActions": [
+              {
+                "variableId": "early",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "text": "Apply cream"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "early",
+      "name": "early",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

@@ -1,0 +1,36 @@
+{
+  "id": "walk-dangling-edge-ends-with-error",
+  "title": "A connection to a node that does not exist ends the experience with an error, not a crash",
+  "spec": [
+    "5.2"
+  ],
+  "gaps": [
+    "G32"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "connection/dangling"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a"
+    ],
+    "end": {
+      "reason": "dangling",
+      "error": true
+    }
+  }
+}

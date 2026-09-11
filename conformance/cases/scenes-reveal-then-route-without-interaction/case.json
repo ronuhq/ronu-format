@@ -1,0 +1,36 @@
+{
+  "id": "scenes-reveal-then-route-without-interaction",
+  "title": "A hotspot with a reveal and a targetNodeId shows the reveal, then routes on dismiss",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G12"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "door"
+    },
+    {
+      "continue": true
+    },
+    {
+      "dismissBeat": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "stop"
+    ],
+    "current": "stop"
+  }
+}

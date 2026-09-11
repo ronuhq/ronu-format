@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {
+      "id": "only",
+      "type": "message",
+      "title": "only",
+      "connection": null,
+      "config": {
+        "content": "<p>only</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

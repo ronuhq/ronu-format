@@ -1,0 +1,39 @@
+{
+  "id": "walk-start-missing-falls-back-to-first",
+  "title": "No isStart anywhere: the first node in the array starts",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G33"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "module/no-start"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "b"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

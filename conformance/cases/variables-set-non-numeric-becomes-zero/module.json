@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "set",
+                "value": "not a number"
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 10
+    }
+  ],
+  "settings": {}
+}

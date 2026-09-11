@@ -1,0 +1,42 @@
+{
+  "id": "scenes-abort-when-checked-after-events-not-on-entry",
+  "title": "abortWhen is checked after each in-scene event (a miss, a hotspot action) and not on entry",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G43"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "tapScene": {
+        "yaw": 3,
+        "pitch": 0
+      }
+    },
+    {
+      "tapScene": {
+        "yaw": 0,
+        "pitch": 0
+      }
+    }
+  ],
+  "expect": {
+    "current": "stop",
+    "variables": {
+      "count": 2
+    },
+    "trail": [
+      "s",
+      "stop"
+    ]
+  }
+}

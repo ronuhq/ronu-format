@@ -158,5 +158,8 @@ export function evaluateFormula(formula, values) {
     }
     return Number.isFinite(result) ? result : 0;
   };
-  return evalNode(ast);
+  // Spec 9.2: the result is rounded to six decimals, exactly as the reference
+  // validator does, so a pass rule reads the same number everywhere.
+  // Math.round rounds halves toward positive infinity; the validator mirrors that.
+  return Math.round(evalNode(ast) * 1e6) / 1e6;
 }

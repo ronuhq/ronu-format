@@ -1,0 +1,43 @@
+{
+  "id": "completion-node-score-operator-absent",
+  "title": "nodeScore mode with no operator compares value >= threshold",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "matching"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1",
+        "l2": "r2"
+      }
+    },
+    {
+      "continue": true
+    },
+    {
+      "answerMatching": {
+        "l3": "r3",
+        "l4": "r3"
+      }
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": true,
+      "score": 75
+    }
+  }
+}

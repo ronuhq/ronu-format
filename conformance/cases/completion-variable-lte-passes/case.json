@@ -1,0 +1,29 @@
+{
+  "id": "completion-variable-lte-passes",
+  "title": "variable mode, <=: passes at the threshold; the value is a string",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6",
+    "G4"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "end": {
+      "passed": true
+    }
+  }
+}

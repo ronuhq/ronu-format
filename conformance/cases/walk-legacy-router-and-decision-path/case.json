@@ -1,0 +1,38 @@
+{
+  "id": "walk-legacy-router-and-decision-path",
+  "title": "Legacy router and decisionPath (stringified choices) play as choice and condition",
+  "spec": [
+    "5.4",
+    "8"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "choice",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c1"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "r",
+      "d",
+      "yes"
+    ],
+    "variables": {
+      "n": 3
+    },
+    "end": {
+      "reason": "end"
+    }
+  }
+}

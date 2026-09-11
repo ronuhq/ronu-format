@@ -1,0 +1,35 @@
+{
+  "id": "walk-note-is-skipped-silently",
+  "title": "A note wired into the path is skipped: not in the trail, never entered, its connection followed",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G26"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "note"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "b"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

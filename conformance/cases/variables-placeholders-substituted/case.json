@@ -1,0 +1,29 @@
+{
+  "id": "variables-placeholders-substituted",
+  "title": "Placeholders substitute by variable name, computed included; an unknown name is left as written",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G30"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "computed",
+    "placeholders"
+  ],
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "current": "a",
+    "view": {
+      "title": "Hello Ade",
+      "content": "<p>n=21 c=42 b=false missing={zzz}</p>"
+    }
+  }
+}

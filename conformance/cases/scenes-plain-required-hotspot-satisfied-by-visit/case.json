@@ -1,0 +1,39 @@
+{
+  "id": "scenes-plain-required-hotspot-satisfied-by-visit",
+  "title": "A required hotspot with no interaction is satisfied by visiting it",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G13",
+    "G41"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "activateHotspot": "plain"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "s",
+      "after"
+    ]
+  }
+}

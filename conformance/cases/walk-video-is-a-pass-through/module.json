@@ -1,0 +1,37 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "v",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "v",
+      "type": "video",
+      "title": "v",
+      "connection": "b",
+      "config": {
+        "videoUrl": "assets/clip.mp4",
+        "videoControls": {
+          "autoplay": false
+        }
+      }
+    },
+    {
+      "id": "b",
+      "type": "message",
+      "title": "b",
+      "connection": null,
+      "config": {
+        "content": "<p>b</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,36 @@
+{
+  "id": "conditions-no-match-no-default-follows-connection",
+  "title": "No set holds and there is no default: the node connection is followed",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G5"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "fallback"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

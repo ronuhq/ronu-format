@@ -1,0 +1,57 @@
+{
+  "id": "grades-drag-distractor-left-alone",
+  "title": "dragToTarget: every item on its target and the distractor left unused scores 100",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G7",
+    "G25"
+  ],
+  "level": 2,
+  "requires": [
+    "dragToTarget",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "placeItem": [
+        "needle",
+        "bin"
+      ]
+    },
+    {
+      "continue": true
+    },
+    {
+      "placeItem": [
+        "soap",
+        "sink"
+      ]
+    },
+    {
+      "submitPlacements": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "d": 100
+    },
+    "answers": {
+      "d": {
+        "needle": "bin",
+        "soap": "sink"
+      }
+    },
+    "trail": [
+      "d",
+      "after"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "triggers-unknown-type-never-fires",
+  "title": "A trigger of a type the player does not know never fires",
+  "spec": [
+    "5.1",
+    "7"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 0
+    }
+  }
+}

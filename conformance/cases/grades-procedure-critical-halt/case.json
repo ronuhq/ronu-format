@@ -1,0 +1,55 @@
+{
+  "id": "grades-procedure-critical-halt",
+  "title": "procedure: procedureHaltOnCritical stops at a critical misstep with the score so far; later steps are ignored",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G24"
+  ],
+  "level": 2,
+  "requires": [
+    "procedure",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "performStep": 1
+    },
+    {
+      "performStep": 0
+    },
+    {
+      "performStep": 2
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "p": 0
+    },
+    "answers": {
+      "p": {
+        "order": [
+          1
+        ],
+        "missteps": [
+          1
+        ],
+        "halted": true
+      }
+    },
+    "variables": {
+      "early": 1
+    },
+    "trail": [
+      "p",
+      "after"
+    ]
+  }
+}

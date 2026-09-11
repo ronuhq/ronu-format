@@ -1,0 +1,35 @@
+{
+  "id": "conditions-numeric-operators-boundaries",
+  "title": "Strict operators fail at the boundary; the default target is taken",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1",
+    "G4"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "gt",
+      "lt",
+      "yes"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "ranking",
+      "title": "q",
+      "connection": "after",
+      "config": {
+        "question": "Order",
+        "rankingItems": [
+          "a",
+          {
+            "text": "b"
+          },
+          "c"
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

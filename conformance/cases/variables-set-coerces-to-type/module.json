@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "set",
+                "value": "42"
+              },
+              {
+                "variableId": "b",
+                "operator": "set",
+                "value": "true"
+              },
+              {
+                "variableId": "t",
+                "operator": "set",
+                "value": 7
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": ""
+    }
+  ],
+  "settings": {}
+}

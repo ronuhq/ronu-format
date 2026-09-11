@@ -1,0 +1,34 @@
+{
+  "id": "completion-reached-node-fails",
+  "title": "reachedNode mode fails when passNodeId was never visited",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G6"
+  ],
+  "level": 1,
+  "requires": [
+    "choice"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c2"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "lose"
+    ],
+    "end": {
+      "passed": false
+    }
+  }
+}

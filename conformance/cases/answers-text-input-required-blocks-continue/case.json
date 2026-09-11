@@ -1,0 +1,38 @@
+{
+  "id": "answers-text-input-required-blocks-continue",
+  "title": "textInput records the text; required blocks Continue until answered",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G22"
+  ],
+  "level": 1,
+  "requires": [
+    "textInput",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "answerText": "hello"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "after"
+    ],
+    "answers": {
+      "q": "hello"
+    }
+  }
+}

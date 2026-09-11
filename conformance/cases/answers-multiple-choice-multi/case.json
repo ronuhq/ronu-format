@@ -1,0 +1,41 @@
+{
+  "id": "answers-multiple-choice-multi",
+  "title": "multipleChoice with allowMultiple records every valid pick in order and drops unknown ids",
+  "spec": [
+    "7"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "multipleChoice",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMultiple": [
+        "b",
+        "ghost",
+        "a"
+      ]
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "current": "after",
+    "answers": {
+      "q": [
+        "b",
+        "a"
+      ]
+    },
+    "variables": {
+      "n": 11
+    },
+    "nodeScores": {}
+  }
+}

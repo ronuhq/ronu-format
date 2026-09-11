@@ -1,0 +1,32 @@
+{
+  "id": "triggers-timer-elapsed-default-30s",
+  "title": "onTimerElapsed with no config.duration fires at 30 seconds",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G8"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 29
+    },
+    {
+      "elapse": 1
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 1
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "r",
+      "type": "router",
+      "title": "r",
+      "connection": "d",
+      "config": {
+        "question": "Pick",
+        "choices": [
+          {
+            "id": "c1",
+            "text": "Go",
+            "connection": "d",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "set",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "id": "c2",
+            "text": "Stay",
+            "connection": "d"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "d",
+      "type": "decisionPath",
+      "title": "d",
+      "config": {
+        "choices": "{\"criteriaSets\":[{\"conditions\":[{\"field\":\"n\",\"operator\":\">=\",\"value\":\"3\"}],\"targetNodeId\":\"yes\"}],\"defaultTargetNodeId\":\"no\"}"
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

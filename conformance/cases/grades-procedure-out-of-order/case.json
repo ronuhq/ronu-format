@@ -1,0 +1,63 @@
+{
+  "id": "grades-procedure-out-of-order",
+  "title": "procedure: a step out of turn is a misstep as it happens, fires earlyActions, and costs its share of the score",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G7",
+    "G24"
+  ],
+  "level": 2,
+  "requires": [
+    "procedure",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "performStep": 1
+    },
+    {
+      "performStep": 0
+    },
+    {
+      "performStep": 2
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "p": 67
+    },
+    "answers": {
+      "p": {
+        "order": [
+          1,
+          0,
+          2
+        ],
+        "missteps": [
+          1
+        ],
+        "halted": false
+      }
+    },
+    "variables": {
+      "early": 1
+    },
+    "events": [
+      {
+        "type": "procedure-misstep",
+        "nodeId": "p",
+        "step": 1,
+        "expected": 0,
+        "critical": true
+      }
+    ]
+  }
+}

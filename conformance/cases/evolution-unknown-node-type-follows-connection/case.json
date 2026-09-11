@@ -1,0 +1,39 @@
+{
+  "id": "evolution-unknown-node-type-follows-connection",
+  "title": "A node of unknown type is a fallback that follows its connection",
+  "spec": [
+    "5.2"
+  ],
+  "gaps": [],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "node/unknown-type"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "weird",
+      "c"
+    ],
+    "current": "c",
+    "view": {
+      "nodeId": "c"
+    }
+  }
+}

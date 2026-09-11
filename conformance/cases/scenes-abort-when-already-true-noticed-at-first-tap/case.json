@@ -1,0 +1,31 @@
+{
+  "id": "scenes-abort-when-already-true-noticed-at-first-tap",
+  "title": "A variable already over the line on entry does not abort on entry; the first in-scene event notices it",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G43"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message",
+    "triggers"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    }
+  ],
+  "expect": {
+    "current": "stop",
+    "trail": [
+      "s",
+      "stop"
+    ]
+  }
+}

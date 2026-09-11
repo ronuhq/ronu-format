@@ -1,0 +1,40 @@
+{
+  "id": "walk-choice-without-connection-uses-node-connection",
+  "title": "A choice with no connection of its own follows the node connection; its actions still fire first",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G19"
+  ],
+  "level": 1,
+  "requires": [
+    "choice"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "choose": "c1"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "q",
+      "fallthrough"
+    ],
+    "variables": {
+      "n": 5
+    },
+    "answers": {
+      "q": "c1"
+    },
+    "end": {
+      "reason": "end"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "walk-start-several-first-flagged-wins",
+  "title": "Several isStart flags: the first flagged node in array order starts",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G33"
+  ],
+  "level": 1,
+  "requires": [
+    "message"
+  ],
+  "validator": {
+    "errors": [
+      "module/multiple-starts"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "b"
+    ],
+    "end": {
+      "reason": "end"
+    }
+  }
+}

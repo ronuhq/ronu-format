@@ -1,0 +1,194 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "c1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "exists"
+                }
+              ],
+              "targetNodeId": "no"
+            }
+          ],
+          "defaultTargetNodeId": "c2"
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "type": "condition",
+      "title": "c2",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "not_exists"
+                }
+              ],
+              "targetNodeId": "c3"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "type": "condition",
+      "title": "c3",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "not exists"
+                }
+              ],
+              "targetNodeId": "c4"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c4",
+      "type": "condition",
+      "title": "c4",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "b",
+                  "operator": "is_true"
+                }
+              ],
+              "targetNodeId": "c5"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c5",
+      "type": "condition",
+      "title": "c5",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "f",
+                  "operator": "is false"
+                }
+              ],
+              "targetNodeId": "c6"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c6",
+      "type": "condition",
+      "title": "c6",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "f",
+                  "operator": "is_true"
+                }
+              ],
+              "targetNodeId": "no"
+            }
+          ],
+          "defaultTargetNodeId": "yes"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    },
+    {
+      "id": "q",
+      "type": "textInput",
+      "title": "q",
+      "connection": null,
+      "config": {
+        "question": "never asked"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": ""
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": true
+    },
+    {
+      "id": "f",
+      "name": "f",
+      "type": "boolean",
+      "initialValue": false
+    }
+  ],
+  "settings": {}
+}

@@ -1,0 +1,29 @@
+{
+  "id": "timers-node-countdown-end",
+  "title": "node countdown, onExpire end: the experience ends with reason timer",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 3
+    }
+  ],
+  "expect": {
+    "end": {
+      "reason": "timer"
+    }
+  }
+}

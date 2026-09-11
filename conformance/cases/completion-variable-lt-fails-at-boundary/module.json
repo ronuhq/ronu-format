@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "errors",
+                "operator": "increment",
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "errors",
+      "name": "errors",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "errors",
+      "operator": "<",
+      "value": 2
+    }
+  }
+}

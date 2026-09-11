@@ -1,0 +1,33 @@
+{
+  "id": "timers-countup-never-expires",
+  "title": "A count-up timer never expires (onExpire ignored) but still records elapsed seconds on exit",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G9"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "timers",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "elapse": 12
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "current": "b",
+    "variables": {
+      "secs": 12
+    }
+  }
+}

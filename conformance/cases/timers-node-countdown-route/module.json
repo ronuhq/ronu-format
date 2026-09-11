@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "next",
+      "config": {
+        "content": "<p>a</p>",
+        "timer": {
+          "mode": "countdown",
+          "seconds": 3,
+          "visible": true,
+          "recordVariableId": "secs",
+          "onExpire": {
+            "behavior": "route",
+            "targetNodeId": "routed"
+          }
+        },
+        "isStart": true
+      }
+    },
+    {
+      "id": "next",
+      "type": "message",
+      "title": "next",
+      "connection": null,
+      "config": {
+        "content": "<p>next</p>"
+      }
+    },
+    {
+      "id": "routed",
+      "type": "message",
+      "title": "routed",
+      "connection": null,
+      "config": {
+        "content": "<p>routed</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "secs",
+      "name": "secs",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

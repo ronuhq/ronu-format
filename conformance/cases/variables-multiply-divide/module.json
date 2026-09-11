@@ -1,0 +1,46 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "a",
+                "operator": "multiply",
+                "value": 3
+              },
+              {
+                "variableId": "b",
+                "operator": "divide",
+                "value": 4
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "a",
+      "name": "a",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "number",
+      "initialValue": 10
+    }
+  ],
+  "settings": {}
+}

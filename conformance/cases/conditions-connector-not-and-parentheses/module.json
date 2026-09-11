@@ -1,0 +1,161 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "c1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "t",
+                  "operator": "equals",
+                  "value": "y"
+                },
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": "OR"
+                },
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": "("
+                },
+                {
+                  "field": "n",
+                  "operator": ">",
+                  "value": "1"
+                },
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": "AND"
+                },
+                {
+                  "field": "b",
+                  "operator": "is_true"
+                },
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": ")"
+                }
+              ],
+              "targetNodeId": "c2"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "type": "condition",
+      "title": "c2",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": "NOT"
+                },
+                {
+                  "field": "t",
+                  "operator": "equals",
+                  "value": "y"
+                }
+              ],
+              "targetNodeId": "c3"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "type": "condition",
+      "title": "c3",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "operator",
+                  "operator": "",
+                  "value": "NOT"
+                },
+                {
+                  "field": "n",
+                  "operator": ">",
+                  "value": "1"
+                }
+              ],
+              "targetNodeId": "no"
+            }
+          ],
+          "defaultTargetNodeId": "yes"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 5
+    },
+    {
+      "id": "t",
+      "name": "t",
+      "type": "text",
+      "initialValue": "x"
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "boolean",
+      "initialValue": true
+    }
+  ],
+  "settings": {}
+}

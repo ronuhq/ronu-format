@@ -1,0 +1,36 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "rating",
+      "title": "q",
+      "connection": "after",
+      "config": {
+        "question": "Rate",
+        "ratingMin": 1,
+        "ratingMax": 5,
+        "ratingStyle": "stars",
+        "ratingVariableId": "stars",
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "stars",
+      "name": "stars",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {}
+}

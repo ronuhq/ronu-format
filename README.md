@@ -93,7 +93,7 @@ Built something? Open an issue and it gets a row here.
 
 ## Help wanted
 
-A conformance suite: a language-neutral set of files plus expected outcomes that any player can run. The samples and the reference player's tests are the seed. See [CONTRIBUTING](CONTRIBUTING.md).
+Run the [conformance suite](conformance/README.md) against your own player and tell us what it skips: it is a language-neutral set of module files, scripted plays and expected outcomes that pin every decision in [SPEC-GAPS](player/SPEC-GAPS.md). Adapters for players in other languages, and cases for decisions the suite does not yet cover, are the most useful contributions. See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Licence
 

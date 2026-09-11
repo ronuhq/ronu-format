@@ -1,0 +1,39 @@
+{
+  "id": "answers-ranking-order-and-fill",
+  "title": "ranking records the order given, appends items left out, accepts object items, and has no score",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G21"
+  ],
+  "level": 1,
+  "requires": [
+    "ranking",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerRanking": [
+        "c",
+        "a"
+      ]
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "answers": {
+      "q": [
+        "c",
+        "a",
+        "b"
+      ]
+    },
+    "nodeScores": {}
+  }
+}

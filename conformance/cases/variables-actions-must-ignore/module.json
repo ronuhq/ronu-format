@@ -1,0 +1,58 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "triggers": [
+          {
+            "type": "onNodeEnter",
+            "actions": [
+              {
+                "variableId": "n",
+                "operator": "exponentiate",
+                "value": 2
+              },
+              {
+                "variableId": "nope",
+                "operator": "set",
+                "value": 1
+              },
+              {
+                "variableId": "c",
+                "operator": "set",
+                "value": 999
+              },
+              {
+                "variableId": "n",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 10
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "n * 2"
+    }
+  ],
+  "settings": {}
+}

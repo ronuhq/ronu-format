@@ -1,0 +1,35 @@
+{
+  "id": "variables-actions-must-ignore",
+  "title": "An unknown operator, an unknown variable and a computed target are ignored; later actions still apply",
+  "spec": [
+    "5.1",
+    "7"
+  ],
+  "gaps": [
+    "G27"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "triggers",
+    "computed"
+  ],
+  "validator": {
+    "errors": [
+      "action/bad-operator",
+      "action/unknown-variable",
+      "action/computed-target"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "n": 11,
+      "c": 22
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "ghost",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

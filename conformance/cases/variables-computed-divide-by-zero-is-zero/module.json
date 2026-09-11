@@ -1,0 +1,37 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": null,
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 5
+    },
+    {
+      "id": "z",
+      "name": "z",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "number",
+      "initialValue": 0,
+      "computed": true,
+      "formula": "n / z"
+    }
+  ],
+  "settings": {}
+}

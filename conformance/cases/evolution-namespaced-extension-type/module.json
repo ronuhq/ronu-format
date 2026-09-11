@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    {
+      "id": "x",
+      "type": "x-mubs:chemistry-lab",
+      "title": "Lab",
+      "connection": "end",
+      "config": {
+        "reagents": [
+          "HCl"
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "end",
+      "type": "message",
+      "title": "end",
+      "connection": null,
+      "config": {
+        "content": "<p>end</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

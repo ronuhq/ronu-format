@@ -1,0 +1,34 @@
+{
+  "id": "conditions-implicit-and",
+  "title": "Two adjacent conditions with no connector combine with AND",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G3"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "c2",
+      "yes"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "scenes-interaction-flow-fields-ignored",
+  "title": "Flow fields on a nested config (triggers, timer, connection, required) are ignored",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G44"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "textInput",
+    "message",
+    "clock"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "h"
+    },
+    {
+      "elapse": 5
+    },
+    {
+      "answerText": "Ade"
+    },
+    {
+      "dismissBeat": true
+    },
+    {
+      "elapse": 5
+    }
+  ],
+  "expect": {
+    "current": "s",
+    "variables": {
+      "count": 0
+    },
+    "answers": {
+      "s/h": "Ade"
+    }
+  }
+}

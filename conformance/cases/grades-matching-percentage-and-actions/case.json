@@ -1,0 +1,52 @@
+{
+  "id": "grades-matching-percentage-and-actions",
+  "title": "matching scores the percentage of left items matched right; actions fire once per correct match",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G7",
+    "G15"
+  ],
+  "level": 1,
+  "requires": [
+    "matching",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "answerMatching": {
+        "l1": "r1",
+        "l2": "r3",
+        "l3": "r3"
+      }
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "nodeScores": {
+      "m": 67
+    },
+    "variables": {
+      "hits": 2
+    },
+    "answers": {
+      "m": {
+        "l1": "r1",
+        "l2": "r3",
+        "l3": "r3"
+      }
+    },
+    "end": {
+      "score": 67
+    }
+  }
+}

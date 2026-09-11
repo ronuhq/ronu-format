@@ -1,0 +1,115 @@
+{
+  "nodes": [
+    {
+      "id": "s",
+      "type": "scene",
+      "title": "s",
+      "connection": "after",
+      "config": {
+        "environment": {
+          "kind": "photo360",
+          "source": "assets/room.jpg"
+        },
+        "completion": "allRequired",
+        "hotspots": [
+          {
+            "id": "h1",
+            "label": "h1",
+            "position": {
+              "yaw": 0,
+              "pitch": 0
+            },
+            "required": true,
+            "variableActions": [
+              {
+                "variableId": "found",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "h2",
+            "label": "h2",
+            "position": {
+              "yaw": 1,
+              "pitch": 0
+            },
+            "required": true,
+            "variableActions": [
+              {
+                "variableId": "found",
+                "operator": "increment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "id": "h3",
+            "label": "h3",
+            "position": {
+              "yaw": 2,
+              "pitch": 0
+            },
+            "reveal": {
+              "kind": "text",
+              "body": "optional"
+            }
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    },
+    {
+      "id": "stop",
+      "type": "message",
+      "title": "stop",
+      "connection": null,
+      "config": {
+        "content": "<p>stop</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "found",
+      "name": "found",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "miss",
+      "name": "miss",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "fail",
+      "name": "fail",
+      "type": "boolean",
+      "initialValue": false
+    },
+    {
+      "id": "count",
+      "name": "count",
+      "type": "number",
+      "initialValue": 0
+    },
+    {
+      "id": "label",
+      "name": "label",
+      "type": "text",
+      "initialValue": "the tube"
+    }
+  ],
+  "settings": {}
+}

@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "textInput",
+      "title": "q",
+      "connection": "c1",
+      "config": {
+        "question": "Word?",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "contains",
+                  "value": "olive"
+                }
+              ],
+              "targetNodeId": "yes"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

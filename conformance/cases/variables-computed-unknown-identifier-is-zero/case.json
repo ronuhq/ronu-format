@@ -1,0 +1,30 @@
+{
+  "id": "variables-computed-unknown-identifier-is-zero",
+  "title": "An unknown identifier in a formula evaluates to 0",
+  "spec": [
+    "4"
+  ],
+  "gaps": [
+    "G31"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "computed"
+  ],
+  "validator": {
+    "errors": [
+      "variable/formula-unknown-ref"
+    ]
+  },
+  "play": [
+    {
+      "at": "start"
+    }
+  ],
+  "expect": {
+    "variables": {
+      "c": 5
+    }
+  }
+}

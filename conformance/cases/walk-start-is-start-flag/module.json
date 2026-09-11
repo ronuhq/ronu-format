@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "first",
+      "type": "message",
+      "title": "first",
+      "connection": null,
+      "config": {
+        "content": "<p>first</p>"
+      }
+    },
+    {
+      "id": "second",
+      "type": "message",
+      "title": "second",
+      "connection": "third",
+      "config": {
+        "content": "<p>second</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "third",
+      "type": "message",
+      "title": "third",
+      "connection": null,
+      "config": {
+        "content": "<p>third</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

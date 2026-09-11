@@ -1,0 +1,141 @@
+{
+  "nodes": [
+    {
+      "id": "q",
+      "type": "multipleChoice",
+      "title": "q",
+      "connection": "c1",
+      "config": {
+        "question": "Pick",
+        "allowMultiple": true,
+        "choices": [
+          {
+            "id": "m1",
+            "text": "Vin"
+          },
+          {
+            "id": "m2",
+            "text": "Elend"
+          },
+          {
+            "id": "m3",
+            "text": "Sazed"
+          }
+        ],
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "contains",
+                  "value": "Sazed"
+                }
+              ],
+              "targetNodeId": "c2"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "type": "condition",
+      "title": "c2",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "contains",
+                  "value": "Elend, Vin"
+                }
+              ],
+              "targetNodeId": "c3"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "type": "condition",
+      "title": "c3",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "not contains",
+                  "value": "Elend"
+                }
+              ],
+              "targetNodeId": "c4"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "c4",
+      "type": "condition",
+      "title": "c4",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "q",
+                  "operator": "length >",
+                  "value": "1"
+                }
+              ],
+              "targetNodeId": "yes"
+            }
+          ],
+          "defaultTargetNodeId": "no"
+        }
+      }
+    },
+    {
+      "id": "yes",
+      "type": "message",
+      "title": "yes",
+      "connection": null,
+      "config": {
+        "content": "<p>yes</p>"
+      }
+    },
+    {
+      "id": "no",
+      "type": "message",
+      "title": "no",
+      "connection": null,
+      "config": {
+        "content": "<p>no</p>"
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,32 @@
+{
+  "id": "scenes-abort-when-procedure-misstep-mid-way",
+  "title": "abortWhen fires from a nested procedure step's earlyActions, leaving the procedure unanswered",
+  "spec": [
+    "7.2"
+  ],
+  "gaps": [
+    "G43"
+  ],
+  "level": 2,
+  "requires": [
+    "scene",
+    "procedure",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "activateHotspot": "p"
+    },
+    {
+      "performStep": 1
+    }
+  ],
+  "expect": {
+    "current": "stop",
+    "answers": {},
+    "nodeScores": {}
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "c",
+      "type": "conversation",
+      "title": "c",
+      "connection": "after",
+      "config": {
+        "persona": "Guest",
+        "firstMessage": "Hi",
+        "objective": "Be polite",
+        "scoreVariableId": "score",
+        "isStart": true
+      }
+    },
+    {
+      "id": "after",
+      "type": "message",
+      "title": "after",
+      "connection": null,
+      "config": {
+        "content": "<p>after</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "score",
+      "name": "score",
+      "type": "number",
+      "initialValue": 0
+    }
+  ],
+  "settings": {
+    "completion": {
+      "mode": "variable",
+      "variableId": "score",
+      "operator": ">=",
+      "value": 60
+    }
+  }
+}

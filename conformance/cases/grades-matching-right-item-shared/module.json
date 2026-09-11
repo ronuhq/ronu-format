@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "m",
+      "type": "matching",
+      "title": "m",
+      "connection": null,
+      "config": {
+        "question": "Match",
+        "matchingLeftItems": [
+          {
+            "id": "l1",
+            "text": "A",
+            "correctRightId": "r1"
+          },
+          {
+            "id": "l2",
+            "text": "B",
+            "correctRightId": "r1"
+          },
+          {
+            "id": "l3",
+            "text": "C"
+          }
+        ],
+        "matchingRightItems": [
+          {
+            "id": "r1",
+            "text": "1"
+          },
+          {
+            "id": "r2",
+            "text": "2"
+          }
+        ],
+        "isStart": true
+      }
+    }
+  ],
+  "variables": [],
+  "settings": {}
+}

@@ -1,0 +1,83 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "type": "message",
+      "title": "a",
+      "connection": "c1",
+      "config": {
+        "content": "<p>a</p>",
+        "isStart": true
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "title": "c1",
+      "connection": null,
+      "config": {
+        "criteria": {
+          "criteriaSets": [
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": ">=",
+                  "value": "10"
+                }
+              ],
+              "targetNodeId": "high"
+            },
+            {
+              "conditions": [
+                {
+                  "field": "n",
+                  "operator": ">=",
+                  "value": "5"
+                }
+              ],
+              "targetNodeId": "mid"
+            }
+          ],
+          "defaultTargetNodeId": "low"
+        }
+      }
+    },
+    {
+      "id": "high",
+      "type": "message",
+      "title": "high",
+      "connection": null,
+      "config": {
+        "content": "<p>high</p>"
+      }
+    },
+    {
+      "id": "mid",
+      "type": "message",
+      "title": "mid",
+      "connection": null,
+      "config": {
+        "content": "<p>mid</p>"
+      }
+    },
+    {
+      "id": "low",
+      "type": "message",
+      "title": "low",
+      "connection": null,
+      "config": {
+        "content": "<p>low</p>"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "n",
+      "name": "n",
+      "type": "number",
+      "initialValue": 1
+    }
+  ],
+  "settings": {}
+}

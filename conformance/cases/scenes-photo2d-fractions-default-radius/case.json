@@ -1,0 +1,38 @@
+{
+  "id": "scenes-photo2d-fractions-default-radius",
+  "title": "photo2d positions are 0..1 fractions and the discovery radius defaults to 0.08",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G10"
+  ],
+  "level": 1,
+  "requires": [
+    "scene",
+    "message"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "tapScene": {
+        "x": 0.7,
+        "y": 0.5
+      }
+    },
+    {
+      "tapScene": {
+        "x": 0.54,
+        "y": 0.53
+      }
+    }
+  ],
+  "expect": {
+    "variables": {
+      "miss": 1,
+      "found": 1
+    }
+  }
+}

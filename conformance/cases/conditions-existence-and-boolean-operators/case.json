@@ -1,0 +1,40 @@
+{
+  "id": "conditions-existence-and-boolean-operators",
+  "title": "exists and not_exists on an unanswered node and an empty text; is_true and is false on booleans",
+  "spec": [
+    "7"
+  ],
+  "gaps": [
+    "G1",
+    "G2"
+  ],
+  "level": 1,
+  "requires": [
+    "message",
+    "condition",
+    "textInput"
+  ],
+  "play": [
+    {
+      "at": "start"
+    },
+    {
+      "continue": true
+    },
+    {
+      "continue": true
+    }
+  ],
+  "expect": {
+    "trail": [
+      "a",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "c6",
+      "yes"
+    ]
+  }
+}
