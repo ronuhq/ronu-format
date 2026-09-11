@@ -105,6 +105,39 @@ It serves the repository on the static port (the player at `/player/`, the sampl
 
 Then open `http://localhost:8000/player/`, Connect, "change" the receiver to `http://localhost:8787`, and go. The mock only connects players on `http://localhost` or `http://127.0.0.1`.
 
+## Packaging for an LMS (SCORM 1.2)
+
+An enterprise LMS (Moodle, Cornerstone, Workday Learning, SCORM Cloud) imports a SCORM package like any other course. This player can be that package: the runtime, a `.ronu` file and a SCORM 1.2 adapter in one zip, running entirely inside the LMS and reporting through the standard runtime API. `docs/lms-integration.md` explains where this sits next to the connected package and xAPI.
+
+```bash
+node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu
+# wrote hello-scorm.zip; --title "..." --out <zip> --identifier <id> override the defaults
+```
+
+The title and the manifest identifier come from the file's `manifest.json` (`module.title`, and `ronu-<familyId>`); the fallbacks are the file name and a slug of it. The zip holds:
+
+- `imsmanifest.xml` at the root: SCORM 1.2, one organization, one item, one resource of `adlcp:scormtype="sco"` whose `href` is `launch.html`, listing every packaged file.
+- `launch.html`: the page the LMS opens. It holds the player in a full-window iframe (`player/index.html?ronu=../module.ronu&scorm=1`) rather than redirecting to it, so the LMS's SCO frame keeps the URL the manifest named (some LMSs key their tracking frame, exit handling and reloads on that href). The player is one same-origin frame down and reaches the LMS API by walking `parent`.
+- `player/`: the runtime (`index.html`, the modules, `app.css`, `vendor/fflate.js`, the icons). Not the tests, the tools, the service worker or the PWA manifest: a package lives inside the LMS and must not cache itself or register anything.
+- `module.ronu`: the file, byte for byte.
+- The four SCORM 1.2 schema files (`ims_xml.xsd`, `imscp_rootv1p1p2.xsd`, `imsmd_rootv1p2p1.xsd`, `adlcp_rootv1p2.xsd`), which the specification wants at the package root. They are vendored under `player/tools/scorm-xsd/` (see the note there on where they came from), so packaging is offline; most LMSs never read them, strict validators do.
+
+In SCORM mode (`?scorm=1` with an API found through the frame chain, `scorm.js`) the player skips the service worker and the "last file" store, hides the opener screen and the Close and "Open another file" buttons, and calls the LMS: `LMSInitialize` on load (reading the learner's name for the top bar and marking a fresh attempt `incomplete`), `cmi.core.lesson_location` and a compact `cmi.suspend_data` on every node entry (committed at most every three seconds), and at the end `cmi.core.score.raw` (0 to 100), `cmi.core.lesson_status` (`passed` or `failed` when the module has a pass rule, else `completed`), `cmi.core.session_time`, `LMSCommit`, `LMSFinish`. The end screen says what was recorded. Leaving early sends the time so far with `cmi.core.exit` `suspend`. The score is the average node score when the module scored any node; a module whose only score is a variable rule reports 100 when passed and 0 when not, because a raw variable is not a percentage. Play again after the outcome went to the LMS is a practice run: the LMS keeps the first outcome of the launch, and a new attempt is a new launch from the LMS. If `?scorm=1` is set but no API is found (the package opened outside an LMS), the player runs as usual and the end screen says "No LMS found; results are not being reported". "Send to RonuNest" stays available inside an LMS when the learner is connected, so a connected learner can do both.
+
+Resuming from `cmi.suspend_data` is not implemented: the engine has no state restore, so a relaunch starts the module from its first node. The data is written so an LMS shows where the learner was, and so a later player can pick it up.
+
+To prove a package without an LMS, the fake one:
+
+```bash
+node player/tools/scorm-harness.mjs hello-scorm.zip --port 8791
+```
+
+It serves the package (a zip, or an unzipped directory) and a page with a logging SCORM 1.2 `window.API` over a small cmi data model (student `Dami Okafor`, status `not attempted`, the read-only, write-only and format rules of the standard), the package's `launch.html` in an iframe, a live table of the cmi values and a log of every call. Play through and watch `lesson_status`, `score.raw` and `session_time` land, then `LMSCommit` and `LMSFinish`.
+
+To test on a real LMS for nothing: SCORM Cloud's free Trial plan takes three courses. Upload the zip as a course, launch it as a registration, then read the registration's report; it shows the same fields and flags any manifest problem on import. CI builds the hello package on every push and checks its manifest, launcher, player and file.
+
+The limits, plainly: AI conversation characters need a connection to RonuNest (the learner connects from inside the package; on an air-gapped LMS the node shows its fallback card with the character's opening line); 3D worlds and `code` nodes show the fallback card; video is bundled, not streamed, so package size grows with media; updates mean re-importing the zip.
+
 ## Architecture
 
 ```
@@ -124,11 +157,12 @@ player/
   conversation.js       the conversation state machine over a receiver client. No DOM.
   receiver-ui.js        the connect dialog (popup, paste-a-code), the stored connection, the top-bar control
   store.js              IndexedDB key-value store: the last file, the receiver connection
+  scorm.js              the SCORM 1.2 adapter: API discovery, the session, progress and outcome. No DOM.
   sw.js                 service worker: app-shell cache
   manifest.webmanifest  PWA manifest
   vendor/fflate.js      unzip (MIT, licence alongside)
   test/                 Node test suite
-  tools/                icon generator, sample zipper, the mock receiver
+  tools/                icon generator, sample zipper, the mock receiver, the SCORM packager and fake LMS
 ```
 
 The engine is a plain state machine. The UI calls `start()`, then `choose()`, `answerText()`, `activateHotspot()`, `tapScene()`, `performStep()`, `dismissBeat()`, `continue()` and so on, and reads `view()` to know what to draw. While a scene's interaction beat is open, `view().interaction` is the nested sub-node in the same shape as a node view, and the answer calls (`answerMultiple()`, `performStep()`, `placeItem()` and the rest) apply to it instead of the scene; the UI draws it with the same `render_<type>` function it uses for the top-level node. A clock is injected, so timers are tested with a fake one. Everything without a DOM runs unchanged in Node, which is what the tests use.

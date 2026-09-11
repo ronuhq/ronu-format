@@ -266,3 +266,6 @@ dialog h2 { margin: 0 0 10px; font-size: 1.3rem; }
 @media (max-width: 640px) {
   .scene-viewport { height: calc(100dvh - 200px); min-height: 240px; }
 }
+
+/* SCORM mode: the LMS learner's name in the top bar. */
+.lms-learner { opacity: 0.85; }

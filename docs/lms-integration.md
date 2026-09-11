@@ -31,6 +31,7 @@ So: xAPI is complementary to `.ronu` (events versus the experience), and SCORM i
 | What the platform receives | Full node-level evidence, certificates, analytics | Nothing, unless the package also sends its record to the platform or an xAPI feed to the customer's LRS |
 | Answers "we host it ourselves" | No | Yes |
 | Answers "we are air-gapped" | No | Yes, with the AI fallback |
+| Where it is built | Not yet | `node player/tools/scorm-package.mjs <file.ronu>` in this repository; see "Packaging for an LMS (SCORM 1.2)" in `player/README.md` for the zip, the fake-LMS harness and the limits |
 
 Both report to the LMS through the standard SCORM runtime API (`LMSInitialize`, `LMSSetValue cmi.core.lesson_status` and `cmi.core.score.raw`, `LMSCommit`, `LMSFinish` in 1.2 terms). Open-source adapters for that API have existed for years (the pipwerks SCORM API wrapper, MIT, since 2008; scorm-again, MIT, covers 1.2, 2004 and AICC). Writing the package side is not the hard part. The hard part is conformance across hundreds of LMS implementations, which is what a test harness such as SCORM Cloud is for.
 

@@ -90,7 +90,9 @@ export class PlayerUI {
   /**
    * @param {object} o  { root, engine, resolver, manifest, onClose, onDownload,
    *   receiver (ReceiverController, optional), receiverControl (fn(ctl, opts) -> element),
-   *   priorSent (a stored "sent" flag for this file, optional), onSent(sent) }
+   *   priorSent (a stored "sent" flag for this file, optional), onSent(sent),
+   *   scorm (optional, read at render time: { active, noApi, studentName, recorded: {status, score} | null, replayed }),
+   *   onNodeEnter(view) (each time a node is entered), onEnd(view) (once per run, when the end screen first renders) }
    */
   constructor(o) {
     this.root = o.root;
@@ -103,6 +105,10 @@ export class PlayerUI {
     this.receiverControl = o.receiverControl ?? null;
     this.priorSent = o.priorSent ?? null;
     this.onSent = o.onSent ?? (() => {});
+    this.scorm = o.scorm ?? null;
+    this.onNodeEnter = o.onNodeEnter ?? (() => {});
+    this.onEnd = o.onEnd ?? (() => {});
+    this.endNotified = false;
     this.moduleId = recordModuleId(this.manifest);
     this.sender = null; // createRecordSender for the current session, made on first use
     this.sendError = null;
@@ -124,6 +130,7 @@ export class PlayerUI {
     this.stage = h('main.stage', { id: 'stage' });
     this.footer = h('footer.player-footer');
     this.root.append(this.header, this.stage, this.footer);
+    this.endNotified = false;
     this.engine.start();
     this.render(true);
     this.timer = setInterval(() => {
@@ -168,10 +175,24 @@ export class PlayerUI {
       this.pano?.destroy();
       this.pano = null;
     }
+    this.notify(view, nodeChanged);
     this.renderHeader(view);
     this.renderStage(view, nodeChanged);
     this.renderFooter(view);
     if (nodeChanged) this.stage.scrollTop = 0;
+  }
+
+  /** The lifecycle hooks (SCORM progress and outcome). A hook that throws must never stop a render. */
+  notify(view, nodeChanged) {
+    try {
+      if (view.kind === 'node' && nodeChanged && !view.nested) this.onNodeEnter(view);
+      if (view.kind === 'end' && !this.endNotified) {
+        this.endNotified = true;
+        this.onEnd(view);
+      }
+    } catch (e) {
+      console.warn('lifecycle hook failed', e);
+    }
   }
 
   renderHeader(view) {
@@ -185,9 +206,11 @@ export class PlayerUI {
       h('div.header-title', { title }, title),
       h('div.header-timers', timers),
       h('div.header-actions',
+        this.scorm?.active && this.scorm.studentName ? h('span.receiver-user.lms-learner', { title: 'Signed in to your LMS' }, this.scorm.studentName) : null,
         h('button.btn.btn-ghost.btn-small', { onclick: () => this.openRecordPanel(), title: 'What has happened in this session so far' }, 'Session record'),
         this.receiver && this.receiverControl ? this.receiverControl(this.receiver, { compact: true, onChange: () => this.render(true) }) : null,
-        h('button.btn.btn-ghost.btn-small', { onclick: () => this.onClose(), title: 'Close this file' }, 'Close'),
+        // Inside an LMS the course window is the LMS's to close; there is no opener to go back to.
+        this.scorm?.active ? null : h('button.btn.btn-ghost.btn-small', { onclick: () => this.onClose(), title: 'Close this file' }, 'Close'),
       ),
     );
   }
@@ -838,18 +861,38 @@ export class PlayerUI {
       card.append(h('table.vars', h('tbody', scores.map(([id, s]) => h('tr', h('td', this.scoreLabel(id)), h('td.num', `${s}%`))))));
     }
     card.append(h('p.muted.small', `Path: ${view.trail.join(' → ')}`));
+    const lmsBlock = this.renderLmsBlock();
+    if (lmsBlock) card.append(lmsBlock);
     const sendBlock = this.renderSendBlock();
     if (sendBlock) card.append(sendBlock);
     card.append(h('div.actions.actions-wrap',
       this.renderSendButton(),
       h('button.btn', { onclick: () => this.playAgain() }, 'Play again'),
-      h('button.btn.btn-ghost', { onclick: () => this.onClose() }, 'Open another file'),
+      this.scorm?.active ? null : h('button.btn.btn-ghost', { onclick: () => this.onClose() }, 'Open another file'),
       h('button.btn.btn-ghost', { onclick: () => this.onDownload() }, 'Download session record'),
     ));
     return card;
   }
 
+  /** What the end screen says about the LMS: recorded (status and score), a practice run after that, or no LMS found. */
+  renderLmsBlock() {
+    const sc = this.scorm;
+    if (!sc) return null;
+    if (sc.noApi) return h('div.send-block', h('p.small.muted', 'No LMS found; results are not being reported.'));
+    if (!sc.active) return null;
+    const box = h('div.send-block');
+    const r = sc.recorded;
+    if (r) {
+      const who = sc.studentName ? ` for ${sc.studentName}` : '';
+      box.append(h('p.score', `Recorded in your LMS${who}: ${r.status}${typeof r.score === 'number' ? `, ${r.score}` : ''}.`));
+      if (sc.replayed) box.append(h('p.small.muted', 'This run was practice. The LMS keeps the first outcome of this launch; relaunch the course from the LMS for a new attempt.'));
+      else box.append(h('p.small.muted', 'Play again runs the module once more without changing what the LMS holds.'));
+    } else box.append(h('p.error.small', 'The LMS did not accept the outcome. Your session record can still be downloaded.'));
+    return box;
+  }
+
   playAgain() {
+    this.endNotified = false;
     this.engine.start();
     this.clearLocals();
     this.pano?.destroy();
