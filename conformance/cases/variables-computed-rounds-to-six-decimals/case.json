@@ -1,8 +1,8 @@
 {
-  "id": "variables-computed-fraction-not-rounded",
-  "title": "A computed division keeps its fraction; a completion rule reads it exactly",
+  "id": "variables-computed-rounds-to-six-decimals",
+  "title": "A computed division is rounded to six decimals, as the validator does (1/3 is 0.333333)",
   "spec": [
-    "4"
+    "9.2"
   ],
   "gaps": [
     "G31",
@@ -23,7 +23,7 @@
   ],
   "expect": {
     "variables": {
-      "half": 2.5
+      "half": 0.333333
     },
     "end": {
       "passed": true

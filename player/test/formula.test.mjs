@@ -21,3 +21,13 @@ test('formula: identifiers are extracted and bad syntax throws', () => {
   assert.throws(() => formulaIdentifiers('(a + b'));
   assert.throws(() => formulaIdentifiers('a ^ b'));
 });
+
+// Spec 9.2: results round to six decimals with Math.round semantics, matching
+// the reference validator (rust/src/formula.rs), so a pass rule that reads a
+// computed variable sees the same number in every implementation.
+test('rounds to six decimals like the validator', () => {
+  assert.equal(evaluateFormula('n / 3', { n: 1 }), 0.333333);
+  assert.equal(evaluateFormula('n / 3', { n: 2 }), 0.666667);
+  assert.equal(evaluateFormula('92 * 0.6 + 88 * 0.4', {}), 90.4);
+  assert.equal(evaluateFormula('-2.5 * 1000000 / 1000000', {}), -2.5);
+});

@@ -152,9 +152,9 @@ A conformance statement then says: the level claimed, the capabilities declared,
 Every `module.json` here validates with zero errors under the reference validator, warnings allowed (`validate-cases.mjs` lists them), except the handful whose whole point is a file a player must tolerate although the validator rejects it. Those carry `validator.errors` in their `case.json` listing the exact error codes, and the script checks the validator reports those and nothing else, so the suite pins the validator's verdicts as well:
 
 - `walk-dangling-edge-ends-with-error` (`connection/dangling`), `walk-start-missing-falls-back-to-first` (`module/no-start`), `walk-start-several-first-flagged-wins` (`module/multiple-starts`): reader tolerance for files the writer should never have produced (G32, G33).
-- `evolution-unknown-node-type-follows-connection` and `evolution-namespaced-extension-type` (`node/unknown-type`): spec rules 5.2 and 5.3. Note that the validator rejects a namespaced `x-` type outright, while rule 5.3 makes it legal; that is a validator gap worth closing.
+- `evolution-unknown-node-type-follows-connection` (`node/unknown-type`): spec rule 5.2. (`evolution-namespaced-extension-type` validates clean: both validators accept `x-` types since the rule 5.3 fix.)
 - `variables-actions-must-ignore` (`action/bad-operator`, `action/unknown-variable`, `action/computed-target`) and `variables-computed-unknown-identifier-is-zero` (`variable/formula-unknown-ref`): must-ignore and the formula's degrade-to-zero rule (5.1, G27, G31).
-- `variables-defaults-per-type` and `variables-initial-value-coerced-to-type` (`variable/initial-mismatch`): the validator requires a typed `initialValue` on number and boolean variables, while G27 tells a player what to do when it is absent or mistyped. The spec should say which of the two is right.
+- `variables-defaults-per-type` and `variables-initial-value-coerced-to-type` (`variable/initial-mismatch`): the validator requires a typed `initialValue` on number and boolean variables (a writer rule), while spec 9.2 tells a reader what to do when it is absent or mistyped. Both are right: writers MUST emit it, readers MUST tolerate its absence.
 
 ## 8. Adding a case
 

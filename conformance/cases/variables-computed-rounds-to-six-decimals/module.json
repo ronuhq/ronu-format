@@ -16,7 +16,7 @@
       "id": "n",
       "name": "n",
       "type": "number",
-      "initialValue": 10
+      "initialValue": 1
     },
     {
       "id": "half",
@@ -24,7 +24,7 @@
       "type": "number",
       "initialValue": 0,
       "computed": true,
-      "formula": "n / 4"
+      "formula": "n / 3"
     }
   ],
   "settings": {
@@ -32,7 +32,7 @@
       "mode": "variable",
       "variableId": "half",
       "operator": ">=",
-      "value": 2.5
+      "value": 0.333333
     }
   }
 }

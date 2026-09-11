@@ -9,11 +9,6 @@
   "requires": [
     "message"
   ],
-  "validator": {
-    "errors": [
-      "node/unknown-type"
-    ]
-  },
   "play": [
     {
       "at": "start"
