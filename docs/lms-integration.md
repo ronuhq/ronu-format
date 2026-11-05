@@ -31,7 +31,7 @@ So: xAPI is complementary to `.ronu` (events versus the experience), and SCORM i
 | What the platform receives | The full play-through, recorded automatically at the end: node-level evidence, certificates, analytics, under a tenant learner keyed to the LMS's student id | Nothing, unless the learner connects and sends, or an xAPI feed goes to the customer's LRS |
 | Answers "we host it ourselves" | Yes (the platform is called, not loaded from) | Yes |
 | Answers "we are air-gapped" | No (it degrades to self-contained) | Yes, with the AI fallback |
-| State | Built: `node player/tools/scorm-package.mjs <file.ronu> --receiver https://ronunest.com --key <customer API key>`; the platform side is `player_session` on `creator-api` (section 7 of `docs/record-receiver.md`) | Built: `node player/tools/scorm-package.mjs <file.ronu>`; see "Packaging for an LMS (SCORM 1.2)" in `player/README.md` for the zip, the fake-LMS harness and the limits |
+| State | Built: `node player/tools/scorm-package.mjs <file.ronu> --receiver https://ronunest.com --key <package key>`; the platform side is `player_session` on `creator-api` (section 7 of `docs/record-receiver.md`) | Built: `node player/tools/scorm-package.mjs <file.ronu>`; see "Packaging for an LMS (SCORM 1.2)" in `player/README.md` for the zip, the fake-LMS harness and the limits |
 
 The "dispatch" launcher (a package that is only a launcher page loading the hosted module) is a third shape, not built: with a connected package there is no need for it in the first deals, because updates are the one thing it adds, and a re-import covers that.
 

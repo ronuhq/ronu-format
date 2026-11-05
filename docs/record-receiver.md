@@ -302,7 +302,7 @@ A package may carry `ronu-package.json` at its root, beside the launcher:
 {
   "version": 0,
   "receiver": "https://ronunest.com",
-  "key": "<creator API key>",
+  "key": "<package key>",
   "moduleId": "<manifest.module.versionId>",
   "name": "ronu player"
 }
@@ -389,6 +389,9 @@ treats both the same and branches on `errorCode`:
 | `invalid_learner` | the request named no usable learner |
 | `module_not_found` | the receiver does not have this module |
 | `module_not_owned` | the module does not belong to the account that issued the key |
+| `module_not_listed` | a package key named no module, or one outside its list |
+| `key_scope` | a package key called anything other than this exchange |
+| `rate_limited` | the key has started too many sessions just now (status 429) |
 
 On any failure the player shows one line ("Could not connect to RonuNest:
 <error>. Playing offline.") and continues as a self-contained package:
@@ -413,20 +416,37 @@ connect as before. The LMS report never waits on the receiver.
 
 ### 7.5 Security notes for keys
 
-- A key in a package can mint sessions for that customer's tenant learners
-  only, for modules the customer's account owns; it cannot reach any other
-  account's learners, modules or records. It is a customer credential, not a
-  learner one, and not a platform one.
+- **Assume every learner can read the key.** The player reads it from
+  `ronu-package.json` and sends it from the learner's browser, so it is
+  visible to anyone who can launch the package, as well as to the LMS's
+  administrators. It is not a secret from the people using the package.
+- **A receiver must issue a narrow key for packages.** A package key can only
+  make the section 7.3 exchange, and a receiver may limit it to listed
+  modules. Any other call fails with `key_scope` and a module outside the
+  list fails with `module_not_listed`. It must never be a general API key.
+  On RonuNest a package key starts `rnp_`, and `scorm-package.mjs` refuses a
+  full-access `rn_` key.
+- A package key can start sessions for that customer's tenant learners only,
+  for modules the customer's account owns. It cannot reach any other
+  account's learners, modules or records.
 - Keys are per customer, issued in RonuNest's settings (nest settings, Portal
-  API keys), revocable there at any time. Issue one key per LMS customer and
-  put that key in the packages built for them: revoking it cuts off every
-  package that carries it and nothing else. A revoked key fails with
-  `unauthorized` and the package keeps working offline.
-- A package is a zip the customer's LMS administrators can open, so the key
-  is visible to them. That is the intended trust boundary: the key belongs
-  to that customer. Do not reuse one customer's key in another customer's
-  package.
-- The receiver should record the provenance of records and conversations
-  minted through a key (the key, the player origin) as it does for the popup
-  path (section 5), so a customer's usage can be attributed and a leaked key
-  spotted.
+  API keys, type Package), revocable there at any time. Issue one key per LMS
+  customer, or one per package, and never reuse a key across customers:
+  revoking it cuts off every package that carries it and nothing else. A
+  revoked key fails with `unauthorized` and the package keeps working
+  offline.
+- A receiver should limit how many sessions a key can start, answering
+  `rate_limited` over the limit. The learner keeps playing offline, as with a
+  revoked key.
+- The receiver should record the provenance of sessions, records and
+  conversations started through a key (the key, the request origin, the
+  player origin) as it does for the popup path (section 5), so a customer's
+  usage can be attributed and a leaked key spotted. `player.origin` is what
+  the package claims; neither it nor a browser's Origin header proves where a
+  request came from.
+- **The remaining limit:** SCORM 1.2 doesn't sign the learner's identity. A
+  learner who reads a package key can start a session under a colleague's ID,
+  so a record from a package shows what was reported, not proof of who
+  played. A narrow key limits this to playing and recording. It doesn't
+  remove it. Say so in security reviews. A launch standard that signs
+  identity, such as LTI 1.3, closes it.
