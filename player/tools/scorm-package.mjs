@@ -26,7 +26,7 @@ const fflate = require(join(PLAYER_DIR, 'vendor', 'fflate.js'));
 
 function usage(code) {
   console.error('usage: scorm-package.mjs <file.ronu> [--title "..."] [--out <zip>] [--identifier <id>]');
-  console.error('       scorm-package.mjs <file.ronu> --receiver <origin> --key <customer API key> [--player-name "..."]  (a connected package)');
+  console.error('       scorm-package.mjs <file.ronu> --receiver <origin> --key <package key> [--player-name "..."]  (a connected package)');
   process.exit(code);
 }
 
@@ -49,7 +49,12 @@ export function parseArgs(argv) {
   return out;
 }
 
-export const CONNECTED_HELP = 'A connected package needs both --receiver <origin> and --key <key>. The key is a customer API key from RonuNest (nest settings, Portal API keys): issue one per LMS customer, and revoke it there to cut the package off.';
+// A key in a package is readable by anyone who can launch it, so a RonuNest
+// full-access key (rn_…) must never go in one; a package key (rnp_…) can only
+// start a session. Other receivers issue their own keys, which pass through.
+const FULL_ACCESS_KEY = /^rn_/;
+export const FULL_ACCESS_KEY_HELP = 'That is a RonuNest full-access key (rn_...). Learners can read any key inside a package, and that key opens the customer\'s learner list and answers. Create a package key (rnp_...) in RonuNest instead: nest settings, Portal API keys, type Package.';
+export const CONNECTED_HELP = 'A connected package needs both --receiver <origin> and --key <key>. The key is a package key from RonuNest (nest settings, Portal API keys, type Package): issue one per LMS customer, and revoke it there to cut the package off.';
 
 /**
  * The connected-package options, or null for a self-contained package.
@@ -64,6 +69,7 @@ export function connectedOptions(args) {
     const missing = !receiver && !key ? '--receiver and --key are missing.' : !receiver ? '--receiver is missing.' : '--key is missing.';
     throw new Error(`${CONNECTED_HELP} ${missing}`);
   }
+  if (FULL_ACCESS_KEY.test(key)) throw new Error(FULL_ACCESS_KEY_HELP);
   return { receiver, key, name: args.playerName ?? undefined };
 }
 

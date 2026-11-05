@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { buildImsManifest, buildLaunchHtml, buildPackageEntries, buildPackageConfig, describeRonu, escapeXml, slugIdentifier, PLAYER_FILES, XSD_FILES, PACKAGE_CONFIG_FILE } from '../tools/scorm-manifest.mjs';
-import { packageRonu, parseArgs, connectedOptions, CONNECTED_HELP } from '../tools/scorm-package.mjs';
+import { packageRonu, parseArgs, connectedOptions, CONNECTED_HELP, FULL_ACCESS_KEY_HELP } from '../tools/scorm-package.mjs';
 import { parsePackageConfig } from '../machine-session.js';
 import { fflate, SAMPLES_DIR, PLAYER_DIR } from './helpers.mjs';
 
@@ -125,6 +125,15 @@ test('round trip: package hello.ronu, unzip with fflate, every listed file exist
 });
 
 // ---- connected packages (contract section 7) --------------------------------
+
+// A key in a package is readable by every learner, so a full-access key must
+// never go in one.
+test('connectedOptions: refuses a RonuNest full-access key; takes a package key and any other receiver\'s key', () => {
+  const opts = (key) => connectedOptions({ receiver: 'https://ronunest.com', key });
+  assert.throws(() => opts('rn_0123456789abcdef'), (e) => e.message === FULL_ACCESS_KEY_HELP);
+  assert.equal(opts('rnp_0123456789abcdef').key, 'rnp_0123456789abcdef');
+  assert.equal(opts('mock-key').key, 'mock-key');
+});
 
 test('buildPackageConfig: ronu-package.json with the receiver origin, the key and the module id; refuses what a receiver could not use', () => {
   const text = buildPackageConfig({ receiver: 'https://ronunest.com/', key: ' cust-key ', moduleId: 'b0000000-0000-4000-8000-000000000001' });

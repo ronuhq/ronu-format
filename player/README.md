@@ -112,7 +112,7 @@ An enterprise LMS (Moodle, Cornerstone, Workday Learning, SCORM Cloud) imports a
 ```bash
 node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu
 # wrote hello-scorm.zip; --title "..." --out <zip> --identifier <id> override the defaults
-node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu --receiver https://ronunest.com --key <customer API key>
+node player/tools/scorm-package.mjs samples/hello-ronu/hello.ronu --receiver https://ronunest.com --key <package key>
 # the same zip as a connected package: adds ronu-package.json and the machine launch
 ```
 
@@ -155,7 +155,7 @@ A self-contained package knows nothing about RonuNest until a learner signs in t
 | Stored on the learner's browser | the popup connection, if they made one | nothing: the session lives in memory for that launch and there is no Disconnect |
 | Play again | practice for the LMS | practice for both; a second send is a manual button and makes a new attempt |
 
-**Getting a key.** In RonuNest, open your nest's settings, then Portal API keys, and create a key for the customer. Issue **one key per LMS customer** and build that customer's packages with it: the key can only mint sessions for that customer's learners on modules your account owns, and revoking it in the same place cuts off every package that carries it, and nothing else. A revoked or mistyped key fails with `unauthorized` and the package plays offline, so a bad key never breaks a course. The key is visible to whoever can open the zip; that is the intended boundary, so never put one customer's key in another customer's package. `--connected` on its own, or `--receiver` without `--key` (or the reverse), is an error that says what is missing.
+**Getting a key.** In RonuNest, open your nest's settings, then Portal API keys, and create a key of type Package for the customer. Learners can read any key inside a package, so the tool refuses a full-access `rn_` key. Issue **one key per LMS customer** and build that customer's packages with it: the key can only mint sessions for that customer's learners on modules your account owns, and revoking it in the same place cuts off every package that carries it, and nothing else. A revoked or mistyped key fails with `unauthorized` and the package plays offline, so a bad key never breaks a course. The key is visible to whoever can open the zip; that is the intended boundary, so never put one customer's key in another customer's package. `--connected` on its own, or `--receiver` without `--key` (or the reverse), is an error that says what is missing.
 
 **The learner on RonuNest.** The receiver keeps a tenant learner per (customer, `cmi.core.student_id`); the same student id on a later launch is the same learner, so attempts and certificates accumulate. An LMS that leaves the id blank (or a package opened outside an LMS with `?machine=1`) gets `anonymous-<random>`, a new learner every launch; the player logs that it did so.
 

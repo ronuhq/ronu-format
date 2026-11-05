@@ -164,12 +164,14 @@ test('mapSessionResponse: every errorCode, whether it comes as 401/403/404 or as
   const discovery = parseDiscovery(DISCOVERY, ORIGIN);
   const cases = [
     ['unauthorized', 401], ['tier_required', 403], ['invalid_learner', 400], ['module_not_found', 404], ['module_not_owned', 403],
+    ['module_not_listed', 403], ['key_scope', 403], ['rate_limited', 429],
     ['unauthorized', 200], ['tier_required', 200], ['invalid_learner', 200], ['module_not_found', 200], ['module_not_owned', 200],
+    ['module_not_listed', 200], ['key_scope', 200], ['rate_limited', 200],
   ];
   for (const [code, status] of cases) {
     assert.throws(() => mapSessionResponse(status, { success: false, error: 'server words', errorCode: code }, discovery), (e) => e instanceof ReceiverError && e.code === code && e.status === status && e.message === SESSION_ERROR_MESSAGES[code], `${code} at ${status}`);
   }
-  assert.equal(Object.keys(SESSION_ERROR_MESSAGES).length, 5, 'the five codes the contract names');
+  assert.equal(Object.keys(SESSION_ERROR_MESSAGES).length, 8, 'the eight codes the contract names');
 });
 
 test('mapSessionResponse: answers without an errorCode fall back on the status', () => {

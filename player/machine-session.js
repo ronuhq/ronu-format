@@ -23,6 +23,9 @@ export const SESSION_ERROR_MESSAGES = {
   invalid_learner: 'the LMS gave no usable learner identity',
   module_not_found: 'the receiver does not have this module',
   module_not_owned: 'this module does not belong to the account that issued the package\'s key',
+  module_not_listed: 'the package\'s key does not cover this module',
+  key_scope: 'the package\'s key is not allowed to do that',
+  rate_limited: 'too many learners are starting at once; try again in a minute',
 };
 
 function str(v) {
